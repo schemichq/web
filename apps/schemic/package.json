@@ -1,0 +1,20 @@
+{
+  "name": "@schemic/web-hub",
+  "type": "module",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Schemic main landing - schemic.dev (library hub + driver chooser). Phase 2 build-out.",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@schemic/brand": "workspace:*",
+    "astro": "^6.4.6"
+  },
+  "devDependencies": {
+    "vite": "^7.3.5"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@schemic/brand",
+  "type": "module",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Shared Schemic brand kit: base design tokens (Tailwind v4 @theme) + per-driver overrides.",
+  "exports": {
+    "./tokens.css": "./tokens.css"
+  },
+  "files": ["tokens.css"]
+}

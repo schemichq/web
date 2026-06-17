@@ -1,0 +1,20 @@
+{
+  "name": "@schemic/web-postgres",
+  "type": "module",
+  "private": true,
+  "version": "0.0.0",
+  "description": "PostgreSQL driver site - postgres.schemic.dev (in the works). Placeholder scaffold.",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@schemic/brand": "workspace:*",
+    "astro": "^6.4.6"
+  },
+  "devDependencies": {
+    "vite": "^7.3.5"
+  }
+}

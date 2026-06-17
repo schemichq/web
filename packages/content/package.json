@@ -1,0 +1,13 @@
+{
+  "name": "@schemic/content",
+  "type": "module",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Shared docs content infrastructure: brand code theme, docs frontmatter schema, and the nav model types. Driver-agnostic (no per-driver content/IA data).",
+  "exports": {
+    "./code-theme": "./code-theme.mjs",
+    "./docs-schema": "./docs-schema.mjs",
+    "./nav": "./nav.ts"
+  },
+  "files": ["code-theme.mjs", "docs-schema.mjs", "nav.ts"]
+}

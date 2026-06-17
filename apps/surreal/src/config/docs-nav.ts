@@ -3,14 +3,8 @@
  * Drives the top nav, the left sidebar tree, breadcrumb, prev/next and active
  * state. Slugs map 1:1 to src/content/docs/<slug>.mdx and render at /docs/<slug>.
  */
-export interface NavItem {
-  label: string;
-  href: string;
-}
-export interface NavGroup {
-  label: string;
-  items: NavItem[];
-}
+import type { NavGroup, NavItem, TocItem } from "@schemic/content/nav";
+export type { NavGroup, NavItem, TocItem };
 
 const d = (slug: string): string => `/docs/${slug}`;
 
@@ -69,11 +63,6 @@ export const topNav: NavItem[] = [
   { label: "Reference", href: d("reference/builders") },
   { label: "Blog", href: "/blog" },
 ];
-
-export interface TocItem {
-  id: string;
-  text: string;
-}
 
 // Flattened, ordered list (sidebar order) for prev/next + lookups.
 const flat: { group: string; item: NavItem }[] = sidebarNav.flatMap((g) =>

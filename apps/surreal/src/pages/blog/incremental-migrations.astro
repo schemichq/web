@@ -2,7 +2,7 @@
 import { Code } from "astro:components";
 import BlogLayout from "../../layouts/BlogLayout.astro";
 import CodeBlock from "../../components/docs/CodeBlock.astro";
-import { brandShikiTheme } from "../../config/code-theme.mjs";
+import { brandShikiTheme } from "@schemic/content/code-theme";
 
 const editTs = `export const User = defineTable("user", {
   name: s.string(),

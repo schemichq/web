@@ -1,10 +1,11 @@
 ---
-import { sidebarNav } from "../../config/docs-nav";
+import type { NavGroup } from "@schemic/content/nav";
 
 interface Props {
+  sidebarNav: NavGroup[];
   activeHref?: string;
 }
-const { activeHref } = Astro.props;
+const { sidebarNav, activeHref } = Astro.props;
 ---
 
 <aside class="sidebar">

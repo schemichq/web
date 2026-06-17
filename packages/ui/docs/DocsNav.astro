@@ -1,10 +1,11 @@
 ---
-import { topNav } from "../../config/docs-nav";
+import type { NavItem } from "@schemic/content/nav";
 
 interface Props {
+  topNav: NavItem[];
   topActive?: string;
 }
-const { topActive } = Astro.props;
+const { topNav, topActive } = Astro.props;
 const repo = "https://github.com/schemichq/schemic";
 ---
 

@@ -1,0 +1,17 @@
+{
+  "name": "@schemic/ui",
+  "type": "module",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Shared, driver-agnostic UI for Schemic sites: the docs shell (layout, nav, sidebar, TOC) + docs content components. Nav data is injected via props.",
+  "exports": {
+    "./*": "./*"
+  },
+  "dependencies": {
+    "@fontsource-variable/geist": "^5.2.9",
+    "@fontsource-variable/jetbrains-mono": "^5.2.8",
+    "@schemic/brand": "workspace:*",
+    "@schemic/content": "workspace:*",
+    "tailwindcss": "^4.3.0"
+  }
+}

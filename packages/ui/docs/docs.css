@@ -6,6 +6,11 @@
 @import "tailwindcss";
 @import "@schemic/brand/tokens.css";
 
+/* This stylesheet ships from a workspace package; Tailwind excludes node_modules
+   from content scanning by default, so explicitly scan the docs shell sources
+   for any utility classes the components use. */
+@source "./";
+
 @layer base {
   html {
     color-scheme: dark;

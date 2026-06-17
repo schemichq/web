@@ -1,15 +1,17 @@
 ---
 import "@fontsource-variable/geist";
 import "@fontsource-variable/jetbrains-mono";
-import "../styles/docs.css";
-import DocsNav from "../components/docs/DocsNav.astro";
-import DocsSidebar from "../components/docs/DocsSidebar.astro";
-import DocsTOC from "../components/docs/DocsTOC.astro";
-import type { TocItem } from "../config/docs-nav";
+import "./docs.css";
+import DocsNav from "./DocsNav.astro";
+import DocsSidebar from "./DocsSidebar.astro";
+import DocsTOC from "./DocsTOC.astro";
+import type { NavGroup, NavItem, TocItem } from "@schemic/content/nav";
 
 interface Props {
   title: string;
   description?: string;
+  sidebarNav: NavGroup[];
+  topNav: NavItem[];
   activeHref?: string;
   topActive?: string;
   headings?: TocItem[];
@@ -17,6 +19,8 @@ interface Props {
 const {
   title,
   description = "Author SurrealDB schemas in TypeScript with Zod. Generate SurrealQL DDL, infer end-to-end types, and run safe migrations.",
+  sidebarNav,
+  topNav,
   activeHref,
   topActive = "Docs",
   headings = [],
@@ -43,9 +47,9 @@ const hasToc = headings.length > 0;
     <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>
-    <DocsNav topActive={topActive} />
+    <DocsNav topNav={topNav} topActive={topActive} />
     <div class="shell">
-      <DocsSidebar activeHref={activeHref} />
+      <DocsSidebar sidebarNav={sidebarNav} activeHref={activeHref} />
       <main class="content">
         <div class:list={["content-inner", { wide: !hasToc }]}>
           <slot />

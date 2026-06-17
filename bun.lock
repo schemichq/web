@@ -39,6 +39,7 @@
         "@fontsource-variable/jetbrains-mono": "^5.2.8",
         "@schemic/brand": "workspace:*",
         "@schemic/content": "workspace:*",
+        "@schemic/ui": "workspace:*",
         "@tailwindcss/vite": "^4.3.0",
         "astro": "^6.4.6",
         "sharp": "^0.35.0",
@@ -55,6 +56,17 @@
     "packages/content": {
       "name": "@schemic/content",
       "version": "0.0.0",
+    },
+    "packages/ui": {
+      "name": "@schemic/ui",
+      "version": "0.0.0",
+      "dependencies": {
+        "@fontsource-variable/geist": "^5.2.9",
+        "@fontsource-variable/jetbrains-mono": "^5.2.8",
+        "@schemic/brand": "workspace:*",
+        "@schemic/content": "workspace:*",
+        "tailwindcss": "^4.3.0",
+      },
     },
   },
   "packages": {
@@ -283,6 +295,8 @@
     "@schemic/brand": ["@schemic/brand@workspace:packages/brand"],
 
     "@schemic/content": ["@schemic/content@workspace:packages/content"],
+
+    "@schemic/ui": ["@schemic/ui@workspace:packages/ui"],
 
     "@schemic/web-hub": ["@schemic/web-hub@workspace:apps/schemic"],
 

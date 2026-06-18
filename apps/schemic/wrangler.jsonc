@@ -1,0 +1,18 @@
+{
+  // Cloudflare Workers Static Assets deploy for the schemic.dev HUB.
+  // Pure static Astro SSG (no Worker script) — `assets.directory` points at the
+  // `astro build` output. Service name is the deploy identity architect's
+  // Terraform attaches the custom domain (schemic.dev) to AFTER the first deploy.
+  // Build first (`bun run build` in this app), then `wrangler deploy` from here.
+  "name": "schemic-hub",
+  "compatibility_date": "2024-09-23",
+  "assets": {
+    "directory": "./dist",
+    // MPA, not an SPA: every route is a real .html (incl. /examples/<driver>).
+    // Serve Astro's 404.html for unknown paths; never blanket-rewrite to index.
+    "not_found_handling": "404-page"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

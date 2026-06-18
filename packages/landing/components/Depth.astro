@@ -30,8 +30,11 @@ const states = paneStates.map((s) => {
   {
     states.map((st) => (
       <div data-driver-pane={st.key} hidden={st.hidden}>
-        {st.depth.available && (
-          <section class="border-t border-border-subtle px-6 py-24 sm:py-28">
+        {/* Depth renders on EVERY route with the SAME layout — only the code
+            shown differs (surrealdb: real DDL; postgres: a graceful placeholder
+            note; hub: blurred behind the "Select a database" overlay). The
+            section/heading/structure are identical on all three. */}
+        <section class="border-t border-border-subtle px-6 py-24 sm:py-28">
             <div class="mx-auto max-w-6xl">
               {/* head (left-aligned) */}
               <div class="max-w-3xl">
@@ -82,7 +85,7 @@ const states = paneStates.map((s) => {
                       {st.depth.input.map((line) => (
                         <div class="flex">
                           <span class="w-9 shrink-0 select-none pr-3 text-right text-ink-3">{line.num}</span>
-                          <code class="whitespace-pre">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</code>
+                          <code class="min-w-0 whitespace-pre-wrap break-words">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</code>
                         </div>
                       ))}
                     </div>
@@ -100,7 +103,7 @@ const states = paneStates.map((s) => {
                       {st.depth.output.map((line) => (
                         <div class="flex">
                           <span class="w-9 shrink-0 select-none pr-3 text-right text-ink-3">{line.num}</span>
-                          <code class="whitespace-pre">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</code>
+                          <code class="min-w-0 whitespace-pre-wrap break-words">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</code>
                         </div>
                       ))}
                     </div>
@@ -139,7 +142,6 @@ const states = paneStates.map((s) => {
               </div>
             </div>
           </section>
-        )}
       </div>
     ))
   }

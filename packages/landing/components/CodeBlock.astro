@@ -20,7 +20,7 @@ const sizeClass = size === 12 ? "text-[12px]" : "text-[13px]";
 >
   {
     lines.map((line) => (
-      <div class="whitespace-pre">{line.map((tk) => <span class={tk.c}>{tk.t}</span>)}</div>
+      <div class="whitespace-pre-wrap break-words">{line.map((tk) => <span class={tk.c}>{tk.t}</span>)}</div>
     ))
   }
 </div>

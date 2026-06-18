@@ -55,60 +55,88 @@ export const drivers: Driver[] = [
 ];
 
 /**
- * The key themeable color values for each driver (concrete hex — NOT CSS vars —
- * so the picker island can assign them straight to `:root` for a cross-fade).
- * These mirror the per-app build-time theme in @schemic/brand/theme-<slug>.css;
- * `hub` is the agnostic schemic.dev NEUTRAL theme. Used to animate the page toward
- * a driver's palette on select (see Hero's island).
+ * The FULL themeable token set for each pane key — every `--color-*` that the
+ * standalone @schemic/brand/theme-<slug>.css overrides, as concrete hex keyed by
+ * its CSS custom-property NAME (not a CSS var, so it can be inlined on :root for
+ * the per-route SSR theme AND assigned straight to :root by the picker island for
+ * the cross-fade). Sourced 1:1 from theme-neutral.css (hub) / theme-surrealdb.css
+ * / theme-postgres.css; any token a given theme does NOT override falls back to
+ * the @schemic/brand/base.css default so the set is COMPLETE for every key —
+ * driver routes match their standalone theme exactly (borders, ink-2/3, surface-2,
+ * accent-soft/hot, code-token hues, on-accent, …), and the client-side switch
+ * never leaves a stale token from the previous palette.
+ *
+ * Only six of these (canvas, canvas-2, surface, accent, accent-2, ink) are
+ * registered <color> @property vars and CROSS-FADE on switch (see landing.css);
+ * every other token flips instantly — which is fine.
  */
-export interface DriverTheme {
-  accent: string;
-  accent2: string;
-  canvas: string;
-  canvas2: string;
-  surface: string;
-  ink: string;
-  /**
-   * Text color on top of the accent gradient. The hub's accent is LIGHT (gray)
-   * so it needs DARK on-accent text; colored drivers keep WHITE. Carried here so
-   * the client-side switch + the per-path inline theme keep accent CTAs legible
-   * even though the app's base CSS stays the neutral theme.
-   */
-  onAccent: string;
-}
+export type DriverTheme = Record<string, string>;
 
 export const driverThemes: Record<string, DriverTheme> = {
-  // schemic.dev hub — NEUTRAL, no flavor: monochrome white → gray accent on the
-  // graphite canvas (theme-neutral.css). The picker cross-fade STARTS here and
-  // animates toward a driver's color on select (no-flavor → flavored).
+  // schemic.dev hub — NEUTRAL (theme-neutral.css): monochrome white → gray accent
+  // on the warm graphite canvas; DARK on-accent (the accent is light); code tokens
+  // stay the colored base.css syntax. The picker cross-fade STARTS here.
   hub: {
-    accent: "#d8d6da",
-    accent2: "#98969a",
-    canvas: "#0c0d10",
-    canvas2: "#14151a",
-    surface: "#181a20",
-    ink: "#f5f4f1",
-    onAccent: "#141519",
+    "--color-canvas": "#0c0d10",
+    "--color-canvas-2": "#14151a",
+    "--color-surface": "#181a20",
+    "--color-surface-2": "#20222b",
+    "--color-code-bg": "#0e0f13",
+    "--color-border": "#2b2d38",
+    "--color-border-subtle": "#212430",
+    "--color-ink": "#f5f4f1",
+    "--color-ink-2": "#aea79c",
+    "--color-ink-3": "#74706a",
+    "--color-accent": "#d8d6da",
+    "--color-accent-2": "#98969a",
+    "--color-accent-soft": "#e7e5e9",
+    "--color-accent-hot": "#b6b4b8",
+    "--color-on-accent": "#141519",
+    "--color-code-comment": "#5d6170",
+    "--color-code-keyword": "#c9a6ff",
+    "--color-code-string": "#9fe3b0",
   },
-  // SurrealDB — purple → pink (theme-surrealdb.css)
+  // SurrealDB — purple → pink (theme-surrealdb.css). on-accent = base white.
   surrealdb: {
-    accent: "#9600ff",
-    accent2: "#ff85d6",
-    canvas: "#0e0c14",
-    canvas2: "#13101c",
-    surface: "#16131f",
-    ink: "#f5f3fa",
-    onAccent: "#ffffff",
+    "--color-canvas": "#0e0c14",
+    "--color-canvas-2": "#13101c",
+    "--color-surface": "#16131f",
+    "--color-surface-2": "#1c1826",
+    "--color-code-bg": "#100d18",
+    "--color-border": "#2a2438",
+    "--color-border-subtle": "#211b2d",
+    "--color-ink": "#f5f3fa",
+    "--color-ink-2": "#aaa1bb",
+    "--color-ink-3": "#6f6781",
+    "--color-accent": "#9600ff",
+    "--color-accent-2": "#ff85d6",
+    "--color-accent-soft": "#c77dff",
+    "--color-accent-hot": "#ff00a0",
+    "--color-on-accent": "#ffffff",
+    "--color-code-comment": "#5d5670",
+    "--color-code-keyword": "#c77dff",
+    "--color-code-string": "#ff85d6",
   },
-  // PostgreSQL — blue → cyan on cool slate (theme-postgres.css)
+  // PostgreSQL — blue → cyan on cool slate (theme-postgres.css). on-accent = white.
   postgres: {
-    accent: "#4aa3df",
-    accent2: "#5ec8e8",
-    canvas: "#0a0e14",
-    canvas2: "#0e131c",
-    surface: "#121823",
-    ink: "#eef3f8",
-    onAccent: "#ffffff",
+    "--color-canvas": "#0a0e14",
+    "--color-canvas-2": "#0e131c",
+    "--color-surface": "#121823",
+    "--color-surface-2": "#19202d",
+    "--color-code-bg": "#0b0f16",
+    "--color-border": "#243044",
+    "--color-border-subtle": "#1b2433",
+    "--color-ink": "#eef3f8",
+    "--color-ink-2": "#9fb0c4",
+    "--color-ink-3": "#647284",
+    "--color-accent": "#4aa3df",
+    "--color-accent-2": "#5ec8e8",
+    "--color-accent-soft": "#8fcdf0",
+    "--color-accent-hot": "#2f7fc9",
+    "--color-on-accent": "#ffffff",
+    "--color-code-comment": "#566476",
+    "--color-code-keyword": "#7cc4f0",
+    "--color-code-string": "#8fd6c0",
   },
 };
 
@@ -144,7 +172,7 @@ export function paneKeyForPath(pathname: string): string {
   return slug && drivers.some((d) => d.slug === slug) ? slug : HUB_PANE;
 }
 
-/** Theme values for a slug, falling back to the agnostic hub (neutral). */
+/** The full token set for a slug, falling back to the agnostic hub (neutral). */
 export function driverTheme(slug: string | null | undefined): DriverTheme {
   return (slug && driverThemes[slug]) || driverThemes.hub;
 }

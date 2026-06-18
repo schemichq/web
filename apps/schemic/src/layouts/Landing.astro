@@ -27,12 +27,17 @@ const {
 
 const canonical = new URL(Astro.url.pathname, Astro.site);
 
-// Inline the driver's theme on the driver routes only (hub stays neutral). Only
-// the registered @property <color> vars + on-accent are set; the rest of the
-// theme stays the neutral base (single CSS bundle for the whole single-origin app).
+// Inline the driver's FULL theme on the driver routes only (hub stays neutral).
+// We set the COMPLETE per-driver token set (every --color-* the standalone
+// theme-<slug>.css overrides — borders, ink-2/3, surface-2, accent-soft/hot,
+// code-token hues, on-accent, …), not just the 6 @property cross-fade vars, so a
+// driver route's first server render fully matches its standalone theme with no
+// flash and no half-dressed look. The hub "/" stays the neutral base CSS.
 const t = findDriver(activeDriver) ? driverTheme(activeDriver) : null;
 const themeStyle = t
-  ? `:root{--color-accent:${t.accent};--color-accent-2:${t.accent2};--color-canvas:${t.canvas};--color-canvas-2:${t.canvas2};--color-surface:${t.surface};--color-ink:${t.ink};--color-on-accent:${t.onAccent};}`
+  ? `:root{${Object.entries(t)
+      .map(([k, v]) => `${k}:${v}`)
+      .join(";")}}`
   : null;
 ---
 

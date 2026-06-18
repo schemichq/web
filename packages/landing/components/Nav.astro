@@ -1,13 +1,10 @@
 ---
-// NOTE (IA TBD): the hub (schemic.dev) has no /docs of its own — docs live on
-// the per-driver subdomains. Pointing at the shipped flagship driver for now;
-// revisit once the hub IA is settled.
 import {
   drivers as driverList,
   driverUrl,
-  flagshipDriver,
   findDriver,
-  REPO_URL,
+  paneStates,
+  paneKeyFor,
   SUGGEST_DRIVER_URL,
 } from "../config/drivers";
 import DbMenu from "./DbMenu.astro";
@@ -18,8 +15,6 @@ interface Props {
 }
 const { activeDriver = null } = Astro.props;
 
-const flagship = driverUrl(flagshipDriver.slug);
-
 // Compact nav picker — persistent while scrolling (the nav is sticky). On the
 // agnostic hub no driver is selected: it shows a "Select database" prompt; on a
 // driver subdomain it shows that driver's name + brand dot. Shares the roster +
@@ -27,16 +22,19 @@ const flagship = driverUrl(flagshipDriver.slug);
 const isHub = activeDriver == null;
 const navDriver = findDriver(activeDriver);
 
-const links = [
-  { label: "Docs", href: `${flagship}/docs/introduction` },
-  { label: "Drivers", href: flagship },
-];
-
-// Feather "star" — filled, tinted with the theme accent in the count chip.
-const starIcon =
-  '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>';
-const githubMark =
-  '<path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.69 5.41-5.25 5.69.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"></path>';
+// Driver-specific nav links resolve to the ACTIVE driver. Each is rendered as a
+// `[data-driver-pane]` variant (like the hero CTAs) so the client-side picker
+// switch keeps it pointed at the current driver with NO reload. On the agnostic
+// hub (no driver) they OPEN the hero picker (`data-open-picker`) instead of
+// pointing at a wrong/dead driver link. Non-driver links (the brand, and
+// "Drivers" → the hub home) stay static.
+const activeKey = paneKeyFor(activeDriver);
+const linkStates = paneStates.map((s) => ({
+  key: s.key,
+  hidden: s.key !== activeKey,
+  docs: s.slug ? `${driverUrl(s.slug)}/docs/introduction` : null,
+  start: s.slug ? driverUrl(s.slug) : null,
+}));
 ---
 
 <header
@@ -59,16 +57,39 @@ const githubMark =
 
     <!-- center: nav links -->
     <div class="hidden items-center gap-8 justify-self-center md:flex">
+      {/* Docs — resolves to the ACTIVE driver's docs; on the hub it opens the
+          hero picker so the visitor chooses a database first. */}
       {
-        links.map((link) => (
-          <a
-            href={link.href}
-            class="text-sm text-ink-2 transition-colors hover:text-ink"
-          >
-            {link.label}
-          </a>
-        ))
+        linkStates.map((st) =>
+          st.docs ? (
+            <a
+              href={st.docs}
+              data-driver-pane={st.key}
+              hidden={st.hidden}
+              class="text-sm text-ink-2 transition-colors hover:text-ink"
+            >
+              Docs
+            </a>
+          ) : (
+            <button
+              type="button"
+              data-open-picker
+              data-driver-pane={st.key}
+              hidden={st.hidden}
+              class="text-sm text-ink-2 transition-colors hover:text-ink"
+            >
+              Docs
+            </button>
+          ),
+        )
       }
+      {/* Neutral, not driver-specific: the agnostic hub home. */}
+      <a
+        href="/"
+        class="text-sm text-ink-2 transition-colors hover:text-ink"
+      >
+        Drivers
+      </a>
     </div>
 
     <!-- right: actions -->
@@ -121,46 +142,33 @@ const githubMark =
           align="right"
         />
       </div>
-      <!--
-        GitHub star button. Plain "GitHub" link by default; the star-count chip
-        is hidden until the island confirms a numeric count, so when the count
-        is unavailable there's NO empty gap / no "0" flash (graceful).
-      -->
-      <a
-        href={REPO_URL}
-        aria-label="Schemic on GitHub"
-        class="hidden items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-sm text-ink-2 transition-colors hover:border-accent/50 hover:text-ink sm:inline-flex"
-      >
-        <svg
-          class="size-4"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          aria-hidden="true"
-          set:html={githubMark}
-        />
-        <span>GitHub</span>
-        <span
-          data-gh-star-count
-          hidden
-          class="inline-flex items-center gap-1 border-l border-border pl-2 font-medium text-ink"
-        >
-          <svg
-            class="size-3.5 text-accent"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            stroke="none"
-            aria-hidden="true"
-            set:html={starIcon}
-          />
-          <span data-gh-count></span>
-        </span>
-      </a>
-      <a
-        href={flagship}
-        class="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-canvas transition-colors hover:bg-white"
-      >
-        Get started
-      </a>
+      <!-- Get started — driver-dynamic (resolves to the ACTIVE driver's site);
+           on the hub it opens the hero picker. Rendered as `[data-driver-pane]`
+           variants so the client-side switch keeps it on the current driver. -->
+      {
+        linkStates.map((st) =>
+          st.start ? (
+            <a
+              href={st.start}
+              data-driver-pane={st.key}
+              hidden={st.hidden}
+              class="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-canvas transition-colors hover:bg-white"
+            >
+              Get started
+            </a>
+          ) : (
+            <button
+              type="button"
+              data-open-picker
+              data-driver-pane={st.key}
+              hidden={st.hidden}
+              class="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-canvas transition-colors hover:bg-white"
+            >
+              Get started
+            </button>
+          ),
+        )
+      }
     </div>
   </nav>
 </header>

@@ -50,19 +50,13 @@ const applyTheme = (vars: Record<string, string>, animate: boolean): void => {
   }
 };
 
-// The :root color vars for a pane key (falls back to the agnostic hub theme).
-const themeVarsFor = (key: string): Record<string, string> => {
-  const t = driverThemes[key] ?? driverThemes[HUB_PANE];
-  return {
-    "--color-accent": t.accent,
-    "--color-accent-2": t.accent2,
-    "--color-canvas": t.canvas,
-    "--color-canvas-2": t.canvas2,
-    "--color-surface": t.surface,
-    "--color-ink": t.ink,
-    "--color-on-accent": t.onAccent,
-  };
-};
+// The FULL :root color-token set for a pane key (the complete per-driver theme —
+// every --color-* the standalone theme overrides, not just the 6 cross-fade
+// vars), falling back to the agnostic hub theme. The six registered @property
+// <color> tokens cross-fade; the rest flip instantly (borders/ink-2/code hues/…),
+// so the client-side switch is fully themed with no half-dressed look.
+const themeVarsFor = (key: string): Record<string, string> =>
+  driverThemes[key] ?? driverThemes[HUB_PANE];
 
 // Show only the panes (example variants + driver CTAs) for the active key.
 const setPanes = (key: string): void => {
@@ -260,10 +254,13 @@ export function initPickers(): void {
     ctls.push({ el, label, options, open: openMenu, close: closeMenu });
   }
 
-  // "Select a database" overlay CTAs (agnostic hub) -> open the nav picker (it's
-  // sticky/always on screen); fall back to the first picker if no nav one.
-  const navCtl = ctls.find((c) => c.el.dataset.dbPicker === "nav") ?? ctls[0];
-  if (navCtl)
+  // "Select a database" overlay CTAs + hub nav links + the hero primary CTA
+  // (`[data-open-picker]`) open the HERO (headline) picker — the prominent
+  // in-hero database dropdown — NOT the compact nav one. That's the picker whose
+  // `[data-db-picker]` is anything other than "nav"; fall back to the first.
+  const heroCtl =
+    ctls.find((c) => c.el.dataset.dbPicker !== "nav") ?? ctls[0];
+  if (heroCtl)
     for (const btn of document.querySelectorAll<HTMLElement>(
       "[data-open-picker]",
     ))
@@ -271,8 +268,8 @@ export function initPickers(): void {
         // Stop the click bubbling to the document click-outside handler, which
         // would otherwise immediately re-close the menu we just opened.
         e.stopPropagation();
-        navCtl.el.scrollIntoView({ block: "nearest" });
-        navCtl.open();
+        heroCtl.el.scrollIntoView({ block: "nearest" });
+        heroCtl.open();
       });
 
   // Back/forward re-applies the pane for the path (animated unless reduced). The

@@ -68,9 +68,9 @@ const states = paneStates.map((s) => ({
               {st.blocks.map((block, i) => (
                 <Fragment>
                   {i > 0 && <div class="h-2"></div>}
-                  <div class="flex items-center gap-2"><span class="text-accent-2">$</span><span class="text-code-plain">{block.cmd}</span></div>
+                  <div class="flex items-center gap-2"><span class="text-accent-2">$</span><span class="min-w-0 break-words text-code-plain">{block.cmd}</span></div>
                   {block.outputs.map((o) => (
-                    <div class:list={["whitespace-pre", o.c]}>{o.t}</div>
+                    <div class:list={["whitespace-pre-wrap break-words", o.c]}>{o.t}</div>
                   ))}
                 </Fragment>
               ))}

@@ -384,22 +384,29 @@ const postgres: DriverExamples = {
     },
   ],
 
-  // No pg analog today: @schemic/postgres registers only table/index/constraint
-  // (no DEFINE ACCESS/EVENT/FUNCTION authoring — verified against the registry on
-  // main). depth.available=false hides the whole Depth section on the pg page.
+  // The Depth section renders on EVERY route with the SAME layout — only the code
+  // shown changes (Depth.astro no longer gates on `available`). Postgres has no
+  // analog of DEFINE ACCESS/EVENT/FUNCTION today (@schemic/postgres registers only
+  // table/index/constraint), so we show a graceful placeholder note instead of
+  // real DDL. available stays true so the section is present.
+  // TODO: confirm postgres depth content (roles / RLS policies / triggers) once
+  // the @schemic/postgres driver authors them.
   depth: {
-    available: false,
+    available: true,
     title: "access.ts → access.sql",
     inputFile: "access.ts",
     inputLang: "TypeScript",
     outputFile: "access.sql",
     outputLang: "PostgreSQL",
     input: [
-      { num: 1, tokens: [{ t: "// Not applicable: @schemic/postgres does not author", c: cm }] },
-      { num: 2, tokens: [{ t: "// events / functions / access rules today.", c: cm }] },
+      { num: 1, tokens: [{ t: "// TODO: confirm postgres depth content", c: cm }] },
+      { num: 2, tokens: [{ t: "// Roles, RLS policies & triggers — authored from", c: cm }] },
+      { num: 3, tokens: [{ t: "// the same typed source. @schemic/postgres", c: cm }] },
+      { num: 4, tokens: [{ t: "// driver support coming.", c: cm }] },
     ],
     output: [
-      { num: 1, tokens: [{ t: "-- Not applicable for @schemic/postgres.", c: cm }] },
+      { num: 1, tokens: [{ t: "-- Postgres: roles, RLS policies & triggers —", c: cm }] },
+      { num: 2, tokens: [{ t: "-- driver support coming.", c: cm }] },
     ],
   },
 

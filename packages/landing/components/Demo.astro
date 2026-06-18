@@ -251,7 +251,7 @@ const comingSoon = [
                             <span class="w-8 shrink-0 select-none pr-3 text-right text-ink-3">
                               {line.num}
                             </span>
-                            <code class="whitespace-pre">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</code>
+                            <code class="min-w-0 whitespace-pre-wrap break-words">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</code>
                           </div>
                         ))}
                       </div>
@@ -297,7 +297,7 @@ const comingSoon = [
                             <span class="w-8 shrink-0 select-none pr-3 text-right text-ink-3">
                               {line.num}
                             </span>
-                            <code class="whitespace-pre">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</code>
+                            <code class="min-w-0 whitespace-pre-wrap break-words">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</code>
                           </div>
                         ))}
                       </div>
@@ -377,7 +377,7 @@ const comingSoon = [
                   <div data-driver-pane={st.key} hidden={st.hidden}>
                     {st.isHub && <SelectOverlay />}
                     {st.ex.migrations.map((l) => (
-                      <div class="whitespace-pre"><span class={l.symC}>{l.sym}</span><span class={l.msgC}>{l.msg}</span></div>
+                      <div class="whitespace-pre-wrap break-words"><span class={l.symC}>{l.sym}</span><span class={l.msgC}>{l.msg}</span></div>
                     ))}
                   </div>
                 ))
@@ -407,7 +407,7 @@ const comingSoon = [
                     {st.ex.types.query.map((line) => (
                       <div class="flex">
                         <span class="w-8 shrink-0 select-none pr-3 text-right text-ink-3">{line.num}</span>
-                        <code class="whitespace-pre">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</code>
+                        <code class="min-w-0 whitespace-pre-wrap break-words">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</code>
                       </div>
                     ))}
                     {/* autocomplete dropdown */}
@@ -452,12 +452,12 @@ const comingSoon = [
                 states.map((st) => (
                   <div data-driver-pane={st.key} hidden={st.hidden}>
                     {st.isHub && <SelectOverlay />}
-                    <div class="whitespace-pre text-ink-3"><span class="text-accent-2">$</span> sc diff --live</div>
-                    <div class="mb-2 whitespace-pre text-ink-3">~ comparing schema.ts ↔ running database</div>
+                    <div class="whitespace-pre-wrap break-words text-ink-3"><span class="text-accent-2">$</span> sc diff --live</div>
+                    <div class="mb-2 whitespace-pre-wrap break-words text-ink-3">~ comparing schema.ts ↔ running database</div>
                     {st.ex.live.map((line) => (
-                      <div class="whitespace-pre pl-2">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</div>
+                      <div class="whitespace-pre-wrap break-words pl-2">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</div>
                     ))}
-                    <div class="mt-2 whitespace-pre text-ink-2">{st.driftCount} {st.driftCount === 1 ? "change" : "changes"} · run <span class="text-accent-soft">sc sync</span> to reconcile</div>
+                    <div class="mt-2 whitespace-pre-wrap break-words text-ink-2">{st.driftCount} {st.driftCount === 1 ? "change" : "changes"} · run <span class="text-accent-soft">sc sync</span> to reconcile</div>
                   </div>
                 ))
               }

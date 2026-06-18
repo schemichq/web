@@ -6,6 +6,7 @@
   "description": "Shared Schemic marketing landing: one theme-agnostic hub landing (Banner · Nav · Hero · DriftProblem · Demo · Bento · CLISpotlight · Depth · FAQ · FinalCTA · Footer) re-themed per subdomain. Parametrized by activeDriver; the cross-subdomain database switcher lives in the hero.",
   "exports": {
     "./landing.css": "./landing.css",
+    "./og/card": "./og/card.ts",
     "./*": "./*"
   },
   "files": [
@@ -13,10 +14,15 @@
     "Landing.astro",
     "landing.css",
     "components",
-    "config"
+    "config",
+    "og"
   ],
   "dependencies": {
+    "@fontsource/geist-sans": "^5.2.5",
+    "@fontsource/jetbrains-mono": "^5.2.8",
     "@schemic/brand": "workspace:*",
+    "satori": "^0.26.0",
+    "sharp": "^0.35.1",
     "tailwindcss": "^4.3.0"
   }
 }

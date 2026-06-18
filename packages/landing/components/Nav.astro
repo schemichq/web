@@ -173,12 +173,14 @@ const linkStates = paneStates.map((s) => ({
 
   <!-- mobile menu — toggled by the hamburger; holds the links that are
        desktop-only in the bar. Driver-aware: real links once a database is
-       chosen, otherwise they open the picker (like the bar's CTAs). -->
+       chosen, otherwise they open the picker (like the bar's CTAs). Floats as an
+       overlay (absolute, OUT of flow) so opening it never shifts the page; the
+       backdrop scrim after </header> separates it from the content. -->
   <div
     id="mobile-menu"
     data-mobile-menu
     hidden
-    class="border-t border-border-subtle bg-canvas/95 backdrop-blur-md md:hidden"
+    class="absolute inset-x-0 top-full z-50 border-b border-border-subtle bg-canvas/95 shadow-2xl shadow-black/50 backdrop-blur-md md:hidden"
   >
     <div class="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-3">
       {
@@ -264,6 +266,18 @@ const linkStates = paneStates.map((s) => ({
     })();
   </script>
 </header>
+
+<!-- Mobile-menu backdrop scrim — deliberately OUTSIDE <header>: the header's
+     backdrop-blur establishes a containing block, so a `fixed` child would
+     resolve to the header box, not the viewport. Placed here it covers the page
+     below the bar (top-16) to separate the floating menu from the content; tap
+     to close. Toggled with the menu by Nav's script. -->
+<div
+  data-nav-backdrop
+  hidden
+  class="fixed inset-x-0 bottom-0 top-16 z-40 bg-black/50 backdrop-blur-sm md:hidden"
+>
+</div>
 
 <style is:global>
   /* The Docs/Examples links stay hidden until a database is selected, and only
@@ -382,15 +396,22 @@ const linkStates = paneStates.map((s) => ({
   // or any item activation.
   const navToggle = document.querySelector<HTMLElement>("[data-nav-toggle]");
   const navMenu = document.getElementById("mobile-menu");
+  const navBackdrop =
+    document.querySelector<HTMLElement>("[data-nav-backdrop]");
   if (navToggle && navMenu) {
     const setOpen = (open: boolean): void => {
       navMenu.hidden = !open;
+      if (navBackdrop) navBackdrop.hidden = !open;
       navToggle.setAttribute("aria-expanded", String(open));
+      // Lock page scroll behind the scrim while the menu is open.
+      document.body.style.overflow = open ? "hidden" : "";
     };
     navToggle.addEventListener("click", (e) => {
       e.stopPropagation();
       setOpen(navMenu.hidden);
     });
+    if (navBackdrop)
+      navBackdrop.addEventListener("click", () => setOpen(false));
     document.addEventListener("click", (e) => {
       if (
         !navMenu.hidden &&

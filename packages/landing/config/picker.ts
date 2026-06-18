@@ -255,12 +255,15 @@ export function initPickers(): void {
   }
 
   // "Select a database" overlay CTAs + hub nav links + the hero primary CTA
-  // (`[data-open-picker]`) open the HERO (headline) picker — the prominent
-  // in-hero database dropdown — NOT the compact nav one. That's the picker whose
-  // `[data-db-picker]` is anything other than "nav"; fall back to the first.
-  const heroCtl =
-    ctls.find((c) => c.el.dataset.dbPicker !== "nav") ?? ctls[0];
-  if (heroCtl)
+  // (`[data-open-picker]`) open the NAV picker IN PLACE. The nav is sticky/always
+  // pinned to the top of the viewport, so its dropdown appears inline with NO page
+  // scroll. (Opening the hero/headline picker would scrollIntoView up to the hero,
+  // which reads as a jarring "redirect" from buttons lower on the page.) No
+  // scrollIntoView: the sticky nav is already on screen, and scrolling a sticky
+  // element jumps to its document-flow position (the very top). Fall back to the
+  // first picker if there's no nav one.
+  const navCtl = ctls.find((c) => c.el.dataset.dbPicker === "nav") ?? ctls[0];
+  if (navCtl)
     for (const btn of document.querySelectorAll<HTMLElement>(
       "[data-open-picker]",
     ))
@@ -268,8 +271,7 @@ export function initPickers(): void {
         // Stop the click bubbling to the document click-outside handler, which
         // would otherwise immediately re-close the menu we just opened.
         e.stopPropagation();
-        heroCtl.el.scrollIntoView({ block: "nearest" });
-        heroCtl.open();
+        navCtl.open();
       });
 
   // Back/forward re-applies the pane for the path (animated unless reduced). The

@@ -33,6 +33,10 @@ import {
   examplesCatalog,
   type CatalogExample,
 } from "../config/examples-catalog";
+// Display-time DDL pretty-printer (whitespace-only) — reflows long single-line
+// SurrealQL goldens across indented clause lines so the code column never scrolls
+// horizontally. SQL passes through untouched. See config/format-ddl.ts.
+import { formatDdl } from "../config/format-ddl";
 // Hand-written SurrealQL TextMate grammar (source.surql) — passed to Astro's
 // <Code> as a custom Shiki language so DDL highlights correctly with the brand
 // theme (DEFINE/TYPE/ASSERT as keywords, record/datetime as types,
@@ -99,11 +103,13 @@ function ddlLabel(lang: string): string {
 }
 
 // Shared <Code> options so TS + DDL blocks render with identical brand colors.
-const codeAttrs = { theme: brandShikiTheme, wrap: false } as const;
+// `wrap` soft-wraps long lines instead of showing a horizontal scrollbar — paired
+// with formatDdl()'s clause reflow, the code columns never scroll sideways.
+const codeAttrs = { theme: brandShikiTheme, wrap: true } as const;
 ---
 
 <Nav activeDriver={activeDriver} />
-<main class="mx-auto max-w-6xl px-6 py-16 sm:py-20">
+<main class="mx-auto max-w-6xl px-6 py-12 sm:py-16">
   <!-- header -->
   <header class="max-w-2xl">
     <p
@@ -164,13 +170,13 @@ const codeAttrs = { theme: brandShikiTheme, wrap: false } as const;
               ))}
             </div>
           )}
-          <div class="mt-10 space-y-14">
+          <div class="mt-8 space-y-10">
             {grps.map((grp) => (
               <div data-group-section data-group-slug={slugifyGroup(grp.group)}>
                 <h2 class="text-sm font-semibold uppercase tracking-[0.12em] text-ink-3">
                   {grp.group}
                 </h2>
-                <div class="mt-5 space-y-8">
+                <div class="mt-5 space-y-6">
               {grp.items.map((ex) => (
                 <article class="overflow-hidden rounded-2xl border border-border bg-surface">
                   <div class="border-b border-border-subtle px-5 py-4">
@@ -207,7 +213,7 @@ const codeAttrs = { theme: brandShikiTheme, wrap: false } as const;
                         </span>
                       </div>
                       <div class="overflow-x-auto p-4 text-sm [&_pre]:!bg-transparent">
-                        <Code code={ex.ddl} lang={ddlLang(ex.lang)} {...codeAttrs} />
+                        <Code code={formatDdl(ex.ddl, ex.lang)} lang={ddlLang(ex.lang)} {...codeAttrs} />
                       </div>
                     </div>
                   </div>

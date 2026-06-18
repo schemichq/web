@@ -105,19 +105,118 @@ const linkStates = paneStates.map((s) => ({
           ))
         }
       </div>
-      <!-- picker home on the agnostic hub (centered) -->
+      <!-- picker home: CENTERED here by default, and ALWAYS centered on mobile.
+           On desktop, Nav's script slides it to the right slot once a database
+           is selected. SSR always renders it here; an inline script below moves
+           it right pre-paint on desktop+selected routes (no flash). -->
       <div data-picker-slot="center" class="flex items-center">
-        {isHub && <NavDbPicker navDriver={navDriver} isHub={isHub} />}
+        <NavDbPicker navDriver={navDriver} isHub={isHub} />
       </div>
     </div>
 
     <!-- right: actions -->
     <div class="flex items-center gap-3 justify-self-end sm:gap-5">
-      <!-- picker home once a database is selected (beside Get started) -->
-      <div data-picker-slot="right" class="flex items-center">
-        {!isHub && <NavDbPicker navDriver={navDriver} isHub={isHub} />}
+      <!-- picker home once a database is selected (desktop only; the picker is
+           reparented here by Nav's script). Stays empty on mobile, where the
+           picker remains centered. -->
+      <div data-picker-slot="right" class="flex items-center"></div>
+      <!-- Get started — DESKTOP only; driver-dynamic (opens the picker on the
+           hub). On mobile it lives in the hamburger menu below. -->
+      <div class="hidden items-center md:flex">
+        {
+          linkStates.map((st) =>
+            st.start ? (
+              <a
+                href={st.start}
+                data-driver-pane={st.key}
+                hidden={st.hidden}
+                class="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-canvas transition-colors hover:bg-white"
+              >
+                Get started
+              </a>
+            ) : (
+              <button
+                type="button"
+                data-open-picker
+                data-driver-pane={st.key}
+                hidden={st.hidden}
+                class="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-canvas transition-colors hover:bg-white"
+              >
+                Get started
+              </button>
+            ),
+          )
+        }
       </div>
-      <!-- Get started — driver-dynamic; on the hub it opens the picker. -->
+      <!-- Hamburger — MOBILE only; opens the menu with Docs/Examples/Get started. -->
+      <button
+        type="button"
+        data-nav-toggle
+        aria-label="Open menu"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+        class="grid size-9 place-items-center rounded-lg border border-border text-ink-2 transition-colors hover:border-accent/50 hover:text-ink md:hidden"
+      >
+        <svg
+          class="size-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg
+        >
+      </button>
+    </div>
+  </nav>
+
+  <!-- mobile menu — toggled by the hamburger; holds the links that are
+       desktop-only in the bar. Driver-aware: real links once a database is
+       chosen, otherwise they open the picker (like the bar's CTAs). -->
+  <div
+    id="mobile-menu"
+    data-mobile-menu
+    hidden
+    class="border-t border-border-subtle bg-canvas/95 backdrop-blur-md md:hidden"
+  >
+    <div class="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-3">
+      {
+        linkStates.map((st) =>
+          st.docs ? (
+            <a
+              href={st.docs}
+              data-driver-pane={st.key}
+              hidden={st.hidden}
+              class="rounded-lg px-3 py-2.5 text-sm text-ink-2 transition-colors hover:bg-white/[0.05] hover:text-ink"
+            >
+              Docs
+            </a>
+          ) : (
+            <button
+              type="button"
+              data-open-picker
+              data-driver-pane={st.key}
+              hidden={st.hidden}
+              class="rounded-lg px-3 py-2.5 text-left text-sm text-ink-2 transition-colors hover:bg-white/[0.05] hover:text-ink"
+            >
+              Docs
+            </button>
+          ),
+        )
+      }
+      {
+        linkStates.map((st) => (
+          <a
+            href={st.examples}
+            data-driver-pane={st.key}
+            hidden={st.hidden}
+            class="rounded-lg px-3 py-2.5 text-sm text-ink-2 transition-colors hover:bg-white/[0.05] hover:text-ink"
+          >
+            Examples
+          </a>
+        ))
+      }
       {
         linkStates.map((st) =>
           st.start ? (
@@ -125,7 +224,7 @@ const linkStates = paneStates.map((s) => ({
               href={st.start}
               data-driver-pane={st.key}
               hidden={st.hidden}
-              class="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-canvas transition-colors hover:bg-white"
+              class="mt-1 rounded-full bg-ink px-4 py-2.5 text-center text-sm font-semibold text-canvas transition-colors hover:bg-white"
             >
               Get started
             </a>
@@ -135,7 +234,7 @@ const linkStates = paneStates.map((s) => ({
               data-open-picker
               data-driver-pane={st.key}
               hidden={st.hidden}
-              class="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-canvas transition-colors hover:bg-white"
+              class="mt-1 rounded-full bg-ink px-4 py-2.5 text-center text-sm font-semibold text-canvas transition-colors hover:bg-white"
             >
               Get started
             </button>
@@ -143,7 +242,27 @@ const linkStates = paneStates.map((s) => ({
         )
       }
     </div>
-  </nav>
+  </div>
+
+  <!-- Pre-paint picker placement (no flash): the picker SSRs into the center
+       slot; on a desktop + selected route move it to the right slot before the
+       first paint. Mobile + the hub keep it centered. -->
+  <script is:inline>
+    (function () {
+      var h = document.querySelector("header[data-db-selected]");
+      if (!h) return;
+      var picker = h.querySelector('[data-db-picker="nav"]');
+      var center = h.querySelector('[data-picker-slot="center"]');
+      var right = h.querySelector('[data-picker-slot="right"]');
+      if (!picker || !center || !right) return;
+      var target =
+        window.matchMedia("(min-width: 768px)").matches &&
+        h.dataset.dbSelected === "true"
+          ? right
+          : center;
+      if (picker.parentElement !== target) target.appendChild(picker);
+    })();
+  </script>
 </header>
 
 <style is:global>
@@ -201,43 +320,44 @@ const linkStates = paneStates.map((s) => ({
     '[data-picker-slot="right"]',
   );
   const links = document.querySelector<HTMLElement>("[data-nav-links]");
+  const desktop = window.matchMedia("(min-width: 768px)");
 
   if (header && picker && centerSlot && rightSlot) {
     const reduce = (): boolean =>
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const isSelected = (): boolean => header.dataset.dbSelected === "true";
 
-    const setSelected = (selected: boolean): void => {
-      // No-op when already in the requested state.
-      if ((header.dataset.dbSelected === "true") === selected) return;
-
-      const target = selected ? rightSlot : centerSlot;
-      if (picker.parentElement === target) {
-        header.dataset.dbSelected = String(selected);
-        return;
-      }
-
-      // FLIP: measure, reparent + flip the state attribute (which restyles the
-      // trigger + reveals the links), measure again, then play the inverse.
+    // Place the picker in the slot for the current breakpoint + state: DESKTOP +
+    // a selected database -> right slot (beside Get started); the hub, and ALL of
+    // mobile -> centered. FLIP-animates the move when `animate` is set.
+    const placePicker = (animate: boolean): void => {
+      const target = desktop.matches && isSelected() ? rightSlot : centerSlot;
+      if (picker.parentElement === target) return;
       const first = picker.getBoundingClientRect();
       target.appendChild(picker);
-      header.dataset.dbSelected = String(selected);
       const last = picker.getBoundingClientRect();
       const dx = first.left - last.left;
       const dy = first.top - last.top;
-
-      if (!reduce() && typeof picker.animate === "function" && (dx || dy)) {
+      if (animate && !reduce() && typeof picker.animate === "function" && (dx || dy)) {
         picker.animate(
-          [
-            { transform: `translate(${dx}px, ${dy}px)` },
-            { transform: "none" },
-          ],
+          [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "none" }],
           { duration: 420, easing: "cubic-bezier(.4, 0, .2, 1)" },
         );
       }
+    };
 
-      // Subtle reveal of the links when entering the selected state.
+    // Live driver switch (in-page select OR back/forward): flip the state attr
+    // (restyles the trigger + reveals/hides the desktop links) and re-place the
+    // picker — animated on desktop, a no-op on mobile (it stays centered).
+    document.addEventListener("schemic:driverswitch", (e) => {
+      const key = (e as CustomEvent<{ key: string }>).detail?.key;
+      if (typeof key !== "string") return;
+      const selected = key !== HUB_PANE;
+      header.dataset.dbSelected = String(selected);
+      placePicker(true);
       if (
         selected &&
+        desktop.matches &&
         links &&
         !reduce() &&
         typeof links.animate === "function"
@@ -248,12 +368,52 @@ const linkStates = paneStates.map((s) => ({
           easing: "ease-out",
         });
       }
-    };
-
-    document.addEventListener("schemic:driverswitch", (e) => {
-      const key = (e as CustomEvent<{ key: string }>).detail?.key;
-      if (typeof key === "string") setSelected(key !== HUB_PANE);
     });
+
+    // Re-place (no animation) when crossing the md breakpoint, so the picker ends
+    // up centered on mobile and right-when-selected on desktop.
+    desktop.addEventListener("change", () => placePicker(false));
+    // Idempotent reconcile on load (the inline pre-paint script normally already
+    // placed it; this covers the no-inline-JS-timing edge).
+    placePicker(false);
+  }
+
+  // Mobile menu (hamburger): toggle the panel; close on outside-click, Escape,
+  // or any item activation.
+  const navToggle = document.querySelector<HTMLElement>("[data-nav-toggle]");
+  const navMenu = document.getElementById("mobile-menu");
+  if (navToggle && navMenu) {
+    const setOpen = (open: boolean): void => {
+      navMenu.hidden = !open;
+      navToggle.setAttribute("aria-expanded", String(open));
+    };
+    navToggle.addEventListener("click", (e) => {
+      e.stopPropagation();
+      setOpen(navMenu.hidden);
+    });
+    document.addEventListener("click", (e) => {
+      if (
+        !navMenu.hidden &&
+        e.target instanceof Node &&
+        !navMenu.contains(e.target) &&
+        !navToggle.contains(e.target)
+      )
+        setOpen(false);
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !navMenu.hidden) setOpen(false);
+    });
+    // Close on item activation. Capture phase, so a child handler that stops
+    // propagation (hub links open the picker via data-open-picker) can't keep
+    // the menu open.
+    navMenu.addEventListener(
+      "click",
+      (e) => {
+        if (e.target instanceof Element && e.target.closest("a, button"))
+          setOpen(false);
+      },
+      true,
+    );
   }
 </script>
 

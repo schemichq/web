@@ -84,3 +84,16 @@ export function findDriver(slug: string | null | undefined): Driver | null {
   if (!slug) return null;
   return drivers.find((d) => d.slug === slug) ?? null;
 }
+
+/**
+ * "Suggest a database" destination — opens a pre-filled driver-request issue on
+ * the library repo so community demand is tracked (👍 reactions = signal).
+ * Swap this single constant to change where requests land.
+ */
+export const SUGGEST_DRIVER_URL =
+  "https://github.com/schemichq/schemic/issues/new?labels=driver-request&title=" +
+  encodeURIComponent("Driver request: ") +
+  "&body=" +
+  encodeURIComponent(
+    "**Which database should Schemic support?**\n\n_e.g. CockroachDB, DuckDB, Cassandra…_\n\n**What would you build with it?** (optional)\n\n",
+  );

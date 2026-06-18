@@ -1,6 +1,15 @@
 ---
 import { driverUrl, flagshipDriver } from "../config/drivers";
 
+interface Props {
+  /** Slug of the driver this site represents; null = agnostic hub. */
+  activeDriver?: string | null;
+}
+const { activeDriver = null } = Astro.props;
+// The Ambassador credit ties to one driver, so it only shows on that driver's
+// site; the agnostic hub (and other drivers) drop it.
+const showAmbassador = activeDriver === "surrealdb";
+
 const repo = "https://github.com/schemichq/schemic";
 // NOTE (IA TBD): docs live on the per-driver subdomains, not the hub; pointing
 // at the shipped flagship driver for now.
@@ -90,19 +99,23 @@ const award =
       class="mx-auto flex max-w-6xl flex-col items-center gap-3 px-6 py-4 text-center sm:flex-row sm:justify-between sm:text-left"
     >
       <span class="text-[13px] text-ink-3">MIT License © 2026 Schemic</span>
-      <span class="flex items-center gap-1.5 text-[13px] text-ink-3">
-        <svg
-          class="size-3.5 text-accent-2"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          set:html={award}
-        />
-        Built by a SurrealDB Ambassador
-      </span>
+      {
+        showAmbassador && (
+          <span class="flex items-center gap-1.5 text-[13px] text-ink-3">
+            <svg
+              class="size-3.5 text-accent-2"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              set:html={award}
+            />
+            Built by a SurrealDB Ambassador
+          </span>
+        )
+      }
       <span class="font-mono text-xs text-ink-3">SurrealDB live · Postgres soon · Zod 4</span>
     </div>
   </div>

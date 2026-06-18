@@ -11,6 +11,7 @@ import {
   isAvailable,
   flagshipDriver,
   findDriver,
+  SUGGEST_DRIVER_URL,
 } from "../config/drivers";
 
 interface Props {
@@ -139,6 +140,20 @@ const chevron = '<path d="m6 9 6 6 6-6"/>';
                 </div>
               ))
             }
+
+            <!-- suggest a database (community demand tracking) -->
+            <div class="mx-1 my-1 h-px bg-border/60" aria-hidden="true"></div>
+            <a
+              id="db-suggest"
+              href={SUGGEST_DRIVER_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              tabindex="-1"
+              class="flex items-center justify-between gap-2 rounded-xl px-3 py-2 font-sans text-[13px] text-ink-3 outline-none transition-colors hover:bg-white/[0.05] hover:text-ink-2 focus-visible:bg-white/[0.07]"
+            >
+              <span>Don't see your database? Suggest one</span>
+              <span aria-hidden="true">&rarr;</span>
+            </a>
           </div>
         </span> schema,
       </span>
@@ -207,6 +222,9 @@ const chevron = '<path d="m6 9 6 6 6-6"/>';
     const options = Array.from(
       menu.querySelectorAll<HTMLElement>('[role="option"]'),
     );
+    const suggest = menu.querySelector<HTMLAnchorElement>("#db-suggest");
+    // Navigable sequence = driver options + the "suggest a database" link.
+    const items: HTMLElement[] = suggest ? [...options, suggest] : options;
     let open = false;
     let active = Math.max(
       0,
@@ -214,11 +232,11 @@ const chevron = '<path d="m6 9 6 6 6-6"/>';
     );
 
     const setActive = (i: number) => {
-      active = (i + options.length) % options.length;
-      options.forEach((o, idx) =>
+      active = (i + items.length) % items.length;
+      items.forEach((o, idx) =>
         o.setAttribute("tabindex", idx === active ? "0" : "-1"),
       );
-      options[active].focus();
+      items[active].focus();
     };
 
     const openMenu = () => {
@@ -291,12 +309,14 @@ const chevron = '<path d="m6 9 6 6 6-6"/>';
           break;
         case "End":
           e.preventDefault();
-          setActive(options.length - 1);
+          setActive(items.length - 1);
           break;
         case "Enter":
         case " ":
           e.preventDefault();
-          select(options[active]);
+          if (items[active] instanceof HTMLAnchorElement)
+            items[active].click();
+          else select(items[active]);
           break;
         case "Tab":
           closeMenu(false);
@@ -310,6 +330,14 @@ const chevron = '<path d="m6 9 6 6 6-6"/>';
         if (active !== i) setActive(i);
       });
     });
+
+    // The suggest link navigates natively on click; sync hover-active state.
+    if (suggest) {
+      suggest.addEventListener("mousemove", () => {
+        const i = items.indexOf(suggest);
+        if (active !== i) setActive(i);
+      });
+    }
 
     document.addEventListener("click", (e) => {
       if (

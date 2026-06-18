@@ -133,6 +133,13 @@ export const REPO_URL = "https://github.com/schemichq/schemic";
 export interface CTALink {
   label: string;
   href: string;
+  /**
+   * When true this CTA is a database-picker trigger, not a navigation link:
+   * the marketing surfaces render it as a `<button data-open-picker>` (which
+   * config/picker.ts wires to open the picker) instead of an `<a href>`. Used
+   * for the agnostic hub's primary CTA ("Choose your database").
+   */
+  openPicker?: boolean;
 }
 
 /**
@@ -162,6 +169,21 @@ export function ctaFor(activeDriver?: string | null): DriverCTA {
   const driver = findDriver(activeDriver) ?? flagshipDriver;
   const url = driverUrl(driver.slug);
   const docs = `${url}/docs/introduction`;
+
+  // Hub (no active driver): the page is database-agnostic, so the primary CTA
+  // invites a choice — it OPENS the picker rather than pushing the flagship
+  // driver. Secondary ("Read the docs") + overlay stay as-is (flagship-backed).
+  if (activeDriver == null) {
+    return {
+      driver,
+      primary: { label: "Choose your database", href: "", openPicker: true },
+      secondary: { label: "Read the docs", href: docs },
+      overlay: {
+        text: `This driver is coming soon — start with ${driver.name} today.`,
+        action: { label: `Start with ${driver.name}`, href: url },
+      },
+    };
+  }
 
   if (isAvailable(driver)) {
     return {

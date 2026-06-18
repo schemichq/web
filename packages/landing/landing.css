@@ -20,6 +20,66 @@
 
 @source "./";
 
+/*
+ * Animated theme transition (database picker).
+ *
+ * The themeable tokens are plain Tailwind custom properties, which the browser
+ * can't interpolate. Registering them as typed <color> properties makes them
+ * animatable: when the picker island assigns a driver's palette to :root, every
+ * element reading these vars (body canvas, accents, gradients, ink) cross-fades
+ * in lockstep — so navigating to the driver's subdomain feels continuous.
+ *
+ * The transition only arms while :root carries [data-theme-shift] (set by the
+ * island for the duration of the cross-fade); the rest of the time token
+ * changes are instant. prefers-reduced-motion users never get the attribute.
+ */
+@property --color-canvas {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #0c0d10;
+}
+@property --color-canvas-2 {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #14151a;
+}
+@property --color-surface {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #181a20;
+}
+@property --color-accent {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffb454;
+}
+@property --color-accent-2 {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ff6a3d;
+}
+@property --color-ink {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #f5f4f1;
+}
+
+:root[data-theme-shift] {
+  transition:
+    --color-canvas 600ms ease,
+    --color-canvas-2 600ms ease,
+    --color-surface 600ms ease,
+    --color-accent 600ms ease,
+    --color-accent-2 600ms ease,
+    --color-ink 600ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme-shift] {
+    transition: none;
+  }
+}
+
 @layer base {
   html {
     color-scheme: dark;

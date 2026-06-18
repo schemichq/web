@@ -457,10 +457,11 @@ const agnostic: DriverExamples = {
       blank(2),
       { num: 3, tokens: [{ t: "// Pick a database — the shape stays the same, the import + output change", c: cm }] },
       { num: 4, tokens: [{ t: "export ", c: kw }, { t: "const ", c: kw }, { t: "User", c: ty }, { t: " = ", c: pl }, { t: "defineTable", c: fn }, { t: "(", c: pl }, { t: '"user"', c: st }, { t: ", {", c: pl }] },
-      { num: 5, tokens: [{ t: "  name", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "string", c: fn }, { t: "(),", c: pl }] },
-      { num: 6, tokens: [{ t: "  email", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "string", c: fn }, { t: "(),", c: pl }] },
-      { num: 7, tokens: [{ t: "  createdAt", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "datetime", c: fn }, { t: "(),", c: pl }] },
-      { num: 8, tokens: [{ t: "});", c: pl }] },
+      { num: 5, tokens: [{ t: "  id", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "string", c: fn }, { t: "(),", c: pl }] },
+      { num: 6, tokens: [{ t: "  name", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "string", c: fn }, { t: "(),", c: pl }] },
+      { num: 7, tokens: [{ t: "  email", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "string", c: fn }, { t: "(),", c: pl }] },
+      { num: 8, tokens: [{ t: "  createdAt", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "datetime", c: fn }, { t: "(),", c: pl }] },
+      { num: 9, tokens: [{ t: "});", c: pl }] },
     ],
     // Blurred on the hub — padded to roughly the input's height so the "Select a
     // database" overlay fills the whole generated-output pane (not just one line).
@@ -490,6 +491,7 @@ const agnostic: DriverExamples = {
       { num: 1, tokens: [{ t: "// Pick a database to see decoded, end-to-end types.", c: cm }] },
     ],
     members: [
+      { name: "id", type: "string" },
       { name: "name", type: "string" },
       { name: "email", type: "string" },
       { name: "createdAt", type: "Date" },

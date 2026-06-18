@@ -1,8 +1,10 @@
 ---
-// The Schemic brand mark — the amber block-"S" (gradient face over a dark-amber
-// depth shadow). This is the MASTER identity mark: it stays amber on every theme
-// (its depth color is amber-specific), unlike the theme-accent gradients used
-// elsewhere. Pair it with the "Schemic" wordmark; the svg is aria-hidden since
+// The Schemic brand mark — the block-"S" (gradient face over a darker depth
+// shadow). It wears the active THEME brand color: the face is the theme accent
+// gradient (var(--color-accent) -> var(--color-accent-2)) and the depth is a
+// derived dark shade of it, so the mark recolors — and cross-fades — with the
+// rest of the page when the driver switches (amber hub, purple SurrealDB, blue
+// Postgres). Pair it with the "Schemic" wordmark; the svg is aria-hidden since
 // the lockups carry the visible wordmark text.
 //
 // The <linearGradient> needs a DOM-unique id: several brand marks render on one
@@ -25,15 +27,15 @@ const gid = `schemic-mark-${crypto.randomUUID()}`;
 >
   <defs>
     <linearGradient id={gid} x1="0" y1="0" x2="126" y2="136" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#ffb454"></stop>
-      <stop offset="1" stop-color="#ff6a3d"></stop>
+      <stop offset="0" style="stop-color: var(--color-accent)"></stop>
+      <stop offset="1" style="stop-color: var(--color-accent-2)"></stop>
     </linearGradient>
   </defs>
   <path
     d="M96 28l-62 0 0 38 52 0 0 38-62 0"
     transform="translate(6 8)"
     fill="none"
-    stroke="#9c3414"
+    style="stroke: color-mix(in oklab, var(--color-accent) 42%, #000)"
     stroke-width="24"
     stroke-linecap="square"></path>
   <path

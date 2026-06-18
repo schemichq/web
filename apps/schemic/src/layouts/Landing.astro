@@ -3,18 +3,37 @@ import "@fontsource-variable/geist";
 import "@fontsource-variable/jetbrains-mono";
 import "../styles/landing.css";
 
+import { driverTheme, findDriver } from "@schemic/landing/config/drivers";
+
 interface Props {
   title?: string;
   description?: string;
+  /**
+   * Slug of the driver this route represents (null on the agnostic hub). On a
+   * driver route we keep the app's NEUTRAL base CSS but inline that driver's
+   * theme @property color vars on :root, so the very first server render is
+   * already in the driver's palette (purple / blue) with NO flash. The agnostic
+   * "/" route stays neutral; the picker cross-fades between them client-side.
+   */
+  activeDriver?: string | null;
 }
 
 const {
   title = "Schemic — Schema as code, for any database",
   description =
     "Define your database schema once in TypeScript with s.* — a drop-in for Zod. Schemic generates your database's native DDL, validates at runtime, and manages migrations. SurrealDB and Postgres today; MySQL & more on the way.",
+  activeDriver = null,
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site);
+
+// Inline the driver's theme on the driver routes only (hub stays neutral). Only
+// the registered @property <color> vars + on-accent are set; the rest of the
+// theme stays the neutral base (single CSS bundle for the whole single-origin app).
+const t = findDriver(activeDriver) ? driverTheme(activeDriver) : null;
+const themeStyle = t
+  ? `:root{--color-accent:${t.accent};--color-accent-2:${t.accent2};--color-canvas:${t.canvas};--color-canvas-2:${t.canvas2};--color-surface:${t.surface};--color-ink:${t.ink};--color-on-accent:${t.onAccent};}`
+  : null;
 ---
 
 <!doctype html>
@@ -34,6 +53,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
+
+    {/* Per-path driver theme — last in <head> so it wins over the neutral base. */}
+    {themeStyle && <style set:html={themeStyle} />}
   </head>
   <body class="min-h-screen bg-canvas text-ink antialiased">
     <slot />

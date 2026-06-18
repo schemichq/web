@@ -68,6 +68,13 @@ export interface DriverTheme {
   canvas2: string;
   surface: string;
   ink: string;
+  /**
+   * Text color on top of the accent gradient. The hub's accent is LIGHT (gray)
+   * so it needs DARK on-accent text; colored drivers keep WHITE. Carried here so
+   * the client-side switch + the per-path inline theme keep accent CTAs legible
+   * even though the app's base CSS stays the neutral theme.
+   */
+  onAccent: string;
 }
 
 export const driverThemes: Record<string, DriverTheme> = {
@@ -81,6 +88,7 @@ export const driverThemes: Record<string, DriverTheme> = {
     canvas2: "#14151a",
     surface: "#181a20",
     ink: "#f5f4f1",
+    onAccent: "#141519",
   },
   // SurrealDB — purple → pink (theme-surrealdb.css)
   surrealdb: {
@@ -90,6 +98,7 @@ export const driverThemes: Record<string, DriverTheme> = {
     canvas2: "#13101c",
     surface: "#16131f",
     ink: "#f5f3fa",
+    onAccent: "#ffffff",
   },
   // PostgreSQL — blue → cyan on cool slate (theme-postgres.css)
   postgres: {
@@ -99,8 +108,41 @@ export const driverThemes: Record<string, DriverTheme> = {
     canvas2: "#0e131c",
     surface: "#121823",
     ink: "#eef3f8",
+    onAccent: "#ffffff",
   },
 };
+
+/**
+ * The client-side driver SWITCH renders ALL example variants up-front (one per
+ * render state) and toggles which is visible — no client-side token re-render.
+ * Each variant is wrapped in `[data-driver-pane="<key>"]`; `key` is the driver
+ * slug, or "hub" for the agnostic state. The set is the same on every path; the
+ * SSR'd page just shows the pane matching its route. See config/picker.ts.
+ */
+export interface PaneState {
+  /** DOM key on `[data-driver-pane]` — a slug, or "hub" for agnostic. */
+  key: string;
+  /** The driver slug to pull examples/CTAs for, or null for the agnostic hub. */
+  slug: string | null;
+}
+
+export const HUB_PANE = "hub";
+
+export const paneStates: PaneState[] = [
+  { key: HUB_PANE, slug: null },
+  ...drivers.map((d) => ({ key: d.slug, slug: d.slug })),
+];
+
+/** The visible pane key for a site's active driver (null hub -> "hub"). */
+export function paneKeyFor(activeDriver?: string | null): string {
+  return activeDriver ?? HUB_PANE;
+}
+
+/** The pane key for a URL pathname ("/" -> "hub", "/surrealdb" -> "surrealdb"). */
+export function paneKeyForPath(pathname: string): string {
+  const slug = pathname.replace(/^\/+|\/+$/g, "");
+  return slug && drivers.some((d) => d.slug === slug) ? slug : HUB_PANE;
+}
 
 /** Theme values for a slug, falling back to the agnostic hub (neutral). */
 export function driverTheme(slug: string | null | undefined): DriverTheme {
@@ -190,7 +232,10 @@ export function ctaFor(activeDriver?: string | null): DriverCTA {
   if (isAvailable(driver)) {
     return {
       driver,
-      primary: { label: `Start with ${driver.name}`, href: url },
+      // "Start with <driver>" + "Read the docs" both lead into that driver's
+      // docs subdomain (…/docs/introduction) — the single-origin landing keeps
+      // the marketing pages, docs live on the per-driver subdomain.
+      primary: { label: `Start with ${driver.name}`, href: docs },
       secondary: { label: "Read the docs", href: docs },
       overlay: {
         text: `This driver is coming soon — start with ${driver.name} today.`,

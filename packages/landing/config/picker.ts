@@ -1,31 +1,42 @@
 // Shared database-picker behavior — used by EVERY picker on the page (the hero
 // headline picker + the sticky nav picker). The markup lives in DbMenu.astro
 // (the roster) and each picker's own trigger; this module wires them all from a
-// single `initPickers()` call so the select/theme/redirect logic is defined ONCE
+// single `initPickers()` call so the select/theme/switch logic is defined ONCE
 // and every picker stays in sync (selecting in one updates the labels in all).
+//
+// SINGLE-ORIGIN, NO RELOAD: the landing serves `/` (agnostic), `/surrealdb` and
+// `/postgres` from one app, with EVERY example variant rendered up-front behind
+// `[data-driver-pane="<key>"]` (key = a driver slug, or "hub" for agnostic).
+// Selecting a driver does NOT navigate to another subdomain — it switches
+// CLIENT-SIDE: cross-fade the theme, toggle the visible panes in place, update
+// the picker labels + CTAs (the CTAs are themselves panes), and pushState to
+// `/<slug>` (or `/`). Back/forward (popstate) re-applies the pane for the path.
 //
 // A picker root is any `[data-db-picker]` element containing:
 //   [data-db-trigger]  the button that opens the roster
 //   [data-db-menu]     the roster listbox (role="listbox", hidden by default)
 //   [data-db-label]    the text node reflecting the current selection
-// Each `[role="option"]` carries the driver's slug + brand color + target theme
-// palette as data-* attributes (see DbMenu.astro), so this module reads them
-// straight off the DOM and never needs the driver config at runtime.
+//   [data-db-dot]      (nav only) the brand-color dot beside the label
+// Each `[role="option"]` carries the driver's slug + brand color as data-*.
 //
 // "Select a database" overlay buttons (`[data-open-picker]`, rendered over every
 // blurred output region on the agnostic hub) open the nav picker on click.
+
+import { driverThemes, HUB_PANE, paneKeyForPath } from "./drivers";
 
 const root = document.documentElement;
 const TRANSITION_MS = 600;
 
 // Honour prefers-reduced-motion live (a mid-session OS toggle is respected):
-// skip the cross-fade entirely (site drivers redirect at once).
+// skip the cross-fade entirely and switch instantly.
 const reduceMotion = () =>
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-// Cross-fade the themeable :root color tokens toward `vars`. Registered as typed
-// <color> @property (see landing.css), so assigning them animates every
-// dependent var() — body canvas, accents, gradients, ink — at once.
+// Cross-fade the themeable :root color tokens toward `vars`. The 6 color tokens
+// are registered as typed <color> @property (see landing.css), so assigning them
+// animates every dependent var() — body canvas, accents, gradients, ink — at
+// once. `--color-on-accent` is not a registered @property, so it flips instantly
+// (which keeps accent CTA text legible across the neutral<->driver switch).
 const applyTheme = (vars: Record<string, string>, animate: boolean): void => {
   if (animate) {
     root.setAttribute("data-theme-shift", "");
@@ -39,14 +50,25 @@ const applyTheme = (vars: Record<string, string>, animate: boolean): void => {
   }
 };
 
-const themeVars = (opt: HTMLElement): Record<string, string> => ({
-  "--color-accent": opt.dataset.themeAccent || "",
-  "--color-accent-2": opt.dataset.themeAccent2 || "",
-  "--color-canvas": opt.dataset.themeCanvas || "",
-  "--color-canvas-2": opt.dataset.themeCanvas2 || "",
-  "--color-surface": opt.dataset.themeSurface || "",
-  "--color-ink": opt.dataset.themeInk || "",
-});
+// The :root color vars for a pane key (falls back to the agnostic hub theme).
+const themeVarsFor = (key: string): Record<string, string> => {
+  const t = driverThemes[key] ?? driverThemes[HUB_PANE];
+  return {
+    "--color-accent": t.accent,
+    "--color-accent-2": t.accent2,
+    "--color-canvas": t.canvas,
+    "--color-canvas-2": t.canvas2,
+    "--color-surface": t.surface,
+    "--color-ink": t.ink,
+    "--color-on-accent": t.onAccent,
+  };
+};
+
+// Show only the panes (example variants + driver CTAs) for the active key.
+const setPanes = (key: string): void => {
+  for (const el of document.querySelectorAll<HTMLElement>("[data-driver-pane]"))
+    el.hidden = el.dataset.driverPane !== key;
+};
 
 interface RootCtl {
   el: HTMLElement;
@@ -64,64 +86,71 @@ export function initPickers(): void {
 
   const ctls: RootCtl[] = [];
 
-  // Reflect a selection across EVERY picker (labels + aria-selected), then run
-  // the theme/redirect side-effect once.
-  const select = (opt: HTMLElement): void => {
-    const slug = opt.dataset.slug || "";
-    const name = opt.dataset.driver || "";
-    const hasSite = opt.dataset.site === "true";
-    const available = opt.dataset.available === "true";
-    const href = opt.dataset.href || "";
+  // Find the option element for a pane key (undefined for "hub" — no option).
+  const optionFor = (key: string): HTMLElement | undefined => {
+    for (const c of ctls) {
+      const o = c.options.find((o) => o.dataset.slug === key);
+      if (o) return o;
+    }
+    return undefined;
+  };
 
+  // Reflect the active pane across EVERY picker: aria-selected, the label text
+  // (driver name, or the picker's own "Database"/"Select database" prompt on the
+  // hub) and the nav brand dot.
+  const applyLabels = (key: string): void => {
+    const opt = optionFor(key);
     for (const c of ctls) {
       for (const o of c.options)
-        o.setAttribute("aria-selected", String(o.dataset.slug === slug));
+        o.setAttribute("aria-selected", String(o.dataset.slug === key));
       if (c.label) {
-        c.label.textContent = name;
-        // Drop the unselected-prompt styling now that a driver is chosen.
-        c.label.removeAttribute("data-db-prompt");
-        c.el
-          .querySelector("[data-db-trigger]")
-          ?.removeAttribute("data-db-prompt");
+        if (opt) {
+          c.label.textContent = opt.dataset.driver || c.label.textContent;
+          c.label.removeAttribute("data-db-prompt");
+          c.el
+            .querySelector("[data-db-trigger]")
+            ?.removeAttribute("data-db-prompt");
+        } else {
+          const prompt = c.label.dataset.dbPromptLabel;
+          if (prompt) c.label.textContent = prompt;
+        }
+      }
+      const dot = c.el.querySelector<HTMLElement>("[data-db-dot]");
+      if (dot) {
+        if (opt) {
+          dot.style.background = opt.dataset.accent || "";
+          dot.hidden = false;
+        } else {
+          dot.hidden = true;
+        }
       }
     }
+  };
 
-    // Driver WITH its own subdomain -> cross-fade toward its palette, then
-    // navigate so the (already in-theme) destination feels continuous.
-    if (hasSite && href) {
-      for (const c of ctls) c.close(false);
-      if (reduceMotion()) {
-        window.location.href = href;
-        return;
-      }
-      applyTheme(themeVars(opt), true);
-      window.setTimeout(() => {
-        window.location.href = href;
-      }, TRANSITION_MS);
-      return;
-    }
-
-    // Driver WITHOUT a site (no page yet) -> stay in-page: animate the accent
-    // toward its brand color and broadcast so the Demo surfaces its overlay.
-    const animate = !reduceMotion();
-    applyTheme(
-      {
-        "--color-accent": opt.dataset.themeAccent || "",
-        "--color-accent-2": opt.dataset.themeAccent2 || "",
-      },
-      animate,
-    );
+  // The whole client-side switch: panes + labels + theme cross-fade + history.
+  const switchTo = (
+    key: string,
+    { animate, push }: { animate: boolean; push: boolean },
+  ): void => {
+    setPanes(key);
+    applyLabels(key);
+    applyTheme(themeVarsFor(key), animate);
     if (animate)
       window.setTimeout(
         () => root.removeAttribute("data-theme-shift"),
         TRANSITION_MS,
       );
-    document.dispatchEvent(
-      new CustomEvent("schemic:driver", {
-        detail: { name, available, accent: opt.dataset.accent || "" },
-      }),
-    );
-    for (const c of ctls) c.close();
+    if (push) {
+      const path = key === HUB_PANE ? "/" : `/${key}`;
+      history.pushState({ pane: key }, "", path);
+    }
+  };
+
+  // Selecting a driver option: close the menus, then switch in place (no nav).
+  const select = (opt: HTMLElement): void => {
+    const slug = opt.dataset.slug || HUB_PANE;
+    for (const c of ctls) c.close(false);
+    switchTo(slug, { animate: !reduceMotion(), push: true });
   };
 
   for (const el of roots) {
@@ -245,4 +274,19 @@ export function initPickers(): void {
         navCtl.el.scrollIntoView({ block: "nearest" });
         navCtl.open();
       });
+
+  // Back/forward re-applies the pane for the path (animated unless reduced). The
+  // SSR'd first paint already matches the path, so no initial switch is needed —
+  // we only seed history.state so popstate has something to read.
+  history.replaceState(
+    { pane: paneKeyForPath(location.pathname) },
+    "",
+    location.pathname + location.search,
+  );
+  window.addEventListener("popstate", () => {
+    switchTo(paneKeyForPath(location.pathname), {
+      animate: !reduceMotion(),
+      push: false,
+    });
+  });
 }

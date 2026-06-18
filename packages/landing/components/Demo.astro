@@ -4,6 +4,8 @@ import {
   flagshipDriver,
   findDriver,
   ctaFor,
+  paneStates,
+  paneKeyFor,
 } from "../config/drivers";
 import { examplesFor } from "../config/examples";
 import SelectOverlay from "./SelectOverlay.astro";
@@ -15,39 +17,32 @@ interface Props {
 
 const { activeDriver = null } = Astro.props;
 
-// The agnostic hub (no driver selected): the schema INPUT shows a neutral
-// @schemic/core example, while every generated/OUTPUT region is rendered behind
-// a "Select a database" blur overlay.
-const isHub = activeDriver == null;
+// Single-origin landing: EVERY driver variant (+ the agnostic state) is rendered
+// up-front and the picker toggles which `[data-driver-pane]` is visible — no
+// client-side token re-rendering. Only the code-bearing bits are duplicated; the
+// rail + window chrome (and the tab/auto-advance logic) stay shared. The pane
+// matching this route's `activeDriver` is the one shown on first paint.
+const activeKey = paneKeyFor(activeDriver);
 
-// Seed the schema -> DDL panel from the site's driver. A coming-soon driver
-// also seeds the overlay shown over the generated-DDL pane. The hero's picker
-// can still change all of this client-side via the `schemic:driver` event.
-const selected = findDriver(activeDriver) ?? flagshipDriver;
-const selectedAvailable = isAvailable(selected);
-// All code blocks in this Demo (schema input + generated DDL + map note,
-// migrations terminal, end-to-end types, live round-trip) come from the
-// centralized example set, selected by the active driver — null on the hub,
-// which yields the neutral @schemic/core schema. See config/examples.ts.
-const ex = examplesFor(activeDriver);
-const initialDialect = { lang: ex.lang, file: ex.file };
-// Driver-aware coming-soon overlay copy + action (Postgres-centric on the
-// postgres site; never pushes the flagship for a coming-soon driver).
-const cta = ctaFor(activeDriver);
-
-const tsLines = ex.schema.input;
-const outputLines = ex.schema.output;
-const mapNote = ex.schema.mapNote;
-const migrationsLines = ex.migrations;
-const typesLines = ex.types.query;
-const typeMembers = ex.types.members;
-const driftLines = ex.live;
-// The live array is a header row (`ON TABLE …`) + N diff lines, each opening
-// with a `+`/`~`/`-` marker token. Count only the marker lines so the footer
-// reflects the active driver's real change count (surreal: 3, postgres: 2).
-const driftCount = driftLines.filter((line) =>
-  ["+", "~", "-"].includes(line.tokens[0]?.t.trim() ?? ""),
-).length;
+const states = paneStates.map((s) => {
+  const ex = examplesFor(s.slug);
+  const selected = findDriver(s.slug) ?? flagshipDriver;
+  const cta = ctaFor(s.slug);
+  // The live array is a header row (`ON TABLE …`) + N diff lines, each opening
+  // with a `+`/`~`/`-` marker token; count only the markers for the footer.
+  const driftCount = ex.live.filter((line) =>
+    ["+", "~", "-"].includes(line.tokens[0]?.t.trim() ?? ""),
+  ).length;
+  return {
+    key: s.key,
+    isHub: s.slug == null,
+    hidden: s.key !== activeKey,
+    ex,
+    selectedAvailable: isAvailable(selected),
+    cta,
+    driftCount,
+  };
+});
 
 const icons: Record<string, string> = {
   file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/>',
@@ -70,13 +65,6 @@ const comingSoon = [
   { label: "Tests", icon: "flask" },
   { label: "Studio", icon: "app" },
 ];
-
-const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }> = {
-  schema: { l: "schema.ts", lt: "TypeScript", r: ex.file, rt: ex.lang },
-  migrations: { l: "terminal", lt: "sc migrate" },
-  types: { l: "query.ts", lt: "TypeScript" },
-  live: { l: "sc diff --live", lt: "drift" },
-};
 ---
 
 <section id="demo" class="relative px-6 py-24 sm:py-28">
@@ -90,11 +78,17 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
         class="mx-auto mt-4 max-w-2xl font-display text-3xl font-semibold tracking-tight text-balance text-ink-2 sm:text-4xl"
       >
         From <code class="font-mono text-accent-soft">s.*</code> schema to generated{" "}
-        <span
-          id="demo-dialect"
-          class="bg-gradient-to-r from-accent to-accent-2 bg-clip-text text-transparent"
-          >{initialDialect.lang}</span
-        >.
+        {
+          states.map((st) => (
+            <span
+              data-driver-pane={st.key}
+              hidden={st.hidden}
+              class="bg-gradient-to-r from-accent to-accent-2 bg-clip-text text-transparent"
+            >
+              {st.ex.lang}
+            </span>
+          ))
+        }.
       </h2>
     </div>
 
@@ -238,24 +232,28 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
                 <div
                   class="flex items-center justify-between border-b border-border-subtle bg-white/[0.02] px-4 py-2.5"
                 >
-                  <span class="font-mono text-xs text-ink-2">{tabHead.schema.l}</span>
-                  <span class="font-mono text-[10px] text-code-fn">{tabHead.schema.lt}</span>
+                  <span class="font-mono text-xs text-ink-2">schema.ts</span>
+                  <span class="font-mono text-[10px] text-code-fn">TypeScript</span>
                 </div>
                 <div
                   class="min-w-0 overflow-x-auto bg-code-bg py-4 font-mono text-[13px] leading-6 lg:pr-5"
                 >
                   {
-                    tsLines.map((line) => (
-                      <div
-                        class:list={[
-                          "flex border-l-2 pr-4",
-                          line.hl ? "border-accent bg-accent/10" : "border-transparent",
-                        ]}
-                      >
-                        <span class="w-8 shrink-0 select-none pr-3 text-right text-ink-3">
-                          {line.num}
-                        </span>
-                        <code class="whitespace-pre">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</code>
+                    states.map((st) => (
+                      <div data-driver-pane={st.key} hidden={st.hidden}>
+                        {st.ex.schema.input.map((line) => (
+                          <div
+                            class:list={[
+                              "flex border-l-2 pr-4",
+                              line.hl ? "border-accent bg-accent/10" : "border-transparent",
+                            ]}
+                          >
+                            <span class="w-8 shrink-0 select-none pr-3 text-right text-ink-3">
+                              {line.num}
+                            </span>
+                            <code class="whitespace-pre">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</code>
+                          </div>
+                        ))}
                       </div>
                     ))
                   }
@@ -266,8 +264,16 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
                 <div
                   class="flex items-center justify-between border-b border-border-subtle bg-accent-2/[0.03] px-4 py-2.5"
                 >
-                  <span id="demo-file" class="font-mono text-xs text-ink-2">{initialDialect.file}</span>
-                  <span id="demo-lang" class="font-mono text-[10px] text-accent-2">{initialDialect.lang}</span>
+                  {
+                    states.map((st) => (
+                      <span data-driver-pane={st.key} hidden={st.hidden} class="font-mono text-xs text-ink-2">{st.ex.file}</span>
+                    ))
+                  }
+                  {
+                    states.map((st) => (
+                      <span data-driver-pane={st.key} hidden={st.hidden} class="font-mono text-[10px] text-accent-2">{st.ex.lang}</span>
+                    ))
+                  }
                 </div>
                 <div
                   class="relative min-w-0 overflow-x-auto bg-code-bg py-4 font-mono text-[13px] leading-6 lg:pl-5"
@@ -276,41 +282,24 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
                     class="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent to-accent-2/[0.04]"
                   >
                   </div>
-                  <!-- coming-soon overlay (shown when a not-yet-shipped driver is picked) -->
-                  <div
-                    id="demo-soon"
-                    hidden={selectedAvailable}
-                    class="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-code-bg/90 px-6 text-center backdrop-blur-[2px]"
-                  >
-                    <span
-                      class="size-2.5 rounded-full"
-                      id="demo-soon-dot"
-                      style={`background:${selected.color}`}
-                      aria-hidden="true"></span>
-                    <p id="demo-soon-text" class="max-w-xs font-sans text-sm text-ink-2">
-                      {cta.overlay.text}
-                    </p>
-                    <a
-                      id="demo-soon-cta"
-                      href={cta.overlay.action.href}
-                      class="rounded-full bg-gradient-to-r from-accent to-accent-2 px-4 py-2 font-sans text-xs font-semibold text-on-accent"
-                      >{cta.overlay.action.label}</a
-                    >
-                  </div>
-                  {/* agnostic hub: blur the generated DDL behind a picker prompt */}
-                  {isHub && <SelectOverlay />}
                   {
-                    outputLines.map((line) => (
-                      <div
-                        class:list={[
-                          "relative flex border-l-2 pr-2",
-                          line.hl ? "border-accent bg-accent/10" : "border-transparent",
-                        ]}
-                      >
-                        <span class="w-8 shrink-0 select-none pr-3 text-right text-ink-3">
-                          {line.num}
-                        </span>
-                        <code class="whitespace-pre">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</code>
+                    states.map((st) => (
+                      <div data-driver-pane={st.key} hidden={st.hidden}>
+                        {/* agnostic hub: blur the generated DDL behind a picker prompt */}
+                        {st.isHub && <SelectOverlay />}
+                        {st.ex.schema.output.map((line) => (
+                          <div
+                            class:list={[
+                              "relative flex border-l-2 pr-2",
+                              line.hl ? "border-accent bg-accent/10" : "border-transparent",
+                            ]}
+                          >
+                            <span class="w-8 shrink-0 select-none pr-3 text-right text-ink-3">
+                              {line.num}
+                            </span>
+                            <code class="whitespace-pre">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</code>
+                          </div>
+                        ))}
                       </div>
                     ))
                   }
@@ -347,23 +336,31 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
               </div>
             </div>
 
-            <!-- map note -->
-            <div
-              id="demo-mapnote"
-              hidden={isHub || !selectedAvailable}
-              class="flex items-center gap-2 border-t border-border-subtle bg-accent/10 px-4 py-2.5 text-xs text-ink-2"
-            >
-              <span class="size-1.5 shrink-0 rounded-full bg-gradient-to-r from-accent to-accent-2"></span>
-              <span>{
-                mapNote.map((seg) =>
-                  seg.code ? (
-                    <code class:list={["font-mono", seg.c]}>{seg.t}</code>
-                  ) : (
-                    <Fragment>{seg.t}</Fragment>
-                  ),
-                )
-              }</span>
-            </div>
+            <!-- map note — only the driver panes render one (never the agnostic
+                 hub, where the generated output sits behind the blur overlay), so
+                 the picker's blanket pane-toggle can't surface an empty note. -->
+            {
+              states
+                .filter((st) => !st.isHub && st.selectedAvailable)
+                .map((st) => (
+                  <div
+                    data-driver-pane={st.key}
+                    hidden={st.hidden}
+                    class="flex items-center gap-2 border-t border-border-subtle bg-accent/10 px-4 py-2.5 text-xs text-ink-2"
+                  >
+                    <span class="size-1.5 shrink-0 rounded-full bg-gradient-to-r from-accent to-accent-2"></span>
+                    <span>{
+                      st.ex.schema.mapNote.map((seg) =>
+                        seg.code ? (
+                          <code class:list={["font-mono", seg.c]}>{seg.t}</code>
+                        ) : (
+                          <Fragment>{seg.t}</Fragment>
+                        ),
+                      )
+                    }</span>
+                  </div>
+                ))
+            }
           </div>
 
           <!-- ============ STATE: migrations ============ -->
@@ -371,14 +368,18 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
             <div
               class="flex items-center justify-between border-b border-border-subtle px-4 py-2.5"
             >
-              <span class="font-mono text-xs text-ink-2">{tabHead.migrations.l}</span>
-              <span class="font-mono text-[11px] text-ink-3">{tabHead.migrations.lt}</span>
+              <span class="font-mono text-xs text-ink-2">terminal</span>
+              <span class="font-mono text-[11px] text-ink-3">sc migrate</span>
             </div>
             <div class="relative bg-code-bg px-4 py-4 font-mono text-[13px] leading-[1.7]">
-              {isHub && <SelectOverlay />}
               {
-                migrationsLines.map((l) => (
-                  <div class="whitespace-pre"><span class={l.symC}>{l.sym}</span><span class={l.msgC}>{l.msg}</span></div>
+                states.map((st) => (
+                  <div data-driver-pane={st.key} hidden={st.hidden}>
+                    {st.isHub && <SelectOverlay />}
+                    {st.ex.migrations.map((l) => (
+                      <div class="whitespace-pre"><span class={l.symC}>{l.sym}</span><span class={l.msgC}>{l.msg}</span></div>
+                    ))}
+                  </div>
                 ))
               }
             </div>
@@ -395,38 +396,40 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
             <div
               class="flex items-center justify-between border-b border-border-subtle px-4 py-2.5"
             >
-              <span class="font-mono text-xs text-ink-2">{tabHead.types.l}</span>
-              <span class="font-mono text-[10px] text-code-fn">{tabHead.types.lt}</span>
+              <span class="font-mono text-xs text-ink-2">query.ts</span>
+              <span class="font-mono text-[10px] text-code-fn">TypeScript</span>
             </div>
             <div class="relative bg-code-bg px-4 py-4 font-mono text-[13px] leading-6">
               {/* types = TypeScript, visible on the hub (not native code) */}
               {
-                typesLines.map((line) => (
-                  <div class="flex">
-                    <span class="w-8 shrink-0 select-none pr-3 text-right text-ink-3">{line.num}</span>
-                    <code class="whitespace-pre">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</code>
+                states.map((st) => (
+                  <div data-driver-pane={st.key} hidden={st.hidden}>
+                    {st.ex.types.query.map((line) => (
+                      <div class="flex">
+                        <span class="w-8 shrink-0 select-none pr-3 text-right text-ink-3">{line.num}</span>
+                        <code class="whitespace-pre">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</code>
+                      </div>
+                    ))}
+                    {/* autocomplete dropdown */}
+                    <div
+                      class="ml-[3.7rem] mt-1 w-fit overflow-hidden rounded-lg border border-border bg-surface-2 text-[12.5px] shadow-[0_16px_40px_-12px_rgba(0,0,0,0.7)]"
+                    >
+                      {st.ex.types.members.map((m, i) => (
+                        <div
+                          class:list={[
+                            "flex items-center gap-3 px-3 py-1.5",
+                            i === 0 && "bg-accent/15",
+                          ]}
+                        >
+                          <span class="text-code-fn">{m.name}</span>
+                          <span class="text-ink-3">:</span>
+                          <span class="text-code-type">{m.type}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))
               }
-              <!-- autocomplete dropdown -->
-              <div
-                class="ml-[3.7rem] mt-1 w-fit overflow-hidden rounded-lg border border-border bg-surface-2 text-[12.5px] shadow-[0_16px_40px_-12px_rgba(0,0,0,0.7)]"
-              >
-                {
-                  typeMembers.map((m, i) => (
-                    <div
-                      class:list={[
-                        "flex items-center gap-3 px-3 py-1.5",
-                        i === 0 && "bg-accent/15",
-                      ]}
-                    >
-                      <span class="text-code-fn">{m.name}</span>
-                      <span class="text-ink-3">:</span>
-                      <span class="text-code-type">{m.type}</span>
-                    </div>
-                  ))
-                }
-              </div>
             </div>
             <div
               class="flex items-center gap-2 border-t border-border-subtle bg-accent/10 px-4 py-2.5 text-xs text-ink-2"
@@ -441,19 +444,23 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
             <div
               class="flex items-center justify-between border-b border-border-subtle px-4 py-2.5"
             >
-              <span class="font-mono text-xs text-ink-2">{tabHead.live.l}</span>
-              <span class="font-mono text-[11px] text-ink-3">{tabHead.live.lt}</span>
+              <span class="font-mono text-xs text-ink-2">sc diff --live</span>
+              <span class="font-mono text-[11px] text-ink-3">drift</span>
             </div>
             <div class="relative bg-code-bg px-4 py-4 font-mono text-[13px] leading-[1.7]">
-              {isHub && <SelectOverlay />}
-              <div class="whitespace-pre text-ink-3"><span class="text-accent-2">$</span> sc diff --live</div>
-              <div class="mb-2 whitespace-pre text-ink-3">~ comparing schema.ts ↔ running database</div>
               {
-                driftLines.map((line) => (
-                  <div class="whitespace-pre pl-2">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</div>
+                states.map((st) => (
+                  <div data-driver-pane={st.key} hidden={st.hidden}>
+                    {st.isHub && <SelectOverlay />}
+                    <div class="whitespace-pre text-ink-3"><span class="text-accent-2">$</span> sc diff --live</div>
+                    <div class="mb-2 whitespace-pre text-ink-3">~ comparing schema.ts ↔ running database</div>
+                    {st.ex.live.map((line) => (
+                      <div class="whitespace-pre pl-2">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</div>
+                    ))}
+                    <div class="mt-2 whitespace-pre text-ink-2">{st.driftCount} {st.driftCount === 1 ? "change" : "changes"} · run <span class="text-accent-soft">sc sync</span> to reconcile</div>
+                  </div>
                 ))
               }
-              <div class="mt-2 whitespace-pre text-ink-2">{driftCount} {driftCount === 1 ? "change" : "changes"} · run <span class="text-accent-soft">sc sync</span> to reconcile</div>
             </div>
             <div
               class="flex items-center gap-2 border-t border-border-subtle bg-accent/10 px-4 py-2.5 text-xs text-ink-2"
@@ -554,35 +561,4 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
     root.addEventListener("mouseleave", start);
     start();
   }
-
-  // Reflect the hero's database picker in the schema -> DDL panel.
-  const dialects: Record<string, { lang: string; file: string }> = {
-    SurrealDB: { lang: "SurrealQL", file: "user.surql" },
-    PostgreSQL: { lang: "PostgreSQL", file: "user.sql" },
-  };
-  const dialectEl = document.getElementById("demo-dialect");
-  const fileEl = document.getElementById("demo-file");
-  const langEl = document.getElementById("demo-lang");
-  const mapNote = document.getElementById("demo-mapnote");
-  const soon = document.getElementById("demo-soon");
-  const soonText = document.getElementById("demo-soon-text");
-  const soonDot = document.getElementById("demo-soon-dot");
-
-  document.addEventListener("schemic:driver", (e) => {
-    const { name, available, accent } = (e as CustomEvent).detail as {
-      name: string;
-      available: boolean;
-      accent: string;
-    };
-    const d = dialects[name] ?? dialects.SurrealDB;
-    if (dialectEl) dialectEl.textContent = d.lang;
-    if (fileEl) fileEl.textContent = d.file;
-    if (langEl) langEl.textContent = d.lang;
-    if (mapNote) mapNote.hidden = !available;
-    if (soon) soon.hidden = available;
-    if (!available && soonText)
-      soonText.textContent = `The ${name} driver is coming soon — follow progress on GitHub.`;
-    if (!available && soonDot && accent)
-      soonDot.style.background = accent;
-  });
 </script>

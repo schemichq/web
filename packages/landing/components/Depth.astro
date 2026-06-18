@@ -1,4 +1,5 @@
 ---
+import { paneStates, paneKeyFor } from "../config/drivers";
 import { examplesFor } from "../config/examples";
 import SelectOverlay from "./SelectOverlay.astro";
 
@@ -8,130 +9,138 @@ interface Props {
 }
 const { activeDriver = null } = Astro.props;
 
-// Driver-aware events / functions / access -> DDL. `depth.available` is false
-// for drivers with no analog of DEFINE ACCESS/EVENT/FUNCTION, in which case the
-// whole section is hidden. On the agnostic hub the section IS shown (neutral
-// placeholder) but blurred behind a "Select a database" prompt — only the
-// postgres no-analog case hides it outright. See config/examples.ts.
-const isHub = activeDriver == null;
-const depth = examplesFor(activeDriver).depth;
-const tsLines = depth.input;
-const surqlLines = depth.output;
+// Driver-aware events / functions / access -> DDL. Every variant is rendered as a
+// `[data-driver-pane]` and the picker toggles which is visible. `depth.available`
+// is false for drivers with no analog of DEFINE ACCESS/EVENT/FUNCTION — that pane
+// renders EMPTY, so switching to it makes the whole section disappear (Postgres).
+// The agnostic pane shows a neutral placeholder behind a "Select a database" blur.
+const activeKey = paneKeyFor(activeDriver);
+const states = paneStates.map((s) => {
+  const depth = examplesFor(s.slug).depth;
+  return {
+    key: s.key,
+    isHub: s.slug == null,
+    hidden: s.key !== activeKey,
+    depth,
+  };
+});
 ---
 
-{depth.available && (
+<div id="depth">
+  {
+    states.map((st) => (
+      <div data-driver-pane={st.key} hidden={st.hidden}>
+        {st.depth.available && (
+          <section class="border-t border-border-subtle px-6 py-24 sm:py-28">
+            <div class="mx-auto max-w-6xl">
+              {/* head (left-aligned) */}
+              <div class="max-w-3xl">
+                <p class="font-mono text-xs text-accent-2">
+                  // if you know Zod, you already know this
+                </p>
+                <h2
+                  class="mt-3 font-display text-[32px] font-semibold tracking-tight text-ink sm:text-[36px]"
+                >
+                  Schema, DDL, and migrations — one file.
+                </h2>
+                <p class="mt-4 max-w-2xl text-base leading-relaxed text-ink-2">
+                  Go past tables and fields. Events, functions, and access rules all
+                  live in the same typed source — and generate real DDL.
+                </p>
+              </div>
 
-<section id="depth" class="border-t border-border-subtle px-6 py-24 sm:py-28">
-  <div class="mx-auto max-w-6xl">
-    <!-- head (left-aligned) -->
-    <div class="max-w-3xl">
-      <p class="font-mono text-xs text-accent-2">
-        // if you know Zod, you already know this
-      </p>
-      <h2
-        class="mt-3 font-display text-[32px] font-semibold tracking-tight text-ink sm:text-[36px]"
-      >
-        Schema, DDL, and migrations — one file.
-      </h2>
-      <p class="mt-4 max-w-2xl text-base leading-relaxed text-ink-2">
-        Go past tables and fields. Events, functions, and access rules all
-        live in the same typed source — and generate real DDL.
-      </p>
-    </div>
-
-    <!-- window -->
-    <div
-      class="mt-10 overflow-hidden rounded-2xl border border-border bg-code-bg shadow-[0_30px_70px_-30px_rgba(0,0,0,0.7),0_0_70px_-26px_color-mix(in_oklab,var(--color-accent)_28%,transparent)]"
-    >
-      <!-- title bar -->
-      <div class="relative flex items-center bg-surface px-4.5 py-3.5">
-        <div class="flex items-center gap-2">
-          <span class="size-3 rounded-full bg-[#ff5f57]"></span>
-          <span class="size-3 rounded-full bg-[#febc2e]"></span>
-          <span class="size-3 rounded-full bg-[#28c840]"></span>
-        </div>
-        <span
-          class="absolute left-1/2 -translate-x-1/2 font-mono text-xs text-ink-3"
-          >{depth.title}</span
-        >
-      </div>
-
-      <!-- panes: side-by-side w/ bare seam arrow on desktop, stacked on mobile -->
-      <div class="relative grid font-mono text-[12.5px] leading-6 lg:grid-cols-2">
-        {isHub && <SelectOverlay />}
-        <!-- left pane (access.ts) -->
-        <div
-          class="flex min-w-0 flex-col border-b border-border-subtle bg-white/[0.02] lg:border-b-0"
-        >
-          <div
-            class="flex items-center justify-between border-b border-border-subtle px-4.5 py-2.5"
-          >
-            <span class="font-mono text-xs text-ink">{depth.inputFile}</span>
-            <span class="font-mono text-[11px] text-ink-3">{depth.inputLang}</span>
-          </div>
-          <div class="min-w-0 overflow-x-auto py-4 lg:pr-5">
-            {
-              tsLines.map((line) => (
-                <div class="flex">
-                  <span class="w-9 shrink-0 select-none pr-3 text-right text-ink-3">{line.num}</span>
-                  <code class="whitespace-pre">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</code>
-                </div>
-              ))
-            }
-          </div>
-        </div>
-
-        <!-- right pane (access.surql) -->
-        <div class="flex min-w-0 flex-col bg-accent-2/[0.04]">
-          <div
-            class="flex items-center justify-between border-b border-border-subtle px-4.5 py-2.5"
-          >
-            <span class="font-mono text-xs text-ink">{depth.outputFile}</span>
-            <span class="font-mono text-[11px] text-ink-3">{depth.outputLang}</span>
-          </div>
-          <div class="min-w-0 overflow-x-auto py-4 lg:pl-5">
-            {
-              surqlLines.map((line) => (
-                <div class="flex">
-                  <span class="w-9 shrink-0 select-none pr-3 text-right text-ink-3">{line.num}</span>
-                  <code class="whitespace-pre">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</code>
-                </div>
-              ))
-            }
-          </div>
-        </div>
-
-        <!-- bare gradient seam arrow (desktop only) -->
-        <div
-          class="absolute left-1/2 top-5 hidden -translate-x-1/2 -translate-y-1/2 lg:block"
-        >
-          <svg
-            class="size-5"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="url(#depthSeamArrowGrad)"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <defs>
-              <linearGradient
-                id="depthSeamArrowGrad"
-                x1="0"
-                y1="24"
-                x2="24"
-                y2="0"
-                gradientUnits="userSpaceOnUse"
+              {/* window */}
+              <div
+                class="mt-10 overflow-hidden rounded-2xl border border-border bg-code-bg shadow-[0_30px_70px_-30px_rgba(0,0,0,0.7),0_0_70px_-26px_color-mix(in_oklab,var(--color-accent)_28%,transparent)]"
               >
-                <stop offset="0" stop-color="var(--color-accent)"></stop>
-                <stop offset="1" stop-color="var(--color-accent-2)"></stop>
-              </linearGradient>
-            </defs>
-            <path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path>
-          </svg>
-        </div>
+                {/* title bar */}
+                <div class="relative flex items-center bg-surface px-4.5 py-3.5">
+                  <div class="flex items-center gap-2">
+                    <span class="size-3 rounded-full bg-[#ff5f57]" />
+                    <span class="size-3 rounded-full bg-[#febc2e]" />
+                    <span class="size-3 rounded-full bg-[#28c840]" />
+                  </div>
+                  <span
+                    class="absolute left-1/2 -translate-x-1/2 font-mono text-xs text-ink-3"
+                  >{st.depth.title}</span>
+                </div>
+
+                {/* panes: side-by-side w/ bare seam arrow on desktop, stacked on mobile */}
+                <div class="relative grid font-mono text-[12.5px] leading-6 lg:grid-cols-2">
+                  {st.isHub && <SelectOverlay />}
+                  {/* left pane (access.ts) */}
+                  <div
+                    class="flex min-w-0 flex-col border-b border-border-subtle bg-white/[0.02] lg:border-b-0"
+                  >
+                    <div
+                      class="flex items-center justify-between border-b border-border-subtle px-4.5 py-2.5"
+                    >
+                      <span class="font-mono text-xs text-ink">{st.depth.inputFile}</span>
+                      <span class="font-mono text-[11px] text-ink-3">{st.depth.inputLang}</span>
+                    </div>
+                    <div class="min-w-0 overflow-x-auto py-4 lg:pr-5">
+                      {st.depth.input.map((line) => (
+                        <div class="flex">
+                          <span class="w-9 shrink-0 select-none pr-3 text-right text-ink-3">{line.num}</span>
+                          <code class="whitespace-pre">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</code>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* right pane (access.surql) */}
+                  <div class="flex min-w-0 flex-col bg-accent-2/[0.04]">
+                    <div
+                      class="flex items-center justify-between border-b border-border-subtle px-4.5 py-2.5"
+                    >
+                      <span class="font-mono text-xs text-ink">{st.depth.outputFile}</span>
+                      <span class="font-mono text-[11px] text-ink-3">{st.depth.outputLang}</span>
+                    </div>
+                    <div class="min-w-0 overflow-x-auto py-4 lg:pl-5">
+                      {st.depth.output.map((line) => (
+                        <div class="flex">
+                          <span class="w-9 shrink-0 select-none pr-3 text-right text-ink-3">{line.num}</span>
+                          <code class="whitespace-pre">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</code>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* bare gradient seam arrow (desktop only) */}
+                  <div
+                    class="absolute left-1/2 top-5 hidden -translate-x-1/2 -translate-y-1/2 lg:block"
+                  >
+                    <svg
+                      class="size-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke={`url(#depthSeamArrowGrad-${st.key})`}
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <defs>
+                        <linearGradient
+                          id={`depthSeamArrowGrad-${st.key}`}
+                          x1="0"
+                          y1="24"
+                          x2="24"
+                          y2="0"
+                          gradientUnits="userSpaceOnUse"
+                        >
+                          <stop offset="0" stop-color="var(--color-accent)" />
+                          <stop offset="1" stop-color="var(--color-accent-2)" />
+                        </linearGradient>
+                      </defs>
+                      <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
       </div>
-    </div>
-  </div>
-</section>
-)}
+    ))
+  }
+</div>

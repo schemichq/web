@@ -92,16 +92,16 @@ const githubMark =
               : "border-border text-ink-2 hover:border-accent/50 hover:text-ink",
           ]}
         >
-          {
-            !isHub && navDriver && (
-              <span
-                class="size-2.5 rounded-full"
-                style={`background:${navDriver.color}`}
-                aria-hidden="true"
-              />
-            )
-          }
-          <span data-db-label>{navDriver?.name ?? "Select database"}</span>
+          <span
+            data-db-dot
+            hidden={isHub || !navDriver}
+            class="size-2.5 rounded-full"
+            style={navDriver ? `background:${navDriver.color}` : ""}
+            aria-hidden="true"
+          />
+          <span data-db-label data-db-prompt-label="Select database"
+            >{navDriver?.name ?? "Select database"}</span
+          >
           <svg
             class="size-3.5 text-accent-soft transition-transform group-aria-expanded:rotate-180"
             viewBox="0 0 24 24"

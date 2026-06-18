@@ -1,0 +1,20 @@
+---
+// schemic.dev/<driver> — the single-origin per-driver landing. SSG: getStaticPaths
+// emits one page per driver in the roster (/surrealdb, /postgres). Each renders the
+// SAME shared @schemic/landing pre-selected for that driver, and the Landing layout
+// inlines that driver's theme on :root so the first paint is already in-palette (no
+// flash). Selecting another driver in the picker switches CLIENT-SIDE (no reload).
+import HubLanding from "@schemic/landing/HubLanding.astro";
+import Landing from "../layouts/Landing.astro";
+import { drivers } from "@schemic/landing/config/drivers";
+
+export function getStaticPaths() {
+  return drivers.map((d) => ({ params: { driver: d.slug } }));
+}
+
+const { driver } = Astro.params;
+---
+
+<Landing activeDriver={driver}>
+  <HubLanding activeDriver={driver} />
+</Landing>

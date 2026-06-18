@@ -1,5 +1,5 @@
 ---
-import { ctaFor } from "../config/drivers";
+import { ctaFor, paneStates, paneKeyFor } from "../config/drivers";
 
 interface Props {
   /** Slug of the driver this site represents; null = agnostic hub. */
@@ -7,9 +7,16 @@ interface Props {
 }
 
 const { activeDriver = null } = Astro.props;
-// Driver-aware primary/secondary (flagship on the hub, the site's driver
-// otherwise). Coming-soon drivers stay honest and never push the flagship.
-const cta = ctaFor(activeDriver);
+// Driver-aware primary/secondary, rendered for EVERY variant as a
+// `[data-driver-pane]` so the picker can toggle the visible CTA row client-side
+// (no reload). The hub variant's primary OPENS the picker; a driver variant
+// links into that driver's docs subdomain.
+const activeKey = paneKeyFor(activeDriver);
+const ctaStates = paneStates.map((s) => ({
+  key: s.key,
+  hidden: s.key !== activeKey,
+  cta: ctaFor(s.slug),
+}));
 const arrow = '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>';
 ---
 
@@ -36,41 +43,47 @@ const arrow = '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>';
       schema you already wrote.
     </p>
 
-    <div class="mt-8 flex flex-wrap items-center justify-center gap-3.5">
-      {
-        cta.primary.openPicker ? (
-          <button
-            type="button"
-            data-open-picker
-            class="rounded-full bg-gradient-to-r from-accent to-accent-2 px-6 py-3.5 text-[15px] font-semibold text-on-accent shadow-[0_8px_30px_-6px_var(--color-accent)] transition-transform hover:scale-[1.03]"
-          >
-            {cta.primary.label}
-          </button>
-        ) : (
+    {
+      ctaStates.map((st) => (
+        <div
+          data-driver-pane={st.key}
+          hidden={st.hidden}
+          class="mt-8 flex flex-wrap items-center justify-center gap-3.5"
+        >
+          {st.cta.primary.openPicker ? (
+            <button
+              type="button"
+              data-open-picker
+              class="rounded-full bg-gradient-to-r from-accent to-accent-2 px-6 py-3.5 text-[15px] font-semibold text-on-accent shadow-[0_8px_30px_-6px_var(--color-accent)] transition-transform hover:scale-[1.03]"
+            >
+              {st.cta.primary.label}
+            </button>
+          ) : (
+            <a
+              href={st.cta.primary.href}
+              class="rounded-full bg-gradient-to-r from-accent to-accent-2 px-6 py-3.5 text-[15px] font-semibold text-on-accent shadow-[0_8px_30px_-6px_var(--color-accent)] transition-transform hover:scale-[1.03]"
+            >
+              {st.cta.primary.label}
+            </a>
+          )}
           <a
-            href={cta.primary.href}
-            class="rounded-full bg-gradient-to-r from-accent to-accent-2 px-6 py-3.5 text-[15px] font-semibold text-on-accent shadow-[0_8px_30px_-6px_var(--color-accent)] transition-transform hover:scale-[1.03]"
+            href={st.cta.secondary.href}
+            class="inline-flex items-center gap-2 rounded-full border border-border bg-code-bg px-5 py-3 text-sm font-medium text-ink transition-colors hover:border-ink-3"
           >
-            {cta.primary.label}
+            {st.cta.secondary.label}
+            <svg
+              class="size-3.5 text-ink-2"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              set:html={arrow}
+            />
           </a>
-        )
-      }
-      <a
-        href={cta.secondary.href}
-        class="inline-flex items-center gap-2 rounded-full border border-border bg-code-bg px-5 py-3 text-sm font-medium text-ink transition-colors hover:border-ink-3"
-      >
-        {cta.secondary.label}
-        <svg
-          class="size-3.5 text-ink-2"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          set:html={arrow}
-        />
-      </a>
-    </div>
+        </div>
+      ))
+    }
   </div>
 </section>

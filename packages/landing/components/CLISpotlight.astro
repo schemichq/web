@@ -1,4 +1,5 @@
 ---
+import { paneStates, paneKeyFor } from "../config/drivers";
 import { examplesFor } from "../config/examples";
 
 interface Props {
@@ -8,11 +9,15 @@ interface Props {
 const { activeDriver = null } = Astro.props;
 
 // Driver-aware terminal session (generated artifacts/dialect differ; the `sc`
-// commands themselves are driver-agnostic). See config/examples.ts. On the
-// agnostic hub the terminal output is blurred behind a "Select a database"
-// prompt (the generated artifacts are driver-specific).
-const isHub = activeDriver == null;
-const blocks = examplesFor(activeDriver).cli;
+// commands themselves are driver-agnostic). Every variant is rendered as a
+// `[data-driver-pane]` and the picker toggles which is visible. The agnostic
+// pane's blocks are neutral "select a database…" placeholders. See examples.ts.
+const activeKey = paneKeyFor(activeDriver);
+const states = paneStates.map((s) => ({
+  key: s.key,
+  hidden: s.key !== activeKey,
+  blocks: examplesFor(s.slug).cli,
+}));
 ---
 
 <section
@@ -58,14 +63,18 @@ const blocks = examplesFor(activeDriver).cli;
         class="relative flex flex-col gap-1.5 overflow-x-auto px-[22px] pt-[18px] pb-[22px] font-mono text-[13px] leading-[1.6]"
       >
         {
-          blocks.map((block, i) => (
-            <Fragment>
-              {i > 0 && <div class="h-2"></div>}
-              <div class="flex items-center gap-2"><span class="text-accent-2">$</span><span class="text-code-plain">{block.cmd}</span></div>
-              {block.outputs.map((o) => (
-                <div class:list={["whitespace-pre", o.c]}>{o.t}</div>
+          states.map((st) => (
+            <div data-driver-pane={st.key} hidden={st.hidden} class="flex flex-col gap-1.5">
+              {st.blocks.map((block, i) => (
+                <Fragment>
+                  {i > 0 && <div class="h-2"></div>}
+                  <div class="flex items-center gap-2"><span class="text-accent-2">$</span><span class="text-code-plain">{block.cmd}</span></div>
+                  {block.outputs.map((o) => (
+                    <div class:list={["whitespace-pre", o.c]}>{o.t}</div>
+                  ))}
+                </Fragment>
               ))}
-            </Fragment>
+            </div>
           ))
         }
       </div>

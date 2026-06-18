@@ -1,5 +1,6 @@
 ---
 import CodeBlock from "./CodeBlock.astro";
+import { paneStates, paneKeyFor } from "../config/drivers";
 import { examplesFor } from "../config/examples";
 
 interface Props {
@@ -8,23 +9,20 @@ interface Props {
 }
 const { activeDriver = null } = Astro.props;
 
-// Agnostic hub: the per-card generated/driver-specific snippets are blurred
-// behind a "Select a database" prompt (the `sc pull` adopt snippet + CLI chips
-// stay visible — they're driver-agnostic).
-const isHub = activeDriver == null;
-
 const vr = "text-accent-2";
 const cm = "text-code-comment";
 const pl = "text-code-plain";
 
 // Driver-specific mini snippets come from the centralized per-driver set; the
-// `sc pull` adopt snippet + CLI chips below are driver-agnostic. See
-// config/examples.ts.
-const bento = examplesFor(activeDriver).bento;
-const dropInLines = bento.dropIn;
-const endTypesLines = bento.endTypes;
-const byoLines = bento.byo;
-const liveLines = bento.live;
+// `sc pull` adopt snippet + CLI chips below are driver-agnostic. Each card's
+// driver snippet is rendered for EVERY variant as a `[data-driver-pane]`; the
+// picker toggles which is visible (the agnostic pane holds neutral placeholders).
+const activeKey = paneKeyFor(activeDriver);
+const states = paneStates.map((s) => ({
+  key: s.key,
+  hidden: s.key !== activeKey,
+  bento: examplesFor(s.slug).bento,
+}));
 
 const adoptLines = [
   [{ t: "$ ", c: vr }, { t: "sc pull", c: pl }],
@@ -85,7 +83,13 @@ const icons: Record<string, string> = {
           defaults, coercion, and <code class="font-mono text-accent-soft">infer / input / output</code>.
         </p>
         <div class="relative">
-          <CodeBlock lines={dropInLines} />
+          {
+            states.map((st) => (
+              <div data-driver-pane={st.key} hidden={st.hidden}>
+                <CodeBlock lines={st.bento.dropIn} />
+              </div>
+            ))
+          }
         </div>
         <p class="text-[13px] leading-relaxed text-ink-3">
           Migrate an existing schema by find-replacing <code class="font-mono text-ink-2">z.</code>
@@ -146,7 +150,13 @@ const icons: Record<string, string> = {
         </div>
         <p class="text-sm leading-relaxed text-ink-2">Infer row shapes straight from the schema.</p>
         <div class="relative">
-          <CodeBlock lines={endTypesLines} size={12} />
+          {
+            states.map((st) => (
+              <div data-driver-pane={st.key} hidden={st.hidden}>
+                <CodeBlock lines={st.bento.endTypes} size={12} />
+              </div>
+            ))
+          }
         </div>
         <p class="text-[13px] leading-relaxed text-ink-3">
           Unsupported types are flagged in your editor — not at migration time.
@@ -163,7 +173,13 @@ const icons: Record<string, string> = {
         </div>
         <p class="text-sm leading-relaxed text-ink-2">Store any class with a typed codec — app value in, wire type out.</p>
         <div class="relative">
-          <CodeBlock lines={byoLines} size={12} />
+          {
+            states.map((st) => (
+              <div data-driver-pane={st.key} hidden={st.hidden}>
+                <CodeBlock lines={st.bento.byo} size={12} />
+              </div>
+            ))
+          }
         </div>
       </article>
 
@@ -177,7 +193,13 @@ const icons: Record<string, string> = {
         </div>
         <p class="text-sm leading-relaxed text-ink-2">Diff against the running database.</p>
         <div class="relative">
-          <CodeBlock lines={liveLines} size={12} />
+          {
+            states.map((st) => (
+              <div data-driver-pane={st.key} hidden={st.hidden}>
+                <CodeBlock lines={st.bento.live} size={12} />
+              </div>
+            ))
+          }
         </div>
       </article>
     </div>

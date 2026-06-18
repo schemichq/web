@@ -9,6 +9,8 @@ import {
   drivers as driverList,
   findDriver,
   ctaFor,
+  paneStates,
+  paneKeyFor,
   SUGGEST_DRIVER_URL,
   REPO_URL,
 } from "../config/drivers";
@@ -35,10 +37,15 @@ const pickerLabel = selected?.name ?? "Database";
 
 const meta = ["TypeScript-first", "Zod-compatible", "MIT"];
 
-// Primary CTA — driver-aware: derived from the site's active driver (flagship
-// on the hub). Available drivers get "Start with <name>"; coming-soon drivers
-// get an honest, driver-centric CTA pointing at their own subdomain.
-const cta = ctaFor(activeDriver);
+// Primary CTA — driver-aware, rendered for EVERY variant as a `[data-driver-pane]`
+// (the hub variant OPENS the picker; a driver variant links into that driver's
+// docs). The picker toggles which is visible on a client-side switch (no reload).
+const activeKey = paneKeyFor(activeDriver);
+const ctaStates = paneStates.map((s) => ({
+  key: s.key,
+  hidden: s.key !== activeKey,
+  cta: ctaFor(s.slug),
+}));
 const chevron = '<path d="m6 9 6 6 6-6"/>';
 ---
 
@@ -87,6 +94,7 @@ const chevron = '<path d="m6 9 6 6 6-6"/>';
           >
             <span
               data-db-label
+              data-db-prompt-label="Database"
               class="bg-gradient-to-r from-accent to-accent-2 bg-clip-text text-transparent"
               >{pickerLabel}</span
             >
@@ -126,21 +134,27 @@ const chevron = '<path d="m6 9 6 6 6-6"/>';
     <!-- CTAs -->
     <div class="mt-9 flex flex-wrap items-center justify-center gap-3">
       {
-        cta.primary.openPicker ? (
-          <button
-            type="button"
-            data-open-picker
-            class="rounded-full bg-gradient-to-r from-accent to-accent-2 px-7 py-3.5 text-[15px] font-semibold text-on-accent shadow-[0_8px_26px_0_color-mix(in_oklab,var(--color-accent)_33%,transparent)] transition-transform hover:scale-[1.03]"
-          >
-            {cta.primary.label}
-          </button>
-        ) : (
-          <a
-            href={cta.primary.href}
-            class="rounded-full bg-gradient-to-r from-accent to-accent-2 px-7 py-3.5 text-[15px] font-semibold text-on-accent shadow-[0_8px_26px_0_color-mix(in_oklab,var(--color-accent)_33%,transparent)] transition-transform hover:scale-[1.03]"
-          >
-            {cta.primary.label}
-          </a>
+        ctaStates.map((st) =>
+          st.cta.primary.openPicker ? (
+            <button
+              type="button"
+              data-open-picker
+              data-driver-pane={st.key}
+              hidden={st.hidden}
+              class="rounded-full bg-gradient-to-r from-accent to-accent-2 px-7 py-3.5 text-[15px] font-semibold text-on-accent shadow-[0_8px_26px_0_color-mix(in_oklab,var(--color-accent)_33%,transparent)] transition-transform hover:scale-[1.03]"
+            >
+              {st.cta.primary.label}
+            </button>
+          ) : (
+            <a
+              href={st.cta.primary.href}
+              data-driver-pane={st.key}
+              hidden={st.hidden}
+              class="rounded-full bg-gradient-to-r from-accent to-accent-2 px-7 py-3.5 text-[15px] font-semibold text-on-accent shadow-[0_8px_26px_0_color-mix(in_oklab,var(--color-accent)_33%,transparent)] transition-transform hover:scale-[1.03]"
+            >
+              {st.cta.primary.label}
+            </a>
+          ),
         )
       }
       <a

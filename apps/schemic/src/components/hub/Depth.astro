@@ -4,7 +4,7 @@ const fn = "text-code-fn";
 const ty = "text-code-type";
 const st = "text-code-string";
 const pl = "text-code-plain";
-const vr = "text-pink";
+const vr = "text-accent-2";
 const cm = "text-code-comment";
 
 type Tok = { t: string; c: string };
@@ -50,7 +50,7 @@ const surqlLines: Line[] = [
   <div class="mx-auto max-w-6xl">
     <!-- head (left-aligned) -->
     <div class="max-w-3xl">
-      <p class="font-mono text-xs text-pink">
+      <p class="font-mono text-xs text-accent-2">
         // if you know Zod, you already know this
       </p>
       <h2
@@ -67,7 +67,7 @@ const surqlLines: Line[] = [
 
     <!-- window -->
     <div
-      class="mt-10 overflow-hidden rounded-2xl border border-border bg-code-bg shadow-[0_30px_70px_-30px_rgba(0,0,0,0.7),0_0_70px_-26px_rgba(150,0,255,0.28)]"
+      class="mt-10 overflow-hidden rounded-2xl border border-border bg-code-bg shadow-[0_30px_70px_-30px_rgba(0,0,0,0.7),0_0_70px_-26px_color-mix(in_oklab,var(--color-accent)_28%,transparent)]"
     >
       <!-- title bar -->
       <div class="relative flex items-center bg-surface px-4.5 py-3.5">
@@ -107,7 +107,7 @@ const surqlLines: Line[] = [
         </div>
 
         <!-- right pane (access.surql) -->
-        <div class="flex min-w-0 flex-col bg-pink/[0.04]">
+        <div class="flex min-w-0 flex-col bg-accent-2/[0.04]">
           <div
             class="flex items-center justify-between border-b border-border-subtle px-4.5 py-2.5"
           >
@@ -148,8 +148,8 @@ const surqlLines: Line[] = [
                 y2="0"
                 gradientUnits="userSpaceOnUse"
               >
-                <stop offset="0" stop-color="#9600ff"></stop>
-                <stop offset="1" stop-color="#ff85d6"></stop>
+                <stop offset="0" stop-color="var(--color-accent)"></stop>
+                <stop offset="1" stop-color="var(--color-accent-2)"></stop>
               </linearGradient>
             </defs>
             <path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path>

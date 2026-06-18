@@ -1,10 +1,13 @@
 /*
  * Landing entry (standalone marketing pages under src/pages/**).
  * Full Tailwind import (includes preflight/reset). Brand tokens come from the
- * shared @schemic/brand package so every driver site stays in sync.
+ * shared @schemic/brand package: the neutral BASE plus exactly one THEME. The
+ * hub wears its own umbrella theme (Amber); the same semantic-token markup
+ * re-themes per subdomain just by swapping the theme import.
  */
 @import "tailwindcss";
-@import "@schemic/brand/tokens.css";
+@import "@schemic/brand/base.css";
+@import "@schemic/brand/theme-schemic.css";
 
 @layer base {
   html {
@@ -21,7 +24,7 @@
   }
 
   ::selection {
-    background-color: color-mix(in oklab, var(--color-purple) 40%, transparent);
+    background-color: color-mix(in oklab, var(--color-accent) 40%, transparent);
     color: var(--color-ink);
   }
 }

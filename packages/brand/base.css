@@ -1,0 +1,66 @@
+/*
+ * Schemic brand — BASE (Tailwind v4 @theme).
+ *
+ * Structural + SEMANTIC tokens, theme-neutral. An app imports this BASE plus
+ * exactly ONE theme file (theme-schemic / theme-surrealdb / theme-postgres),
+ * which overrides the accent + canvas/surface/ink/border family so the same
+ * markup re-themes per subdomain:
+ *
+ *   @import "@schemic/brand/base.css";
+ *   @import "@schemic/brand/theme-schemic.css";
+ *
+ * This file is ONLY an @theme block (no base/body rules) so it is safe to
+ * import into multiple Tailwind roots. Values here are neutral defaults — a
+ * theme is expected to override the visual palette on top of them.
+ */
+@theme {
+  /* ---- Typography (fontsource variable families) ---- */
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* ---- Surfaces (canvas family — themes override) ---- */
+  --color-canvas: #0c0d10;
+  --color-canvas-2: #131419;
+  --color-surface: #16171d;
+  --color-surface-2: #1d1e26;
+  --color-code-bg: #0e0f13;
+
+  /* ---- Borders ---- */
+  --color-border: #2a2c36;
+  --color-border-subtle: #20222b;
+
+  /* ---- Text (ink) ---- */
+  --color-ink: #f4f5f7;
+  --color-ink-2: #a8acb8;
+  --color-ink-3: #6c7080;
+
+  /* ---- Accent family (the two gradient stops + soft/hot — themes override) ---- */
+  --color-accent: #8a8f9c;
+  --color-accent-2: #b9bfcd;
+  --color-accent-soft: #aeb3c0;
+  --color-accent-hot: #c8ccd8;
+
+  /* ---- Status (fixed across themes) ---- */
+  --color-success: #46d39a;
+  --color-danger: #ff5d6c;
+
+  /* ---- Code tokens (syntax; keyword/string/comment are accent-tinted per theme) ---- */
+  --color-code-comment: #5d6170;
+  --color-code-fn: #7bd0ff;
+  --color-code-keyword: #c9a6ff;
+  --color-code-plain: #d6d9e2;
+  --color-code-string: #9fe3b0;
+  --color-code-type: #9fe3b0;
+
+  /* ---- FIXED per-driver brand colors ----
+   * Independent of the active theme — used for the database-switcher dots and
+   * the "coming soon" driver accents, so a driver always reads in its own
+   * brand color regardless of which theme the page is wearing. */
+  --color-driver-surrealdb: #9600ff;
+  --color-driver-surrealdb-2: #ff85d6;
+  --color-driver-postgres: #4aa3df;
+  --color-driver-mysql: #00758f;
+  --color-driver-sqlite: #0f80cc;
+  --color-driver-mongodb: #13aa52;
+}

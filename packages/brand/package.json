@@ -3,9 +3,19 @@
   "type": "module",
   "private": true,
   "version": "0.0.0",
-  "description": "Shared Schemic brand kit: base design tokens (Tailwind v4 @theme) + per-driver overrides.",
+  "description": "Shared Schemic brand kit: base design tokens (Tailwind v4 @theme) + per-theme palettes (schemic/surrealdb/postgres) + fixed per-driver brand colors.",
   "exports": {
+    "./base.css": "./base.css",
+    "./theme-schemic.css": "./theme-schemic.css",
+    "./theme-surrealdb.css": "./theme-surrealdb.css",
+    "./theme-postgres.css": "./theme-postgres.css",
     "./tokens.css": "./tokens.css"
   },
-  "files": ["tokens.css"]
+  "files": [
+    "base.css",
+    "theme-schemic.css",
+    "theme-surrealdb.css",
+    "theme-postgres.css",
+    "tokens.css"
+  ]
 }

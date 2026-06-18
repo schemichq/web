@@ -1,0 +1,34 @@
+/*
+ * Schemic theme — SurrealDB (purple → pink). The original Schemic palette.
+ * Pair with base.css:
+ *   @import "@schemic/brand/base.css";
+ *   @import "@schemic/brand/theme-surrealdb.css";
+ */
+@theme {
+  /* Surfaces — purple-tinted */
+  --color-canvas: #0e0c14;
+  --color-canvas-2: #13101c;
+  --color-surface: #16131f;
+  --color-surface-2: #1c1826;
+  --color-code-bg: #100d18;
+
+  /* Borders */
+  --color-border: #2a2438;
+  --color-border-subtle: #211b2d;
+
+  /* Ink */
+  --color-ink: #f5f3fa;
+  --color-ink-2: #aaa1bb;
+  --color-ink-3: #6f6781;
+
+  /* Accent — purple → pink */
+  --color-accent: #9600ff;
+  --color-accent-2: #ff85d6;
+  --color-accent-soft: #c77dff;
+  --color-accent-hot: #ff00a0;
+
+  /* Accent-tinted code tokens */
+  --color-code-comment: #5d5670;
+  --color-code-keyword: #c77dff;
+  --color-code-string: #ff85d6;
+}

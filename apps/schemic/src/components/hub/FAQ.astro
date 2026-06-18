@@ -1,5 +1,5 @@
 ---
-const code = (s: string) => `<code class="font-mono text-soft">${s}</code>`;
+const code = (s: string) => `<code class="font-mono text-accent-soft">${s}</code>`;
 
 const faqs: { q: string; a: string; chips?: string[] }[] = [
   {
@@ -45,7 +45,7 @@ const faqs: { q: string; a: string; chips?: string[] }[] = [
 >
   <div class="mx-auto max-w-[1040px]">
     <div class="text-center">
-      <p class="font-mono text-xs uppercase tracking-[0.12em] text-pink">
+      <p class="font-mono text-xs uppercase tracking-[0.12em] text-accent-2">
         // common questions
       </p>
       <h2
@@ -60,7 +60,7 @@ const faqs: { q: string; a: string; chips?: string[] }[] = [
         faqs.map((f) => (
           <div class="flex flex-col gap-2.5 rounded-2xl border border-border bg-surface p-6">
             <div class="flex items-start gap-2.5">
-              <span class="font-mono text-base font-semibold leading-[1.3] text-pink">+</span>
+              <span class="font-mono text-base font-semibold leading-[1.3] text-accent-2">+</span>
               <h3 class="font-display text-[17px] font-semibold leading-[1.3] text-ink">
                 {f.q}
               </h3>

@@ -6,7 +6,7 @@ const fn = "text-code-fn";
 const ty = "text-code-type";
 const st = "text-code-string";
 const pl = "text-code-plain";
-const vr = "text-pink";
+const vr = "text-accent-2";
 const cm = "text-code-comment";
 const mut = "text-ink-3";
 const ok = "text-success";
@@ -63,7 +63,7 @@ const icons: Record<string, string> = {
   <div class="mx-auto max-w-6xl">
     <!-- head -->
     <div class="mx-auto max-w-3xl text-center">
-      <p class="font-mono text-xs uppercase tracking-[0.12em] text-pink">
+      <p class="font-mono text-xs uppercase tracking-[0.12em] text-accent-2">
         // what you get
       </p>
       <h2
@@ -72,9 +72,9 @@ const icons: Record<string, string> = {
         Everything you get with Schemic.
       </h2>
       <p class="mx-auto mt-4 max-w-2xl text-[17px] leading-relaxed text-ink-2">
-        A drop-in <code class="font-mono text-soft">s.*</code> schema, generated
+        A drop-in <code class="font-mono text-accent-soft">s.*</code> schema, generated
         SurrealQL DDL, a migration CLI, end-to-end types, the full
-        <code class="font-mono text-soft">define*</code> vocabulary, and a live round-trip
+        <code class="font-mono text-accent-soft">define*</code> vocabulary, and a live round-trip
         — all from one typed file.
       </p>
     </div>
@@ -87,15 +87,15 @@ const icons: Record<string, string> = {
       >
         <div class="flex items-center gap-2.5">
           <span
-            class="grid size-[34px] place-items-center rounded-[9px] border border-border bg-pink/10 text-pink"
+            class="grid size-[34px] place-items-center rounded-[9px] border border-border bg-accent-2/10 text-accent-2"
           >
             <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={icons.puzzle} />
           </span>
           <h3 class="font-display text-lg font-semibold text-ink">Drop-in Zod API</h3>
         </div>
         <p class="text-sm leading-relaxed text-ink-2">
-          A 1:1 drop-in for <code class="font-mono text-soft">z.*</code> — refinements,
-          defaults, coercion, and <code class="font-mono text-soft">infer / input / output</code>.
+          A 1:1 drop-in for <code class="font-mono text-accent-soft">z.*</code> — refinements,
+          defaults, coercion, and <code class="font-mono text-accent-soft">infer / input / output</code>.
         </p>
         <CodeBlock lines={dropInLines} />
         <p class="text-[13px] leading-relaxed text-ink-3">
@@ -109,7 +109,7 @@ const icons: Record<string, string> = {
         <!-- Adopt any database -->
         <article class="flex flex-1 flex-col gap-3 rounded-2xl border border-border bg-surface p-[22px]">
           <div class="flex items-center gap-2.5">
-            <span class="grid size-[34px] place-items-center rounded-[9px] border border-border bg-pink/10 text-pink">
+            <span class="grid size-[34px] place-items-center rounded-[9px] border border-border bg-accent-2/10 text-accent-2">
               <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={icons.download} />
             </span>
             <h3 class="font-display text-lg font-semibold text-ink">Adopt any database</h3>
@@ -123,7 +123,7 @@ const icons: Record<string, string> = {
         <!-- CLI toolbelt -->
         <article class="flex flex-1 flex-col gap-3 rounded-2xl border border-border bg-surface p-[22px]">
           <div class="flex items-center gap-2.5">
-            <span class="grid size-[34px] place-items-center rounded-[9px] border border-border bg-pink/10 text-pink">
+            <span class="grid size-[34px] place-items-center rounded-[9px] border border-border bg-accent-2/10 text-accent-2">
               <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={icons.wrench} />
             </span>
             <h3 class="font-display text-lg font-semibold text-ink">CLI toolbelt</h3>
@@ -150,7 +150,7 @@ const icons: Record<string, string> = {
       <!-- End-to-end types -->
       <article class="flex flex-col gap-3.5 rounded-2xl border border-border bg-surface p-[22px]">
         <div class="flex items-center gap-2.5">
-          <span class="grid size-[34px] place-items-center rounded-[9px] border border-border bg-pink/10 text-pink">
+          <span class="grid size-[34px] place-items-center rounded-[9px] border border-border bg-accent-2/10 text-accent-2">
             <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={icons.shieldCheck} />
           </span>
           <h3 class="font-display text-lg font-semibold text-ink">End-to-end types</h3>
@@ -165,7 +165,7 @@ const icons: Record<string, string> = {
       <!-- Bring your own types -->
       <article class="flex flex-col gap-3.5 rounded-2xl border border-border bg-surface p-[22px]">
         <div class="flex items-center gap-2.5">
-          <span class="grid size-[34px] place-items-center rounded-[9px] border border-border bg-pink/10 text-pink">
+          <span class="grid size-[34px] place-items-center rounded-[9px] border border-border bg-accent-2/10 text-accent-2">
             <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={icons.package} />
           </span>
           <h3 class="font-display text-lg font-semibold text-ink">Bring your own types</h3>
@@ -177,7 +177,7 @@ const icons: Record<string, string> = {
       <!-- Live round-trip -->
       <article class="flex flex-col gap-3.5 rounded-2xl border border-border bg-surface p-[22px]">
         <div class="flex items-center gap-2.5">
-          <span class="grid size-[34px] place-items-center rounded-[9px] border border-border bg-pink/10 text-pink">
+          <span class="grid size-[34px] place-items-center rounded-[9px] border border-border bg-accent-2/10 text-accent-2">
             <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={icons.refresh} />
           </span>
           <h3 class="font-display text-lg font-semibold text-ink">Live round-trip</h3>

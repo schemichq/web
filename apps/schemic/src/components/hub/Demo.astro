@@ -5,7 +5,7 @@ const fn = "text-code-fn";
 const ty = "text-code-type";
 const st = "text-code-string";
 const pl = "text-code-plain";
-const vr = "text-pink";
+const vr = "text-accent-2";
 const cm = "text-code-comment";
 const mut = "text-ink-3";
 const ok = "text-success";
@@ -37,14 +37,14 @@ const surqlLines: Line[] = [
 
 // --- Migrations (CLI) state ---
 const migrationsLines = [
-  { sym: "$", symC: "text-pink", msg: " sc generate add_users", msgC: "text-code-plain" },
+  { sym: "$", symC: "text-accent-2", msg: " sc generate add_users", msgC: "text-code-plain" },
   { sym: "~", symC: mut, msg: " diffing schema.ts against snapshot…", msgC: mut },
   { sym: "+", symC: ok, msg: " DEFINE TABLE user TYPE NORMAL SCHEMAFULL", msgC: ok },
   { sym: "+", symC: ok, msg: " DEFINE FIELD email ON TABLE user … UNIQUE", msgC: ok },
   { sym: "✓", symC: ok, msg: " wrote migrations/0001_add_users.surql", msgC: "text-ink-2" },
   { sym: " ", symC: mut, msg: "", msgC: mut },
-  { sym: "$", symC: "text-pink", msg: " sc migrate", msgC: "text-code-plain" },
-  { sym: "▸", symC: "text-soft", msg: " applying 0001_add_users.surql → surrealdb", msgC: "text-soft" },
+  { sym: "$", symC: "text-accent-2", msg: " sc migrate", msgC: "text-code-plain" },
+  { sym: "▸", symC: "text-accent-soft", msg: " applying 0001_add_users.surql → surrealdb", msgC: "text-accent-soft" },
   { sym: "✓", symC: ok, msg: " migrated user · 3 fields · 1 index", msgC: "text-ink-2" },
   { sym: "✓", symC: ok, msg: " recorded 0001 · sha 9f2c… · up to date", msgC: ok },
 ];
@@ -117,10 +117,10 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
       <h2
         class="mx-auto mt-4 max-w-2xl font-display text-3xl font-semibold tracking-tight text-balance text-ink-2 sm:text-4xl"
       >
-        From <code class="font-mono text-soft">s.*</code> schema to generated{" "}
+        From <code class="font-mono text-accent-soft">s.*</code> schema to generated{" "}
         <span
           id="demo-dialect"
-          class="bg-gradient-to-r from-purple to-pink bg-clip-text text-transparent"
+          class="bg-gradient-to-r from-accent to-accent-2 bg-clip-text text-transparent"
           >SurrealQL</span
         >.
       </h2>
@@ -141,7 +141,7 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
               class="group flex shrink-0 items-center gap-2 rounded-full border border-border bg-surface px-3.5 py-2 text-sm text-ink-2 transition-colors data-[active=true]:bg-surface-2 data-[active=true]:font-semibold data-[active=true]:text-ink"
             >
               <svg
-                class="size-4 shrink-0 text-ink-3 group-data-[active=true]:text-pink"
+                class="size-4 shrink-0 text-ink-3 group-data-[active=true]:text-accent-2"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -199,7 +199,7 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
                   class="group flex items-center gap-2.5 rounded-[10px] border border-transparent px-3 py-2.5 text-left text-sm text-ink-2 transition-colors hover:bg-white/[0.04] data-[active=true]:border-border data-[active=true]:bg-surface-2 data-[active=true]:font-semibold data-[active=true]:text-ink"
                 >
                   <svg
-                    class="size-[17px] shrink-0 text-ink-3 group-data-[active=true]:text-pink"
+                    class="size-[17px] shrink-0 text-ink-3 group-data-[active=true]:text-accent-2"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -239,7 +239,7 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
         </aside>
 
         <!-- editor window -->
-        <div class="min-w-0 flex-1 overflow-hidden rounded-2xl border border-border bg-code-bg shadow-[0_0_60px_#9600ff22,0_30px_60px_-10px_#00000066]">
+        <div class="min-w-0 flex-1 overflow-hidden rounded-2xl border border-border bg-code-bg shadow-[0_0_60px_color-mix(in_oklab,var(--color-accent)_13%,transparent),0_30px_60px_-10px_#00000066]">
           <!-- window header -->
           <div
             class="relative flex items-center border-b border-border-subtle bg-surface px-4 py-3"
@@ -277,7 +277,7 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
                       <div
                         class:list={[
                           "flex border-l-2 pr-4",
-                          line.hl ? "border-purple bg-purple/10" : "border-transparent",
+                          line.hl ? "border-accent bg-accent/10" : "border-transparent",
                         ]}
                       >
                         <span class="w-8 shrink-0 select-none pr-3 text-right text-ink-3">
@@ -292,16 +292,16 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
               <!-- right pane -->
               <div class="flex min-w-0 flex-col">
                 <div
-                  class="flex items-center justify-between border-b border-border-subtle bg-pink/[0.03] px-4 py-2.5"
+                  class="flex items-center justify-between border-b border-border-subtle bg-accent-2/[0.03] px-4 py-2.5"
                 >
                   <span id="demo-file" class="font-mono text-xs text-ink-2">{tabHead.schema.r}</span>
-                  <span id="demo-lang" class="font-mono text-[10px] text-pink">{tabHead.schema.rt}</span>
+                  <span id="demo-lang" class="font-mono text-[10px] text-accent-2">{tabHead.schema.rt}</span>
                 </div>
                 <div
                   class="relative min-w-0 overflow-x-auto bg-code-bg py-4 font-mono text-[13px] leading-6 lg:pl-5"
                 >
                   <div
-                    class="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent to-pink/[0.04]"
+                    class="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent to-accent-2/[0.04]"
                   >
                   </div>
                   <!-- coming-soon overlay (shown when a not-yet-shipped driver is picked) -->
@@ -313,14 +313,14 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
                     <span
                       class="size-2.5 rounded-full"
                       id="demo-soon-dot"
-                      style="background:#4aa3df"
+                      style="background:var(--color-driver-postgres)"
                       aria-hidden="true"></span>
                     <p id="demo-soon-text" class="max-w-xs font-sans text-sm text-ink-2">
                       This driver is coming soon — start with SurrealDB today.
                     </p>
                     <a
                       href="https://surreal.schemic.dev"
-                      class="rounded-full bg-gradient-to-r from-purple to-pink px-4 py-2 font-sans text-xs font-semibold text-white"
+                      class="rounded-full bg-gradient-to-r from-accent to-accent-2 px-4 py-2 font-sans text-xs font-semibold text-white"
                       >Start with SurrealDB</a
                     >
                   </div>
@@ -329,7 +329,7 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
                       <div
                         class:list={[
                           "relative flex border-l-2 pr-2",
-                          line.hl ? "border-purple bg-purple/10" : "border-transparent",
+                          line.hl ? "border-accent bg-accent/10" : "border-transparent",
                         ]}
                       >
                         <span class="w-8 shrink-0 select-none pr-3 text-right text-ink-3">
@@ -363,8 +363,8 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
                       y2="0"
                       gradientUnits="userSpaceOnUse"
                     >
-                      <stop offset="0" stop-color="#9600ff"></stop>
-                      <stop offset="1" stop-color="#ff85d6"></stop>
+                      <stop offset="0" stop-color="var(--color-accent)"></stop>
+                      <stop offset="1" stop-color="var(--color-accent-2)"></stop>
                     </linearGradient>
                   </defs>
                   <path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path>
@@ -375,11 +375,11 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
             <!-- map note -->
             <div
               id="demo-mapnote"
-              class="flex items-center gap-2 border-t border-border-subtle bg-purple/10 px-4 py-2.5 text-xs text-ink-2"
+              class="flex items-center gap-2 border-t border-border-subtle bg-accent/10 px-4 py-2.5 text-xs text-ink-2"
             >
-              <span class="size-1.5 shrink-0 rounded-full bg-gradient-to-r from-purple to-pink"></span>
+              <span class="size-1.5 shrink-0 rounded-full bg-gradient-to-r from-accent to-accent-2"></span>
               <span>
-                Highlighted — one <code class="font-mono text-soft">s.email().unique()</code>
+                Highlighted — one <code class="font-mono text-accent-soft">s.email().unique()</code>
                 compiles to a typed <code class="font-mono text-code-type">FIELD</code> + a
                 <code class="font-mono text-code-type">UNIQUE INDEX</code>.
               </span>
@@ -402,9 +402,9 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
               }
             </div>
             <div
-              class="flex items-center gap-2 border-t border-border-subtle bg-purple/10 px-4 py-2.5 text-xs text-ink-2"
+              class="flex items-center gap-2 border-t border-border-subtle bg-accent/10 px-4 py-2.5 text-xs text-ink-2"
             >
-              <span class="size-1.5 shrink-0 rounded-full bg-gradient-to-r from-purple to-pink"></span>
+              <span class="size-1.5 shrink-0 rounded-full bg-gradient-to-r from-accent to-accent-2"></span>
               <span>Every change is a reviewable up/down migration — applied in order, recorded by sha.</span>
             </div>
           </div>
@@ -435,7 +435,7 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
                     <div
                       class:list={[
                         "flex items-center gap-3 px-3 py-1.5",
-                        i === 0 && "bg-purple/15",
+                        i === 0 && "bg-accent/15",
                       ]}
                     >
                       <span class="text-code-fn">{m.name}</span>
@@ -447,10 +447,10 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
               </div>
             </div>
             <div
-              class="flex items-center gap-2 border-t border-border-subtle bg-purple/10 px-4 py-2.5 text-xs text-ink-2"
+              class="flex items-center gap-2 border-t border-border-subtle bg-accent/10 px-4 py-2.5 text-xs text-ink-2"
             >
-              <span class="size-1.5 shrink-0 rounded-full bg-gradient-to-r from-purple to-pink"></span>
-              <span>Decoded rows are fully typed — <code class="font-mono text-soft">datetime → Date</code>, <code class="font-mono text-soft">RecordId</code>, optionals and all.</span>
+              <span class="size-1.5 shrink-0 rounded-full bg-gradient-to-r from-accent to-accent-2"></span>
+              <span>Decoded rows are fully typed — <code class="font-mono text-accent-soft">datetime → Date</code>, <code class="font-mono text-accent-soft">RecordId</code>, optionals and all.</span>
             </div>
           </div>
 
@@ -463,19 +463,19 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
               <span class="font-mono text-[11px] text-ink-3">{tabHead.live.lt}</span>
             </div>
             <div class="bg-code-bg px-4 py-4 font-mono text-[13px] leading-[1.7]">
-              <div class="whitespace-pre text-ink-3"><span class="text-pink">$</span> sc diff --live</div>
+              <div class="whitespace-pre text-ink-3"><span class="text-accent-2">$</span> sc diff --live</div>
               <div class="mb-2 whitespace-pre text-ink-3">~ comparing schema.ts ↔ running database</div>
               {
                 driftLines.map((line) => (
                   <div class="whitespace-pre pl-2">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</div>
                 ))
               }
-              <div class="mt-2 whitespace-pre text-ink-2">3 changes · run <span class="text-soft">sc sync</span> to reconcile</div>
+              <div class="mt-2 whitespace-pre text-ink-2">3 changes · run <span class="text-accent-soft">sc sync</span> to reconcile</div>
             </div>
             <div
-              class="flex items-center gap-2 border-t border-border-subtle bg-purple/10 px-4 py-2.5 text-xs text-ink-2"
+              class="flex items-center gap-2 border-t border-border-subtle bg-accent/10 px-4 py-2.5 text-xs text-ink-2"
             >
-              <span class="size-1.5 shrink-0 rounded-full bg-gradient-to-r from-purple to-pink"></span>
+              <span class="size-1.5 shrink-0 rounded-full bg-gradient-to-r from-accent to-accent-2"></span>
               <span>Diff your code against the live database — normalized through SurrealDB, so there is no formatting noise.</span>
             </div>
           </div>
@@ -487,7 +487,7 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
     <div class="mt-6 flex flex-col items-center justify-between gap-4 sm:flex-row">
       <p class="flex items-center gap-2 text-sm text-ink-3">
         <svg
-          class="size-4 shrink-0 text-pink"
+          class="size-4 shrink-0 text-accent-2"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -509,7 +509,7 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
       >
         Open the playground
         <svg
-          class="size-4 shrink-0 text-pink transition-transform group-hover:translate-x-0.5"
+          class="size-4 shrink-0 text-accent-2 transition-transform group-hover:translate-x-0.5"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"

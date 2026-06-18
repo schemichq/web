@@ -1,18 +1,24 @@
 ---
-// schemic.dev hub hero. The database word in the headline is a CLOSED dropdown
-// control — the SOLE database picker. PASS 1: static/closed. PASS 2 wires the
-// open/switch interaction (#db-picker / #db-menu) so switching re-renders the
-// demo's generated DDL. Roster markup is here but hidden for now.
+// schemic.dev hub hero. The database word in the headline is the SOLE database
+// picker (a dropdown). It is CROSS-SUBDOMAIN: choosing an AVAILABLE driver
+// navigates to that driver's subdomain; a COMING-SOON driver stays in-page and
+// surfaces the demo's coming-soon overlay. Per-driver dots use the FIXED brand
+// color (independent of the page's active theme); the picker label + glow use
+// the theme accent (the hub wears Amber).
+import { drivers as driverList, driverUrl, isAvailable } from "../../config/drivers";
+
 const meta = ["TypeScript-first", "Zod-compatible", "MIT"];
 
-const drivers = [
-  { name: "SurrealDB", status: "Available", available: true, href: "https://surreal.schemic.dev" },
-  { name: "PostgreSQL", status: "Coming soon", available: false, dot: "#4aa3df" },
-  { name: "MySQL", status: "Coming soon", available: false, dot: "#00a8c6" },
-  { name: "SQLite", status: "Coming soon", available: false, dot: "#3aa6e8" },
-  { name: "MongoDB", status: "Coming soon", available: false, dot: "#13aa52" },
-];
+const options = driverList.map((d) => ({
+  name: d.name,
+  available: isAvailable(d),
+  status: isAvailable(d) ? "Available" : "Coming soon",
+  href: isAvailable(d) ? driverUrl(d.slug) : "",
+  color: d.color,
+  color2: d.color2 ?? d.color,
+}));
 
+const surrealUrl = driverUrl("surreal");
 const chevron = '<path d="m6 9 6 6 6-6"/>';
 ---
 
@@ -20,7 +26,7 @@ const chevron = '<path d="m6 9 6 6 6-6"/>';
   <!-- ambient glow -->
   <div
     class="pointer-events-none absolute inset-x-0 -top-40 mx-auto h-[640px] max-w-5xl opacity-70 blur-3xl"
-    style="background: radial-gradient(closest-side, color-mix(in oklab, var(--color-purple) 26%, transparent), transparent 70%);"
+    style="background: radial-gradient(closest-side, color-mix(in oklab, var(--color-accent) 26%, transparent), transparent 70%);"
     aria-hidden="true"
   >
   </div>
@@ -31,9 +37,9 @@ const chevron = '<path d="m6 9 6 6 6-6"/>';
     <!-- eyebrow pill -->
     <a
       href="https://github.com/schemichq/schemic"
-      class="group inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3.5 py-[7px] font-mono text-xs text-ink-2 backdrop-blur transition-colors hover:border-purple/50 hover:text-ink"
+      class="group inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3.5 py-[7px] font-mono text-xs text-ink-2 backdrop-blur transition-colors hover:border-accent/50 hover:text-ink"
     >
-      <span class="size-[7px] rounded-full bg-pink" aria-hidden="true"></span>
+      <span class="size-[7px] rounded-full bg-accent-2" aria-hidden="true"></span>
       Schema as code · any database
     </a>
 
@@ -49,15 +55,15 @@ const chevron = '<path d="m6 9 6 6 6-6"/>';
             aria-haspopup="listbox"
             aria-expanded="false"
             aria-label="Choose your database"
-            class="group inline-flex items-center gap-2 rounded-2xl border border-purple/40 bg-surface/70 px-3 py-0.5 align-middle shadow-[0_0_24px_-6px_var(--color-purple)] transition-colors hover:border-purple/70"
+            class="group inline-flex items-center gap-2 rounded-2xl border border-accent/40 bg-surface/70 px-3 py-0.5 align-middle shadow-[0_0_24px_-6px_var(--color-accent)] transition-colors hover:border-accent/70"
           >
             <span
               id="db-label"
-              class="bg-gradient-to-r from-purple to-pink bg-clip-text text-transparent"
+              class="bg-gradient-to-r from-accent to-accent-2 bg-clip-text text-transparent"
               >SurrealDB</span
             >
             <svg
-              class="size-[0.6em] text-soft transition-transform group-aria-expanded:rotate-180"
+              class="size-[0.6em] text-accent-soft transition-transform group-aria-expanded:rotate-180"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -77,29 +83,28 @@ const chevron = '<path d="m6 9 6 6 6-6"/>';
             class="absolute left-1/2 top-full z-30 mt-3 w-72 -translate-x-1/2 rounded-2xl border border-border bg-canvas-2/95 p-1.5 text-left shadow-2xl backdrop-blur"
           >
             {
-              drivers.map((d, i) => (
+              options.map((d, i) => (
                 <div
                   role="option"
                   aria-selected={i === 0}
                   tabindex={i === 0 ? 0 : -1}
                   data-driver={d.name}
                   data-available={d.available ? "true" : "false"}
-                  data-accent={d.dot ?? ""}
+                  data-href={d.href}
+                  data-accent={d.color}
                   class="flex cursor-pointer items-center justify-between rounded-xl px-3 py-2 font-sans text-sm text-ink-2 outline-none transition-colors hover:bg-white/[0.05] focus-visible:bg-white/[0.07] aria-selected:text-ink"
                 >
                   <span class="flex items-center gap-2.5">
-                    {d.available ? (
-                      <span
-                        class="size-2.5 rounded-full bg-gradient-to-br from-purple to-pink"
-                        aria-hidden="true"
-                      />
-                    ) : (
-                      <span
-                        class="size-2.5 rounded-full"
-                        style={`background:${d.dot}`}
-                        aria-hidden="true"
-                      />
-                    )}
+                    {/* per-driver dot uses the FIXED brand color, not the theme accent */}
+                    <span
+                      class="size-2.5 rounded-full"
+                      style={
+                        d.available
+                          ? `background:linear-gradient(135deg, ${d.color}, ${d.color2})`
+                          : `background:${d.color}`
+                      }
+                      aria-hidden="true"
+                    />
                     <span class="font-medium">{d.name}</span>
                   </span>
                   <span
@@ -133,8 +138,8 @@ const chevron = '<path d="m6 9 6 6 6-6"/>';
     <!-- CTAs -->
     <div class="mt-9 flex flex-wrap items-center justify-center gap-3">
       <a
-        href="https://surreal.schemic.dev"
-        class="rounded-full bg-gradient-to-r from-purple to-pink px-7 py-3.5 text-[15px] font-semibold text-white shadow-[0_8px_26px_0_#9600ff55] transition-transform hover:scale-[1.03]"
+        href={surrealUrl}
+        class="rounded-full bg-gradient-to-r from-accent to-accent-2 px-7 py-3.5 text-[15px] font-semibold text-white shadow-[0_8px_26px_0_color-mix(in_oklab,var(--color-accent)_33%,transparent)] transition-transform hover:scale-[1.03]"
       >
         Start with SurrealDB
       </a>
@@ -212,6 +217,16 @@ const chevron = '<path d="m6 9 6 6 6-6"/>';
     };
 
     const select = (opt: HTMLElement) => {
+      const available = opt.getAttribute("data-available") === "true";
+      const href = opt.getAttribute("data-href") || "";
+
+      // Available driver -> navigate to its subdomain (cross-subdomain switch).
+      if (available && href) {
+        window.location.href = href;
+        return;
+      }
+
+      // Coming-soon driver -> stay in-page: update the label + tell the Demo.
       options.forEach((o) =>
         o.setAttribute("aria-selected", String(o === opt)),
       );
@@ -221,7 +236,7 @@ const chevron = '<path d="m6 9 6 6 6-6"/>';
         new CustomEvent("schemic:driver", {
           detail: {
             name,
-            available: opt.getAttribute("data-available") === "true",
+            available: false,
             accent: opt.getAttribute("data-accent") || "",
           },
         }),

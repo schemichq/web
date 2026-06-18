@@ -2,7 +2,7 @@
 const ok = "text-success";
 const mut = "text-ink-3";
 const sec = "text-ink-2";
-const soft = "text-soft";
+const soft = "text-accent-soft";
 
 type Out = { t: string; c: string };
 type Block = { cmd: string; outputs: Out[] };
@@ -42,7 +42,7 @@ const blocks: Block[] = [
   <div class="mx-auto flex max-w-[920px] flex-col items-center">
     <!-- head -->
     <div class="text-center">
-      <p class="font-mono text-xs uppercase tracking-[0.08em] text-pink">
+      <p class="font-mono text-xs uppercase tracking-[0.08em] text-accent-2">
         // the cli
       </p>
       <h2
@@ -58,7 +58,7 @@ const blocks: Block[] = [
 
     <!-- terminal -->
     <div
-      class="mt-9 w-full overflow-hidden rounded-[14px] border border-border bg-code-bg shadow-[0_0_60px_0_#9600ff22,0_30px_60px_0_#00000066]"
+      class="mt-9 w-full overflow-hidden rounded-[14px] border border-border bg-code-bg shadow-[0_0_60px_0_color-mix(in_oklab,var(--color-accent)_13%,transparent),0_30px_60px_0_#00000066]"
     >
       <!-- title bar -->
       <div class="relative flex items-center bg-surface px-4.5 py-[13px]">
@@ -81,7 +81,7 @@ const blocks: Block[] = [
           blocks.map((block, i) => (
             <Fragment>
               {i > 0 && <div class="h-2"></div>}
-              <div class="flex items-center gap-2"><span class="text-pink">$</span><span class="text-code-plain">{block.cmd}</span></div>
+              <div class="flex items-center gap-2"><span class="text-accent-2">$</span><span class="text-code-plain">{block.cmd}</span></div>
               {block.outputs.map((o) => (
                 <div class:list={["whitespace-pre", o.c]}>{o.t}</div>
               ))}

@@ -1,10 +1,18 @@
 /*
- * Schemic brand tokens -> Tailwind v4 theme (shared base).
+ * Schemic brand tokens -> Tailwind v4 theme (LEGACY / SurrealDB alias).
+ *
+ * BACK-COMPAT: this is the original SurrealDB-flavored token set. It is kept
+ * intact for consumers that still import "@schemic/brand/tokens.css" (the
+ * surreal app + @schemic/ui docs shell), which rely on the literal brand names
+ * (--color-purple / -pink / -soft / -hot) and the Starlight accent/gray ramps.
+ *
+ * NEW WORK should use the theme system instead:
+ *   @import "@schemic/brand/base.css";
+ *   @import "@schemic/brand/theme-surrealdb.css";  // or theme-schemic / theme-postgres
+ *
  * Source of truth: design/website.pen (Pencil) variables, Concept 7.1 (dark).
- * Shared across the Schemic web properties (the hub + every driver site) so
- * branding stays in sync. This file is ONLY an @theme block (no base/body
- * rules) so it is safe to import into multiple Tailwind roots. Per-driver
- * palette overrides layer on top of this base.
+ * This file is ONLY an @theme block (no base/body rules) so it is safe to
+ * import into multiple Tailwind roots.
  */
 @theme {
   /* Typography (fontsource variable families) */

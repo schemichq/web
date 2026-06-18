@@ -446,9 +446,9 @@ const agnostic: DriverExamples = {
 
   schema: {
     input: [
-      { num: 1, tokens: [{ t: "import ", c: kw }, { t: "{ ", c: pl }, { t: "s", c: pl }, { t: ", ", c: pl }, { t: "defineTable", c: fn }, { t: " } ", c: pl }, { t: "from ", c: kw }, { t: '"@schemic/core"', c: st }, { t: ";", c: pl }] },
+      { num: 1, tokens: [{ t: "import ", c: kw }, { t: "{ ", c: pl }, { t: "s", c: pl }, { t: ", ", c: pl }, { t: "defineTable", c: fn }, { t: " } ", c: pl }, { t: "from ", c: kw }, { t: '"@schemic/<driver>"', c: st }, { t: ";", c: pl }] },
       blank(2),
-      { num: 3, tokens: [{ t: "// NEUTRAL hub schema — confirm core API with core-dev", c: cm }] },
+      { num: 3, tokens: [{ t: "// Pick a database — the shape stays the same, the import + output change", c: cm }] },
       { num: 4, tokens: [{ t: "export ", c: kw }, { t: "const ", c: kw }, { t: "User", c: ty }, { t: " = ", c: pl }, { t: "defineTable", c: fn }, { t: "(", c: pl }, { t: '"user"', c: st }, { t: ", {", c: pl }] },
       { num: 5, tokens: [{ t: "  name", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "string", c: fn }, { t: "(),", c: pl }] },
       { num: 6, tokens: [{ t: "  email", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "string", c: fn }, { t: "(),", c: pl }] },

@@ -14,7 +14,13 @@ import {
   findDriver,
   ctaFor,
   SUGGEST_DRIVER_URL,
+  REPO_URL,
 } from "../config/drivers";
+
+// Feather "star" — filled, accent-tinted; shown only once the star island
+// confirms a numeric count (see Nav's island).
+const starIcon =
+  '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>';
 
 interface Props {
   /** Slug of the driver this site represents; null = agnostic hub. */
@@ -199,9 +205,30 @@ const chevron = '<path d="m6 9 6 6 6-6"/>';
         {cta.primary.label}
       </a>
       <a
-        href="https://github.com/schemichq/schemic"
+        href={REPO_URL}
         class="inline-flex items-center gap-2 rounded-full px-3 py-3.5 text-[15px] font-medium text-ink transition-colors hover:text-white"
       >
+        <!--
+          Star count — hidden until the island confirms a numeric count, so the
+          CTA reads as a plain "View on GitHub" with no empty gap when the count
+          is unavailable. Becomes "★ 1.2k · View on GitHub" when available.
+        -->
+        <span
+          data-gh-star-count
+          hidden
+          class="inline-flex items-center gap-1.5 font-semibold"
+        >
+          <svg
+            class="size-4 text-accent"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            stroke="none"
+            aria-hidden="true"
+            set:html={starIcon}
+          />
+          <span data-gh-count></span>
+          <span class="text-border" aria-hidden="true">·</span>
+        </span>
         <svg
           class="size-4"
           viewBox="0 0 24 24"

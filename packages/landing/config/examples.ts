@@ -9,10 +9,10 @@
 // artifacts / DDL dialect / output differ. Keep that split when adding drivers.
 //
 // SurrealDB content below is the verified, shipped example — byte-identical to
-// the copy previously hardcoded across the components. Postgres entries are
-// DRAFTS flagged `// TODO: pending driver-dev-postgres verification`; the
-// Postgres driver team must verify them (see packages/landing/POSTGRES-EXAMPLES-NEEDED.md)
-// before they are treated as authoritative. Do not ship the pg drafts as final.
+// the copy previously hardcoded across the components. Postgres entries are now
+// VERIFIED by driver-dev-postgres (round-tripped through PGlite); the CLI chrome
+// and codec shape are applied as verified, pending core-dev confirmation. See
+// packages/landing/POSTGRES-EXAMPLES-NEEDED.md.
 
 // Brand code-token color classes (mirror @schemic/brand's code-* tokens).
 const kw = "text-code-keyword";
@@ -270,103 +270,100 @@ const surrealdb: DriverExamples = {
 };
 
 // ===========================================================================
-// PostgreSQL — DRAFT placeholders. NOT verified. The Postgres driver team must
-// confirm exact generated output (column ordering, identifier quoting, CHECK
-// regex, constraint vs index, function/trigger/policy syntax) before this is
-// authoritative. See POSTGRES-EXAMPLES-NEEDED.md. Do not ship as final.
+// PostgreSQL — VERIFIED by driver-dev-postgres. Every DDL/schema slot was
+// produced by the real @schemic/postgres driver and round-tripped through
+// PGlite (apply -> introspectAll -> buildKindDiff = {up:[],down:[]}). The CLI
+// chrome (~ diffing…, ✓ wrote…, N changes…) and the codec shape are applied as
+// driver-dev-postgres verified, pending core-dev confirmation. Depth has no
+// pg analog today (no DEFINE ACCESS/EVENT/FUNCTION), so depth.available=false.
+// See POSTGRES-EXAMPLES-NEEDED.md.
 // ===========================================================================
 const postgres: DriverExamples = {
   lang: "PostgreSQL",
   file: "user.sql",
 
   schema: {
-    // TODO: pending driver-dev-postgres verification — pg INPUT differs:
-    // id implicit/omitted, no $readonly, email is not s.email() yet.
     input: [
-      { num: 1, tokens: [{ t: "export ", c: kw }, { t: "const ", c: kw }, { t: "User", c: ty }, { t: " = ", c: pl }, { t: "defineTable", c: fn }, { t: "(", c: pl }, { t: '"user"', c: st }, { t: ", {", c: pl }] },
-      { num: 2, hl: true, tokens: [{ t: "  email", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "string", c: fn }, { t: "().", c: pl }, { t: "unique", c: fn }, { t: "(),", c: pl }] },
-      { num: 3, tokens: [{ t: "  name", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "string", c: fn }, { t: "().", c: pl }, { t: "optional", c: fn }, { t: "(),", c: pl }] },
-      { num: 4, tokens: [{ t: "  createdAt", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "datetime", c: fn }, { t: "()", c: pl }] },
-      { num: 5, tokens: [{ t: "    .", c: pl }, { t: "$default", c: fn }, { t: "(", c: pl }, { t: "sql", c: fn }, { t: "`", c: st }, { t: "now", c: fn }, { t: "()", c: pl }, { t: "`", c: st }, { t: ")", c: pl }] },
-      { num: 6, tokens: [{ t: "});", c: pl }] },
+      { num: 1, tokens: [{ t: "import ", c: kw }, { t: "{ ", c: pl }, { t: "defineTable", c: fn }, { t: ", ", c: pl }, { t: "s", c: pl }, { t: ", ", c: pl }, { t: "sqlExpr", c: fn }, { t: " } ", c: pl }, { t: "from ", c: kw }, { t: '"@schemic/postgres"', c: st }, { t: ";", c: pl }] },
+      blank(2),
+      { num: 3, tokens: [{ t: "export ", c: kw }, { t: "const ", c: kw }, { t: "user", c: ty }, { t: " = ", c: pl }, { t: "defineTable", c: fn }, { t: "(", c: pl }, { t: '"user"', c: st }, { t: ", {", c: pl }] },
+      { num: 4, hl: true, tokens: [{ t: "  email", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "text", c: fn }, { t: "()", c: pl }] },
+      { num: 5, hl: true, tokens: [{ t: "    .", c: pl }, { t: "$unique", c: fn }, { t: "()", c: pl }] },
+      { num: 6, hl: true, tokens: [{ t: "    .", c: pl }, { t: "$check", c: fn }, { t: "(", c: pl }, { t: "sqlExpr", c: fn }, { t: "(", c: pl }, { t: "\"email ~* '^[^@\\\\s]+@[^@\\\\s]+\\\\.[^@\\\\s]+$'\"", c: st }, { t: ")),", c: pl }] },
+      { num: 7, tokens: [{ t: "  name", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "string", c: fn }, { t: "().", c: pl }, { t: "optional", c: fn }, { t: "(),", c: pl }] },
+      { num: 8, tokens: [{ t: "  createdAt", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "timestamptz", c: fn }, { t: "().", c: pl }, { t: "$default", c: fn }, { t: "(", c: pl }, { t: "sqlExpr", c: fn }, { t: "(", c: pl }, { t: '"now()"', c: st }, { t: ")),", c: pl }] },
+      { num: 9, tokens: [{ t: "});", c: pl }] },
     ],
-    // TODO: pending driver-dev-postgres verification — generated DDL draft only.
     output: [
       { num: 1, tokens: [{ t: "CREATE TABLE ", c: kw }, { t: '"user" ', c: ty }, { t: "(", c: pl }] },
-      { num: 2, tokens: [{ t: "  id          ", c: pl }, { t: "text ", c: ty }, { t: "PRIMARY KEY", c: kw }, { t: ",", c: pl }] },
-      { num: 3, tokens: [{ t: "  name        ", c: pl }, { t: "text ", c: ty }, { t: "NOT NULL", c: kw }, { t: ",", c: pl }] },
-      { num: 4, hl: true, tokens: [{ t: "  email       ", c: pl }, { t: "text ", c: ty }, { t: "NOT NULL ", c: kw }, { t: "CHECK ", c: kw }, { t: "(", c: pl }, { t: "email ", c: pl }, { t: "~* ", c: kw }, { t: "'^[^@]+@[^@]+\\.[^@]+$'", c: st }, { t: "),", c: pl }] },
-      { num: 5, tokens: [{ t: '  "createdAt" ', c: pl }, { t: "timestamptz ", c: ty }, { t: "NOT NULL ", c: kw }, { t: "DEFAULT ", c: kw }, { t: "now", c: fn }, { t: "()", c: pl }] },
+      { num: 2, tokens: [{ t: '  "id" ', c: pl }, { t: "text ", c: ty }, { t: "PRIMARY KEY", c: kw }, { t: ",", c: pl }] },
+      { num: 3, tokens: [{ t: '  "createdAt" ', c: pl }, { t: "timestamp with time zone ", c: ty }, { t: "NOT NULL ", c: kw }, { t: "DEFAULT ", c: kw }, { t: "now", c: fn }, { t: "()", c: pl }, { t: ",", c: pl }] },
+      { num: 4, hl: true, tokens: [{ t: '  "email" ', c: pl }, { t: "text ", c: ty }, { t: "NOT NULL ", c: kw }, { t: "CHECK ", c: kw }, { t: "(", c: pl }, { t: "email ", c: pl }, { t: "~* ", c: kw }, { t: "'^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$'", c: st }, { t: "),", c: pl }] },
+      { num: 5, tokens: [{ t: '  "name" ', c: pl }, { t: "text", c: ty }] },
       { num: 6, tokens: [{ t: ");", c: pl }] },
+      { num: 7, hl: true, tokens: [{ t: "CREATE UNIQUE INDEX ", c: kw }, { t: '"user_email_key" ', c: pl }, { t: "ON ", c: kw }, { t: '"user" ', c: ty }, { t: "(", c: pl }, { t: '"email"', c: pl }, { t: ");", c: pl }] },
     ],
-    // TODO: pending driver-dev-postgres verification — DDL wording draft only.
     mapNote: [
       { t: "Highlighted — one " },
-      { t: "s.string().unique()", code: true, c: soft },
-      { t: " compiles to a typed " },
+      { t: "s.text().$unique().$check(…)", code: true, c: soft },
+      { t: " compiles to a " },
       { t: "column", code: true, c: ty },
       { t: " + a " },
-      { t: "UNIQUE constraint", code: true, c: ty },
+      { t: "CHECK", code: true, c: ty },
+      { t: " + a " },
+      { t: "UNIQUE INDEX", code: true, c: ty },
       { t: "." },
     ],
   },
 
-  // TODO: pending driver-dev-postgres verification — migration output draft only
-  // (.sql artifact, CREATE TABLE / ALTER TABLE, "→ postgres").
   migrations: [
     { sym: "$", symC: vr, msg: " sc generate add_users", msgC: pl },
     { sym: "~", symC: mut, msg: " diffing schema.ts against snapshot…", msgC: mut },
-    { sym: "+", symC: ok, msg: " CREATE TABLE \"user\" ( … )", msgC: ok },
-    { sym: "+", symC: ok, msg: " ALTER TABLE \"user\" ADD UNIQUE (email)", msgC: ok },
+    { sym: "+", symC: ok, msg: " CREATE TABLE \"user\" (…)", msgC: ok },
+    { sym: "+", symC: ok, msg: " CREATE UNIQUE INDEX \"user_email_key\" ON \"user\" (\"email\")", msgC: ok },
     { sym: "✓", symC: ok, msg: " wrote migrations/0001_add_users.sql", msgC: sec },
     { sym: " ", symC: mut, msg: "", msgC: mut },
     { sym: "$", symC: vr, msg: " sc migrate", msgC: pl },
     { sym: "▸", symC: soft, msg: " applying 0001_add_users.sql → postgres", msgC: soft },
-    { sym: "✓", symC: ok, msg: " migrated user · 3 columns · 1 constraint", msgC: sec },
+    { sym: "✓", symC: ok, msg: " migrated user · 3 fields · 1 index", msgC: sec },
     { sym: "✓", symC: ok, msg: " recorded 0001 · sha 9f2c… · up to date", msgC: ok },
   ],
 
   types: {
-    // TODO: pending driver-dev-postgres verification — query dialect draft only
-    // (SQL where/order, now() - interval, no time::now()/90d).
     query: [
-      { num: 1, tokens: [{ t: "const ", c: kw }, { t: "limit ", c: pl }, { t: "= ", c: pl }, { t: "20", c: ty }] },
-      { num: 2, tokens: [{ t: " ", c: pl }] },
-      { num: 3, tokens: [{ t: "const ", c: kw }, { t: "rows ", c: pl }, { t: "= ", c: pl }, { t: "await ", c: kw }, { t: "db", c: pl }, { t: ".", c: pl }, { t: "query", c: fn }, { t: "<[", c: pl }, { t: "unknown", c: ty }, { t: "[]]>(", c: pl }, { t: "sql", c: fn }, { t: "`", c: st }] },
-      { num: 4, tokens: [{ t: "  SELECT ", c: kw }, { t: "* ", c: pl }, { t: "FROM ", c: kw }, { t: '"user"', c: ty }] },
-      { num: 5, tokens: [{ t: "  WHERE ", c: kw }, { t: '"createdAt" ', c: pl }, { t: "> ", c: pl }, { t: "now", c: fn }, { t: "() ", c: pl }, { t: "- ", c: pl }, { t: "interval ", c: kw }, { t: "'90 days'", c: st }] },
-      { num: 6, tokens: [{ t: "  ORDER BY ", c: kw }, { t: '"createdAt" ', c: pl }, { t: "DESC ", c: kw }, { t: "LIMIT ", c: kw }, { t: "${", c: pl }, { t: "limit", c: vr }, { t: "}", c: pl }] },
-      { num: 7, tokens: [{ t: "`", c: st }, { t: ")", c: pl }] },
-      { num: 8, tokens: [{ t: " ", c: pl }] },
-      { num: 9, tokens: [{ t: "const ", c: kw }, { t: "users ", c: pl }, { t: "= ", c: pl }, { t: "rows", c: pl }, { t: "[", c: pl }, { t: "0", c: ty }, { t: "].", c: pl }, { t: "map", c: fn }, { t: "(", c: pl }, { t: "User", c: ty }, { t: ".", c: pl }, { t: "decode", c: fn }, { t: ")", c: pl }] },
-      { num: 10, tokens: [{ t: "users", c: pl }, { t: "[", c: pl }, { t: "0", c: ty }, { t: "].", c: pl }] },
+      { num: 1, tokens: [{ t: "import ", c: kw }, { t: "{ ", c: pl }, { t: "pgSql", c: fn }, { t: ", ", c: pl }, { t: "identifier", c: fn }, { t: " } ", c: pl }, { t: "from ", c: kw }, { t: '"@schemic/postgres"', c: st }, { t: ";", c: pl }] },
+      blank(2),
+      { num: 3, tokens: [{ t: "const ", c: kw }, { t: "limit ", c: pl }, { t: "= ", c: pl }, { t: "20", c: ty }] },
+      blank(4),
+      { num: 5, tokens: [{ t: "const ", c: kw }, { t: "{ rows } ", c: pl }, { t: "= ", c: pl }, { t: "await ", c: kw }, { t: "db", c: pl }, { t: ".", c: pl }, { t: "query", c: fn }, { t: "(", c: pl }, { t: "pgSql", c: fn }, { t: "`", c: st }] },
+      { num: 6, tokens: [{ t: "  SELECT ", c: kw }, { t: "* ", c: pl }, { t: "FROM ", c: kw }, { t: "${", c: pl }, { t: "identifier", c: fn }, { t: "(", c: pl }, { t: '"user"', c: st }, { t: ")", c: pl }, { t: "}", c: pl }] },
+      { num: 7, tokens: [{ t: "  WHERE ", c: kw }, { t: "${", c: pl }, { t: "identifier", c: fn }, { t: "(", c: pl }, { t: '"createdAt"', c: st }, { t: ")", c: pl }, { t: "} ", c: pl }, { t: "> ", c: pl }, { t: "now", c: fn }, { t: "() ", c: pl }, { t: "- ", c: pl }, { t: "interval ", c: kw }, { t: "'90 days'", c: st }] },
+      { num: 8, tokens: [{ t: "  ORDER BY ", c: kw }, { t: "${", c: pl }, { t: "identifier", c: fn }, { t: "(", c: pl }, { t: '"createdAt"', c: st }, { t: ")", c: pl }, { t: "} ", c: pl }, { t: "DESC ", c: kw }, { t: "LIMIT ", c: kw }, { t: "${", c: pl }, { t: "limit", c: vr }, { t: "}", c: pl }] },
+      { num: 9, tokens: [{ t: "`", c: st }, { t: ")", c: pl }] },
+      blank(10),
+      { num: 11, tokens: [{ t: "const ", c: kw }, { t: "users ", c: pl }, { t: "= ", c: pl }, { t: "rows ", c: pl }, { t: "as ", c: kw }, { t: "App", c: ty }, { t: "<", c: pl }, { t: "typeof", c: kw }, { t: " user", c: ty }, { t: ">[]", c: pl }] },
+      { num: 12, tokens: [{ t: "users", c: pl }, { t: "[", c: pl }, { t: "0", c: ty }, { t: "].", c: pl }] },
     ],
-    // TODO: pending driver-dev-postgres verification — pg row id type (uuid/text,
-    // no RecordId).
     members: [
-      { name: "id", type: "string" },
       { name: "email", type: "string" },
       { name: "name?", type: "string" },
       { name: "createdAt", type: "Date" },
     ],
   },
 
-  // TODO: pending driver-dev-postgres verification — drift diff dialect draft only.
   live: [
     { c: pl, tokens: [{ t: "ON TABLE ", c: kw }, { t: '"user"', c: ty }] },
-    { c: ok, tokens: [{ t: "+ ", c: ok }, { t: "CHECK ", c: kw }, { t: "(email ~* …)", c: pl }, { t: "   email", c: mut }] },
-    { c: vr, tokens: [{ t: "~ ", c: vr }, { t: "text ", c: ty }, { t: "→ ", c: pl }, { t: "text NOT NULL", c: ty }, { t: "   name", c: mut }] },
+    { c: ok, tokens: [{ t: "+ ", c: ok }, { t: "ALTER COLUMN ", c: kw }, { t: '"name" ', c: pl }, { t: "SET NOT NULL", c: kw }, { t: "   name", c: mut }] },
     { c: dn, tokens: [{ t: "- ", c: dn }, { t: "DROP INDEX ", c: kw }, { t: "legacy_email_idx", c: pl }, { t: "   removed", c: mut }] },
   ],
 
-  // TODO: pending driver-dev-postgres verification — terminal output draft only.
   cli: [
     {
       cmd: "sc generate add_users",
       outputs: [
         { t: "  ~ diffing schema.ts against the live schema…", c: mut },
-        { t: '  + CREATE TABLE "user" ( … )', c: ok },
-        { t: '  + ALTER TABLE "user" ADD UNIQUE (email)', c: ok },
+        { t: '  + CREATE TABLE "user" (…)', c: ok },
+        { t: '  + CREATE UNIQUE INDEX "user_email_key" ON "user" ("email")', c: ok },
         { t: "  ✓ wrote migrations/0001_add_users.sql", c: sec },
       ],
     },
@@ -374,7 +371,7 @@ const postgres: DriverExamples = {
       cmd: "sc migrate",
       outputs: [
         { t: "  ▸ applying 0001_add_users.sql → postgres", c: soft },
-        { t: "  ✓ migrated user · 3 columns · 1 constraint", c: sec },
+        { t: "  ✓ migrated user · 3 fields · 1 index", c: sec },
         { t: "  ✓ schema up to date", c: ok },
       ],
     },
@@ -387,70 +384,46 @@ const postgres: DriverExamples = {
     },
   ],
 
-  // TODO: pending driver-dev-postgres verification — FEATURE PARITY UNKNOWN.
-  // Does @schemic/postgres author analogs of DEFINE ACCESS (RLS policies?),
-  // DEFINE EVENT (triggers?), DEFINE FUNCTION (pg functions?)? If NO analog,
-  // set `available: false` to hide this whole section on the Postgres page.
-  // The draft below assumes trigger + function + RLS policy.
+  // No pg analog today: @schemic/postgres registers only table/index/constraint
+  // (no DEFINE ACCESS/EVENT/FUNCTION authoring — verified against the registry on
+  // main). depth.available=false hides the whole Depth section on the pg page.
   depth: {
-    available: true,
+    available: false,
     title: "access.ts → access.sql",
     inputFile: "access.ts",
     inputLang: "TypeScript",
     outputFile: "access.sql",
     outputLang: "PostgreSQL",
     input: [
-      { num: 1, tokens: [{ t: "// events, functions & access — one file", c: cm }] },
-      { num: 2, tokens: [{ t: "User", c: ty }, { t: ".", c: pl }, { t: "event", c: fn }, { t: "(", c: pl }, { t: '"welcome"', c: st }, { t: ", {", c: pl }] },
-      { num: 3, tokens: [{ t: "  when", c: pl }, { t: ": ", c: pl }, { t: '"INSERT"', c: st }, { t: ",", c: pl }] },
-      { num: 4, tokens: [{ t: "  then", c: pl }, { t: ": ", c: pl }, { t: "sql", c: fn }, { t: "`", c: st }, { t: "welcome", c: fn }, { t: "(", c: pl }, { t: "NEW.id", c: vr }, { t: ")", c: pl }, { t: "`", c: st }, { t: ",", c: pl }] },
-      { num: 5, tokens: [{ t: "})", c: pl }] },
-      blank(6),
-      { num: 7, tokens: [{ t: "export ", c: kw }, { t: "const ", c: kw }, { t: "welcome", c: pl }, { t: " = ", c: pl }, { t: "defineFunction", c: fn }, { t: "(", c: pl }, { t: '"welcome"', c: st }, { t: ", {", c: pl }] },
-      { num: 8, tokens: [{ t: "  user", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "uuid", c: fn }, { t: "(),", c: pl }] },
-      { num: 9, tokens: [{ t: "}).", c: pl }, { t: "body", c: fn }, { t: "(", c: pl }, { t: "sql", c: fn }, { t: "`", c: st }, { t: "INSERT INTO ", c: kw }, { t: "log", c: ty }, { t: "(", c: pl }, { t: '"user"', c: pl }, { t: ") ", c: pl }, { t: "VALUES ", c: kw }, { t: "($user)", c: vr }, { t: "`", c: st }, { t: ")", c: pl }] },
-      blank(10),
-      { num: 11, tokens: [{ t: "export ", c: kw }, { t: "const ", c: kw }, { t: "account", c: pl }, { t: " = ", c: pl }, { t: "defineAccess", c: fn }, { t: "(", c: pl }, { t: '"account"', c: st }, { t: ")", c: pl }] },
-      { num: 12, tokens: [{ t: "  .", c: pl }, { t: "policy", c: fn }, { t: "().", c: pl }, { t: "using", c: fn }, { t: "(", c: pl }, { t: "sql", c: fn }, { t: "`", c: st }, { t: '"user"', c: pl }, { t: " = ", c: pl }, { t: "current_user", c: vr }, { t: "`", c: st }, { t: ")", c: pl }] },
+      { num: 1, tokens: [{ t: "// Not applicable: @schemic/postgres does not author", c: cm }] },
+      { num: 2, tokens: [{ t: "// events / functions / access rules today.", c: cm }] },
     ],
     output: [
-      { num: 1, tokens: [{ t: "CREATE TRIGGER ", c: kw }, { t: "welcome ", c: pl }, { t: "AFTER INSERT ON ", c: kw }, { t: '"user"', c: ty }] },
-      { num: 2, tokens: [{ t: "  FOR EACH ROW ", c: kw }, { t: "EXECUTE FUNCTION ", c: kw }, { t: "welcome", c: fn }, { t: "();", c: pl }] },
-      blank(3),
-      { num: 4, tokens: [{ t: "CREATE FUNCTION ", c: kw }, { t: "welcome", c: fn }, { t: "(", c: pl }, { t: "user ", c: pl }, { t: "uuid", c: ty }, { t: ") ", c: pl }, { t: "RETURNS trigger ", c: kw }, { t: "AS $$", c: pl }] },
-      { num: 5, tokens: [{ t: "  INSERT INTO ", c: kw }, { t: "log", c: ty }, { t: "(", c: pl }, { t: '"user"', c: pl }, { t: ") ", c: pl }, { t: "VALUES ", c: kw }, { t: "(NEW.id);", c: vr }] },
-      { num: 6, tokens: [{ t: "$$ ", c: pl }, { t: "LANGUAGE plpgsql", c: kw }, { t: ";", c: pl }] },
-      blank(7),
-      { num: 8, tokens: [{ t: "CREATE POLICY ", c: kw }, { t: "account ", c: pl }, { t: "ON ", c: kw }, { t: '"user"', c: ty }] },
-      { num: 9, tokens: [{ t: "  USING ", c: kw }, { t: "(", c: pl }, { t: '"user" ', c: pl }, { t: "= ", c: pl }, { t: "current_user", c: vr }, { t: ");", c: pl }] },
+      { num: 1, tokens: [{ t: "-- Not applicable for @schemic/postgres.", c: cm }] },
     ],
   },
 
   bento: {
-    // TODO: pending driver-dev-postgres verification — $default uses sql`now()`.
     dropIn: [
-      [{ t: "email", c: pl }, { t: ": ", c: pl }, { t: "s", c: fn }, { t: ".", c: pl }, { t: "string", c: fn }, { t: "().", c: pl }, { t: "unique", c: fn }, { t: "(),", c: pl }],
+      [{ t: "email", c: pl }, { t: ": ", c: pl }, { t: "s", c: fn }, { t: ".", c: pl }, { t: "text", c: fn }, { t: "().", c: pl }, { t: "$unique", c: fn }, { t: "().", c: pl }, { t: "$check", c: fn }, { t: "(", c: pl }, { t: "sqlExpr", c: fn }, { t: "(", c: pl }, { t: "\"email ~* '…'\"", c: st }, { t: ")),", c: pl }],
       [{ t: "name", c: pl }, { t: ": ", c: pl }, { t: "s", c: fn }, { t: ".", c: pl }, { t: "string", c: fn }, { t: "().", c: pl }, { t: "optional", c: fn }, { t: "(),", c: pl }],
       [{ t: "role", c: pl }, { t: ": ", c: pl }, { t: "s", c: fn }, { t: ".", c: pl }, { t: "enum", c: fn }, { t: "([", c: pl }, { t: '"admin"', c: st }, { t: ", ", c: pl }, { t: '"user"', c: st }, { t: "]),", c: pl }],
-      [{ t: "createdAt", c: pl }, { t: ": ", c: pl }, { t: "s", c: fn }, { t: ".", c: pl }, { t: "datetime", c: fn }, { t: "().", c: pl }, { t: "$default", c: fn }, { t: "(", c: pl }, { t: "sql", c: fn }, { t: "`", c: st }, { t: "now", c: fn }, { t: "()", c: pl }, { t: "`", c: st }, { t: "),", c: pl }],
+      [{ t: "createdAt", c: pl }, { t: ": ", c: pl }, { t: "s", c: fn }, { t: ".", c: pl }, { t: "timestamptz", c: fn }, { t: "().", c: pl }, { t: "$default", c: fn }, { t: "(", c: pl }, { t: "sqlExpr", c: fn }, { t: "(", c: pl }, { t: '"now()"', c: st }, { t: ")),", c: pl }],
     ],
-    // TODO: pending driver-dev-postgres verification — pg row id type (no RecordId).
     endTypes: [
-      [{ t: "type ", c: kw }, { t: "User", c: ty }, { t: " = ", c: pl }, { t: "App", c: fn }, { t: "<", c: pl }, { t: "typeof", c: kw }, { t: " User>", c: ty }],
-      [{ t: "// { id: string; email: string; … }", c: cm }],
-      [{ t: "type ", c: kw }, { t: "NewUser", c: ty }, { t: " = ", c: pl }, { t: "Create", c: fn }, { t: "<", c: pl }, { t: "typeof", c: kw }, { t: " User", c: ty }, { t: ">;", c: pl }],
-      [{ t: "// id + generated columns excluded", c: cm }],
+      [{ t: "type ", c: kw }, { t: "User", c: ty }, { t: " = ", c: pl }, { t: "App", c: fn }, { t: "<", c: pl }, { t: "typeof", c: kw }, { t: " user>", c: ty }],
+      [{ t: '// { email: string; name?: string; role: "admin" | "user"; createdAt: Date }', c: cm }],
+      [{ t: "type ", c: kw }, { t: "WireUser", c: ty }, { t: " = ", c: pl }, { t: "Wire", c: fn }, { t: "<", c: pl }, { t: "typeof", c: kw }, { t: " user>", c: ty }],
+      [{ t: "// the encoded (DB-wire) row type", c: cm }],
     ],
-    // TODO: pending driver-dev-postgres verification — codec hook name ($postgres?).
     byo: [
-      [{ t: "s", c: fn }, { t: ".", c: pl }, { t: "instanceof", c: fn }, { t: "(", c: pl }, { t: "Money", c: ty }, { t: ")", c: pl }],
-      [{ t: "  .", c: pl }, { t: "$postgres", c: fn }, { t: "(", c: pl }, { t: "s", c: fn }, { t: ".", c: pl }, { t: "string", c: fn }, { t: "(), {", c: pl }],
-      [{ t: "    encode, decode ", c: pl }, { t: "})", c: pl }],
+      [{ t: "s", c: fn }, { t: ".", c: pl }, { t: "$postgres", c: fn }, { t: "(", c: pl }, { t: '"text"', c: st }, { t: ",", c: pl }],
+      [{ t: "  z", c: fn }, { t: ".", c: pl }, { t: "codec", c: fn }, { t: "(", c: pl }, { t: "z", c: fn }, { t: ".", c: pl }, { t: "string", c: fn }, { t: "(), ", c: pl }, { t: "z", c: fn }, { t: ".", c: pl }, { t: "instanceof", c: fn }, { t: "(", c: pl }, { t: "Money", c: ty }, { t: "), {", c: pl }],
+      [{ t: "    decode, encode ", c: pl }, { t: "}))", c: pl }],
     ],
-    // TODO: pending driver-dev-postgres verification — DDL diff draft only.
     live: [
       [{ t: "~ ", c: cm }, { t: "sc diff --live", c: pl }],
-      [{ t: "+ ", c: ok }, { t: "CREATE INDEX user_email_idx", c: ok }],
+      [{ t: "+ ", c: ok }, { t: "CREATE UNIQUE INDEX user_email_key", c: ok }],
       [{ t: "- ", c: dn }, { t: "DROP COLUMN legacy_id", c: dn }],
     ],
   },

@@ -2,15 +2,14 @@
 import { driverUrl, flagshipDriver } from "../config/drivers";
 
 // Single product-news / announcement strip — the SAME message on every
-// subdomain (not driver-aware). Dismissible; dismissal persists in
-// localStorage. Swap the message + href when there is new news to surface.
+// subdomain (not driver-aware). Always visible (NOT dismissible). Swap the
+// message + href when there is new news to surface.
 const href = driverUrl(flagshipDriver.slug);
-const closeIcon = '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>';
 ---
 
 <div id="site-banner" class="border-b border-border-subtle bg-canvas-2/60">
   <div
-    class="relative mx-auto flex max-w-6xl items-center justify-center gap-3 px-10 py-2.5 text-center text-sm"
+    class="mx-auto flex max-w-6xl items-center justify-center gap-3 px-4 py-2.5 text-center text-sm"
   >
     <a href={href} class="group inline-flex items-center gap-3">
       <span
@@ -25,44 +24,5 @@ const closeIcon = '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>';
         aria-hidden="true">&rarr;</span
       >
     </a>
-    <button
-      id="banner-dismiss"
-      type="button"
-      aria-label="Dismiss announcement"
-      class="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-ink-3 transition-colors hover:bg-white/[0.06] hover:text-ink-2"
-    >
-      <svg
-        class="size-3.5"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        set:html={closeIcon}
-      />
-    </button>
   </div>
 </div>
-
-<script is:inline>
-  (function () {
-    var KEY = "schemic-banner-dismissed-v1";
-    var el = document.getElementById("site-banner");
-    if (!el) return;
-    try {
-      if (localStorage.getItem(KEY)) {
-        el.style.display = "none";
-        return;
-      }
-    } catch (e) {}
-    var btn = document.getElementById("banner-dismiss");
-    if (btn)
-      btn.addEventListener("click", function () {
-        el.style.display = "none";
-        try {
-          localStorage.setItem(KEY, "1");
-        } catch (e) {}
-      });
-  })();
-</script>

@@ -12,7 +12,7 @@
 import manifest from "./examples-manifest.json";
 
 /** Staleness marker — must match the vendored manifest's `source.hash`. */
-export const VENDORED_SOURCE_HASH = "a8a72e97e7b23fac";
+export const VENDORED_SOURCE_HASH = "bdd1acc48eeddddc";
 
 /**
  * One verified cookbook example: a TS authoring source (`code`) and the DDL it

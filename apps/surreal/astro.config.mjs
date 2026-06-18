@@ -9,7 +9,7 @@ import { brandShikiTheme } from "@schemic/content/code-theme";
 // built to match design/website.pen. No Starlight: we own the chrome.
 // Docs content is MDX (src/content/docs/**) rendered at /docs/<slug>.
 export default defineConfig({
-  site: "https://surreal.schemic.dev",
+  site: "https://surrealdb.schemic.dev",
   integrations: [mdx()],
   markdown: {
     // Brand syntax colors for plain ``` fences (CodeBlock shares this theme).

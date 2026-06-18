@@ -3,7 +3,7 @@
   "type": "module",
   "private": true,
   "version": "0.0.0",
-  "description": "SurrealDB driver site - surreal.schemic.dev (landing + docs + blog).",
+  "description": "SurrealDB driver site - surrealdb.schemic.dev (landing + docs + blog).",
   "scripts": {
     "dev": "portless run --name surrealdb.schemic astro dev",
     "start": "astro dev",

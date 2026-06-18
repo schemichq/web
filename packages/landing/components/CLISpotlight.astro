@@ -1,38 +1,15 @@
 ---
-const ok = "text-success";
-const mut = "text-ink-3";
-const sec = "text-ink-2";
-const soft = "text-accent-soft";
+import { examplesFor } from "../config/examples";
 
-type Out = { t: string; c: string };
-type Block = { cmd: string; outputs: Out[] };
+interface Props {
+  /** Slug of the driver this site represents; null = agnostic hub. */
+  activeDriver?: string | null;
+}
+const { activeDriver = null } = Astro.props;
 
-const blocks: Block[] = [
-  {
-    cmd: "sc generate add_users",
-    outputs: [
-      { t: "  ~ diffing schema.ts against the live schema…", c: mut },
-      { t: "  + DEFINE TABLE user TYPE NORMAL SCHEMAFULL", c: ok },
-      { t: "  + DEFINE FIELD email ON TABLE user … UNIQUE", c: ok },
-      { t: "  ✓ wrote migrations/0001_add_users.surql", c: sec },
-    ],
-  },
-  {
-    cmd: "sc migrate",
-    outputs: [
-      { t: "  ▸ applying 0001_add_users.surql → surrealdb", c: soft },
-      { t: "  ✓ migrated user · 3 fields · 1 index", c: sec },
-      { t: "  ✓ schema up to date", c: ok },
-    ],
-  },
-  {
-    cmd: "sc diff --live",
-    outputs: [
-      { t: "  ~ comparing schema.ts ↔ running database", c: mut },
-      { t: "  ✓ no drift — live schema matches your code", c: ok },
-    ],
-  },
-];
+// Driver-aware terminal session (generated artifacts/dialect differ; the `sc`
+// commands themselves are driver-agnostic). See config/examples.ts.
+const blocks = examplesFor(activeDriver).cli;
 ---
 
 <section

@@ -5,7 +5,7 @@ import {
   findDriver,
   ctaFor,
 } from "../config/drivers";
-import { exampleFor } from "../config/examples";
+import { examplesFor } from "../config/examples";
 
 interface Props {
   /** Slug of the driver this site represents; null = agnostic hub. */
@@ -19,83 +19,23 @@ const { activeDriver = null } = Astro.props;
 // can still change all of this client-side via the `schemic:driver` event.
 const selected = findDriver(activeDriver) ?? flagshipDriver;
 const selectedAvailable = isAvailable(selected);
-// Driver-aware schema -> DDL example (output lang/file + tokenized DDL lines).
-// The s.* schema INPUT pane is shared; only this output differs per driver.
-const example = exampleFor(selected.slug);
-const initialDialect = { lang: example.lang, file: example.file };
+// All driver-specific code blocks in this Demo (schema input + generated DDL +
+// map note, migrations terminal, end-to-end types, live round-trip) come from
+// the centralized per-driver example set, selected by the active driver and
+// falling back to the flagship. See config/examples.ts.
+const ex = examplesFor(selected.slug);
+const initialDialect = { lang: ex.lang, file: ex.file };
 // Driver-aware coming-soon overlay copy + action (Postgres-centric on the
 // postgres site; never pushes the flagship for a coming-soon driver).
 const cta = ctaFor(activeDriver);
 
-// Token color classes (brand code tokens)
-const kw = "text-code-keyword";
-const fn = "text-code-fn";
-const ty = "text-code-type";
-const st = "text-code-string";
-const pl = "text-code-plain";
-const vr = "text-accent-2";
-const cm = "text-code-comment";
-const mut = "text-ink-3";
-const ok = "text-success";
-
-type Tok = { t: string; c: string };
-type Line = { num: number | null; hl?: boolean; tokens: Tok[] };
-
-const tsLines: Line[] = [
-  { num: 1, tokens: [{ t: "export ", c: kw }, { t: "const ", c: kw }, { t: "User", c: ty }, { t: " = ", c: pl }, { t: "defineTable", c: fn }, { t: "(", c: pl }, { t: '"user"', c: st }, { t: ", {", c: pl }] },
-  { num: 2, tokens: [{ t: "  id", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "string", c: fn }, { t: "(),", c: pl }] },
-  { num: 3, hl: true, tokens: [{ t: "  email", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "email", c: fn }, { t: "().", c: pl }, { t: "unique", c: fn }, { t: "(),", c: pl }] },
-  { num: 4, tokens: [{ t: "  name", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "string", c: fn }, { t: "().", c: pl }, { t: "optional", c: fn }, { t: "(),", c: pl }] },
-  { num: 5, tokens: [{ t: "  createdAt", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "datetime", c: fn }, { t: "()", c: pl }] },
-  { num: 6, tokens: [{ t: "    .", c: pl }, { t: "$default", c: fn }, { t: "(", c: pl }, { t: "surql", c: fn }, { t: "`", c: st }, { t: "time::now", c: fn }, { t: "()", c: pl }, { t: "`", c: st }, { t: ")", c: pl }] },
-  { num: 7, tokens: [{ t: "    .", c: pl }, { t: "$readonly", c: fn }, { t: "(),", c: pl }] },
-  { num: 8, tokens: [{ t: "});", c: pl }] },
-];
-
-// The right (output) pane lines now come from the driver-aware example above.
-const outputLines: Line[] = example.lines;
-
-// --- Migrations (CLI) state ---
-const migrationsLines = [
-  { sym: "$", symC: "text-accent-2", msg: " sc generate add_users", msgC: "text-code-plain" },
-  { sym: "~", symC: mut, msg: " diffing schema.ts against snapshot…", msgC: mut },
-  { sym: "+", symC: ok, msg: " DEFINE TABLE user TYPE NORMAL SCHEMAFULL", msgC: ok },
-  { sym: "+", symC: ok, msg: " DEFINE FIELD email ON TABLE user … UNIQUE", msgC: ok },
-  { sym: "✓", symC: ok, msg: " wrote migrations/0001_add_users.surql", msgC: "text-ink-2" },
-  { sym: " ", symC: mut, msg: "", msgC: mut },
-  { sym: "$", symC: "text-accent-2", msg: " sc migrate", msgC: "text-code-plain" },
-  { sym: "▸", symC: "text-accent-soft", msg: " applying 0001_add_users.surql → surrealdb", msgC: "text-accent-soft" },
-  { sym: "✓", symC: ok, msg: " migrated user · 3 fields · 1 index", msgC: "text-ink-2" },
-  { sym: "✓", symC: ok, msg: " recorded 0001 · sha 9f2c… · up to date", msgC: ok },
-];
-
-// --- End-to-end types state ---
-const typesLines: Line[] = [
-  { num: 1, tokens: [{ t: "const ", c: kw }, { t: "limit ", c: pl }, { t: "= ", c: pl }, { t: "20", c: ty }] },
-  { num: 2, tokens: [{ t: " ", c: pl }] },
-  { num: 3, tokens: [{ t: "const ", c: kw }, { t: "rows ", c: pl }, { t: "= ", c: pl }, { t: "await ", c: kw }, { t: "db", c: pl }, { t: ".", c: pl }, { t: "query", c: fn }, { t: "<[", c: pl }, { t: "unknown", c: ty }, { t: "[]]>(", c: pl }, { t: "surql", c: fn }, { t: "`", c: st }] },
-  { num: 4, tokens: [{ t: "  SELECT ", c: kw }, { t: "* ", c: pl }, { t: "FROM ", c: kw }, { t: "user", c: ty }] },
-  { num: 5, tokens: [{ t: "  WHERE ", c: kw }, { t: "createdAt ", c: pl }, { t: "> ", c: pl }, { t: "time::now", c: fn }, { t: "() ", c: pl }, { t: "- ", c: pl }, { t: "90d", c: ty }] },
-  { num: 6, tokens: [{ t: "  ORDER BY ", c: kw }, { t: "createdAt ", c: pl }, { t: "DESC ", c: kw }, { t: "LIMIT ", c: kw }, { t: "${", c: pl }, { t: "limit", c: vr }, { t: "}", c: pl }] },
-  { num: 7, tokens: [{ t: "`", c: st }, { t: ")", c: pl }] },
-  { num: 8, tokens: [{ t: " ", c: pl }] },
-  { num: 9, tokens: [{ t: "const ", c: kw }, { t: "users ", c: pl }, { t: "= ", c: pl }, { t: "rows", c: pl }, { t: "[", c: pl }, { t: "0", c: ty }, { t: "].", c: pl }, { t: "map", c: fn }, { t: "(", c: pl }, { t: "User", c: ty }, { t: ".", c: pl }, { t: "decode", c: fn }, { t: ")", c: pl }] },
-  { num: 10, tokens: [{ t: "users", c: pl }, { t: "[", c: pl }, { t: "0", c: ty }, { t: "].", c: pl }] },
-];
-const typeMembers = [
-  { name: "id", type: 'RecordId<"user", string>' },
-  { name: "email", type: "string" },
-  { name: "name?", type: "string" },
-  { name: "createdAt", type: "Date" },
-];
-
-// --- Live round-trip state ---
-const driftLines: { c: string; tokens: Tok[] }[] = [
-  { c: pl, tokens: [{ t: "ON TABLE ", c: kw }, { t: "user", c: ty }] },
-  { c: ok, tokens: [{ t: "+ ", c: ok }, { t: "ASSERT ", c: kw }, { t: "string::is_email", c: fn }, { t: "($value)", c: pl }, { t: "   email", c: mut }] },
-  { c: vr, tokens: [{ t: "~ ", c: vr }, { t: "TYPE ", c: kw }, { t: "option<string> ", c: ty }, { t: "→ ", c: pl }, { t: "string", c: ty }, { t: "   name", c: mut }] },
-  { c: "text-danger", tokens: [{ t: "- ", c: "text-danger" }, { t: "DEFINE INDEX ", c: kw }, { t: "legacy_email_idx", c: pl }, { t: "   removed", c: mut }] },
-];
+const tsLines = ex.schema.input;
+const outputLines = ex.schema.output;
+const mapNote = ex.schema.mapNote;
+const migrationsLines = ex.migrations;
+const typesLines = ex.types.query;
+const typeMembers = ex.types.members;
+const driftLines = ex.live;
 
 const icons: Record<string, string> = {
   file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/>',
@@ -120,7 +60,7 @@ const comingSoon = [
 ];
 
 const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }> = {
-  schema: { l: "schema.ts", lt: "TypeScript", r: example.file, rt: example.lang },
+  schema: { l: "schema.ts", lt: "TypeScript", r: ex.file, rt: ex.lang },
   migrations: { l: "terminal", lt: "sc migrate" },
   types: { l: "query.ts", lt: "TypeScript" },
   live: { l: "sc diff --live", lt: "drift" },
@@ -400,11 +340,15 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
               class="flex items-center gap-2 border-t border-border-subtle bg-accent/10 px-4 py-2.5 text-xs text-ink-2"
             >
               <span class="size-1.5 shrink-0 rounded-full bg-gradient-to-r from-accent to-accent-2"></span>
-              <span>
-                Highlighted — one <code class="font-mono text-accent-soft">s.email().unique()</code>
-                compiles to a typed <code class="font-mono text-code-type">FIELD</code> + a
-                <code class="font-mono text-code-type">UNIQUE INDEX</code>.
-              </span>
+              <span>{
+                mapNote.map((seg) =>
+                  seg.code ? (
+                    <code class:list={["font-mono", seg.c]}>{seg.t}</code>
+                  ) : (
+                    <Fragment>{seg.t}</Fragment>
+                  ),
+                )
+              }</span>
             </div>
           </div>
 

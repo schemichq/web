@@ -39,9 +39,9 @@ const { activeDriver = null } = Astro.props;
   <Hero activeDriver={activeDriver} />
   <DriftProblem />
   <Demo activeDriver={activeDriver} />
-  <Bento />
-  <CLISpotlight />
-  <Depth />
+  <Bento activeDriver={activeDriver} />
+  <CLISpotlight activeDriver={activeDriver} />
+  <Depth activeDriver={activeDriver} />
   <FAQ />
   <FinalCTA activeDriver={activeDriver} />
 </main>

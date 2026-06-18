@@ -1,50 +1,21 @@
 ---
-const kw = "text-code-keyword";
-const fn = "text-code-fn";
-const ty = "text-code-type";
-const st = "text-code-string";
-const pl = "text-code-plain";
-const vr = "text-accent-2";
-const cm = "text-code-comment";
+import { examplesFor } from "../config/examples";
 
-type Tok = { t: string; c: string };
-type Line = { num: number; tokens: Tok[] };
-const blank = (n: number): Line => ({ num: n, tokens: [{ t: " ", c: pl }] });
+interface Props {
+  /** Slug of the driver this site represents; null = agnostic hub. */
+  activeDriver?: string | null;
+}
+const { activeDriver = null } = Astro.props;
 
-// access.ts — event + function + access, one typed source
-const tsLines: Line[] = [
-  { num: 1, tokens: [{ t: "// events, functions & access — one file", c: cm }] },
-  { num: 2, tokens: [{ t: "User", c: ty }, { t: ".", c: pl }, { t: "event", c: fn }, { t: "(", c: pl }, { t: '"welcome"', c: st }, { t: ", {", c: pl }] },
-  { num: 3, tokens: [{ t: "  when", c: pl }, { t: ": ", c: pl }, { t: "surql", c: fn }, { t: "`", c: st }, { t: "$event", c: vr }, { t: " = ", c: pl }, { t: "'CREATE'", c: st }, { t: "`", c: st }, { t: ",", c: pl }] },
-  { num: 4, tokens: [{ t: "  then", c: pl }, { t: ": ", c: pl }, { t: "surql", c: fn }, { t: "`", c: st }, { t: "fn::welcome", c: fn }, { t: "(", c: pl }, { t: "$after.id", c: vr }, { t: ")", c: pl }, { t: "`", c: st }, { t: ",", c: pl }] },
-  { num: 5, tokens: [{ t: "})", c: pl }] },
-  blank(6),
-  { num: 7, tokens: [{ t: "export ", c: kw }, { t: "const ", c: kw }, { t: "welcome", c: pl }, { t: " = ", c: pl }, { t: "defineFunction", c: fn }, { t: "(", c: pl }, { t: '"welcome"', c: st }, { t: ", {", c: pl }] },
-  { num: 8, tokens: [{ t: "  user", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "recordId", c: fn }, { t: "(", c: pl }, { t: '"user"', c: st }, { t: "),", c: pl }] },
-  { num: 9, tokens: [{ t: "}).", c: pl }, { t: "body", c: fn }, { t: "(", c: pl }, { t: "surql", c: fn }, { t: "`", c: st }, { t: "CREATE ", c: kw }, { t: "log", c: ty }, { t: " ", c: pl }, { t: "SET ", c: kw }, { t: "user", c: pl }, { t: " = ", c: pl }, { t: "$user", c: vr }, { t: "`", c: st }, { t: ")", c: pl }] },
-  blank(10),
-  { num: 11, tokens: [{ t: "export ", c: kw }, { t: "const ", c: kw }, { t: "account", c: pl }, { t: " = ", c: pl }, { t: "defineAccess", c: fn }, { t: "(", c: pl }, { t: '"account"', c: st }, { t: ")", c: pl }] },
-  { num: 12, tokens: [{ t: "  .", c: pl }, { t: "record", c: fn }, { t: "().", c: pl }, { t: "signup", c: fn }, { t: "(", c: pl }, { t: "surql", c: fn }, { t: "`", c: st }, { t: "CREATE ", c: kw }, { t: "user", c: ty }, { t: " ", c: pl }, { t: "SET ", c: kw }, { t: "email", c: pl }, { t: " = ", c: pl }, { t: "$email", c: vr }, { t: "`", c: st }, { t: ")", c: pl }] },
-  { num: 13, tokens: [{ t: "  .", c: pl }, { t: "duration", c: fn }, { t: "({ ", c: pl }, { t: "session", c: pl }, { t: ": ", c: pl }, { t: '"12h"', c: st }, { t: " })", c: pl }] },
-];
-
-// access.surql — the generated DDL
-const surqlLines: Line[] = [
-  { num: 1, tokens: [{ t: "DEFINE EVENT ", c: kw }, { t: "welcome ", c: pl }, { t: "ON TABLE ", c: kw }, { t: "user", c: ty }] },
-  { num: 2, tokens: [{ t: "  WHEN ", c: kw }, { t: "$event", c: vr }, { t: " = ", c: pl }, { t: "'CREATE'", c: st }] },
-  { num: 3, tokens: [{ t: "  THEN ", c: kw }, { t: "fn::welcome", c: fn }, { t: "(", c: pl }, { t: "$after.id", c: vr }, { t: ");", c: pl }] },
-  blank(4),
-  { num: 5, tokens: [{ t: "DEFINE FUNCTION ", c: kw }, { t: "fn::welcome", c: fn }, { t: "(", c: pl }, { t: "$user", c: vr }, { t: ": ", c: pl }, { t: "record", c: kw }, { t: "<", c: pl }, { t: "user", c: ty }, { t: ">", c: pl }, { t: ") {", c: pl }] },
-  { num: 6, tokens: [{ t: "  CREATE ", c: kw }, { t: "log ", c: ty }, { t: "SET ", c: kw }, { t: "user", c: pl }, { t: " = ", c: pl }, { t: "$user", c: vr }] },
-  { num: 7, tokens: [{ t: "};", c: pl }] },
-  blank(8),
-  { num: 9, tokens: [{ t: "DEFINE ACCESS ", c: kw }, { t: "account ", c: pl }, { t: "ON DATABASE", c: kw }] },
-  { num: 10, tokens: [{ t: "  TYPE RECORD", c: kw }] },
-  { num: 11, tokens: [{ t: "  SIGNUP ", c: kw }, { t: "(", c: pl }, { t: "CREATE ", c: kw }, { t: "user ", c: ty }, { t: "SET ", c: kw }, { t: "email", c: pl }, { t: " = ", c: pl }, { t: "$email", c: vr }, { t: ")", c: pl }] },
-  { num: 12, tokens: [{ t: "  DURATION FOR SESSION ", c: kw }, { t: "12h", c: ty }, { t: ";", c: pl }] },
-];
-
+// Driver-aware events / functions / access -> DDL. `depth.available` is false
+// for drivers with no analog of DEFINE ACCESS/EVENT/FUNCTION, in which case the
+// whole section is hidden. See config/examples.ts.
+const depth = examplesFor(activeDriver).depth;
+const tsLines = depth.input;
+const surqlLines = depth.output;
 ---
+
+{depth.available && (
 
 <section id="depth" class="border-t border-border-subtle px-6 py-24 sm:py-28">
   <div class="mx-auto max-w-6xl">
@@ -77,7 +48,7 @@ const surqlLines: Line[] = [
         </div>
         <span
           class="absolute left-1/2 -translate-x-1/2 font-mono text-xs text-ink-3"
-          >access.ts → access.surql</span
+          >{depth.title}</span
         >
       </div>
 
@@ -90,8 +61,8 @@ const surqlLines: Line[] = [
           <div
             class="flex items-center justify-between border-b border-border-subtle px-4.5 py-2.5"
           >
-            <span class="font-mono text-xs text-ink">access.ts</span>
-            <span class="font-mono text-[11px] text-ink-3">TypeScript</span>
+            <span class="font-mono text-xs text-ink">{depth.inputFile}</span>
+            <span class="font-mono text-[11px] text-ink-3">{depth.inputLang}</span>
           </div>
           <div class="min-w-0 overflow-x-auto py-4 lg:pr-5">
             {
@@ -110,8 +81,8 @@ const surqlLines: Line[] = [
           <div
             class="flex items-center justify-between border-b border-border-subtle px-4.5 py-2.5"
           >
-            <span class="font-mono text-xs text-ink">access.surql</span>
-            <span class="font-mono text-[11px] text-ink-3">SurrealQL</span>
+            <span class="font-mono text-xs text-ink">{depth.outputFile}</span>
+            <span class="font-mono text-[11px] text-ink-3">{depth.outputLang}</span>
           </div>
           <div class="min-w-0 overflow-x-auto py-4 lg:pl-5">
             {
@@ -158,3 +129,4 @@ const surqlLines: Line[] = [
     </div>
   </div>
 </section>
+)}

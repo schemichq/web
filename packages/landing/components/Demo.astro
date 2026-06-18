@@ -475,7 +475,7 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
               class="flex items-center gap-2 border-t border-border-subtle bg-accent/10 px-4 py-2.5 text-xs text-ink-2"
             >
               <span class="size-1.5 shrink-0 rounded-full bg-gradient-to-r from-accent to-accent-2"></span>
-              <span>Decoded rows are fully typed — <code class="font-mono text-accent-soft">datetime → Date</code>, <code class="font-mono text-accent-soft">RecordId</code>, optionals and all.</span>
+              <span>Decoded rows are fully typed — <code class="font-mono text-accent-soft">datetime → Date</code>, ids, optionals and all.</span>
             </div>
           </div>
 
@@ -501,7 +501,7 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
               class="flex items-center gap-2 border-t border-border-subtle bg-accent/10 px-4 py-2.5 text-xs text-ink-2"
             >
               <span class="size-1.5 shrink-0 rounded-full bg-gradient-to-r from-accent to-accent-2"></span>
-              <span>Diff your code against the live database — normalized through SurrealDB, so there is no formatting noise.</span>
+              <span>Diff your code against the live database — normalized by the driver, so there's no formatting noise.</span>
             </div>
           </div>
         </div>
@@ -525,7 +525,7 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
           ></path><path d="M20 3v4"></path><path d="M22 5h-4"></path><path
             d="M4 17v2"></path><path d="M5 18H3"></path>
         </svg>
-        Define your tables and fields in TypeScript — the SurrealQL DDL is
+        Define your tables and fields in TypeScript — the native DDL is
         generated for you.
       </p>
       <a

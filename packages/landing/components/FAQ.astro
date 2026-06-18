@@ -7,17 +7,17 @@ const faqs: { q: string; a: string; chips?: string[] }[] = [
     a: `Yes — ${code("s.*")} is a 1:1 drop-in for ${code("z.*")}. Migrate an existing schema by find-replacing ${code("z.")} → ${code("s.")} If you know Zod, there's nothing new to learn.`,
   },
   {
-    q: "Why not write SurrealQL by hand?",
-    a: `Hand-written DDL drifts from your types. Schemic keeps schema, SurrealQL, and TypeScript types as one source of truth — generated, never out of sync.`,
+    q: "Why not write the DDL by hand?",
+    a: `Hand-written DDL drifts from your types. Schemic keeps your schema, the generated DDL, and your TypeScript types as one source of truth — generated, never out of sync.`,
   },
   {
     q: "How do migrations run?",
-    a: `Three commands cover the whole loop — one writes a migration from the schema diff, one applies it, one checks for drift.`,
-    chips: ["sc generate", "sc migrate", "sc diff --live"],
+    a: `Three commands cover the whole loop: one writes a migration from the schema diff, one applies it, one checks for drift.`,
+    chips: ["sc gen", "sc migrate", "sc diff --live"],
   },
   {
-    q: "Which SurrealDB version?",
-    a: `Built for SurrealDB 3.x and the full ${code("define*")} vocabulary — tables, fields, indexes, events, functions, and access. MIT licensed.`,
+    q: "Which databases are supported?",
+    a: `SurrealDB is available today; Postgres and more are on the way through drivers. Each driver maps the full ${code("define*")} vocabulary — tables, fields, indexes, events, functions, and access — to that database's DDL. MIT licensed.`,
   },
   {
     q: "Can I adopt it on an existing database?",
@@ -25,16 +25,16 @@ const faqs: { q: string; a: string; chips?: string[] }[] = [
     chips: ["sc pull"],
   },
   {
-    q: "Does it replace the surrealdb SDK?",
-    a: `No — it sits on top of it. You keep the official SDK for queries; Schemic owns the schema, the generated DDL, the migrations, and the row types.`,
+    q: "Does it replace my database client?",
+    a: `No — it sits on top. You keep your database's official client for queries; Schemic owns the schema, the generated DDL, the migrations, and the row types.`,
   },
   {
-    q: "How is it different from surqlize?",
-    a: `surqlize is a query builder. Schemic is complementary — it owns the schema, the generated DDL, and the migrations. Pair it with surqlize or the official SDK for queries.`,
+    q: "Is it a query builder or an ORM?",
+    a: `Neither. Schemic is a schema + migrations toolkit. It owns the schema, the generated DDL, and the migrations; pair it with your database's query tools.`,
   },
   {
-    q: "Can I drop to raw SurrealQL?",
-    a: `Always. The ${code("surql")} tag composes raw SurrealQL into any default, event, permission, or function — and for ad-hoc queries you use the SDK directly.`,
+    q: "Can I drop to raw queries?",
+    a: `Always. Schemic owns the schema and migrations, not your queries — use your database's client directly, and compose raw expressions into defaults, events, permissions, and functions where a driver supports it.`,
   },
 ];
 ---

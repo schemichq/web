@@ -1,5 +1,6 @@
 ---
 import CodeBlock from "./CodeBlock.astro";
+import SelectOverlay from "./SelectOverlay.astro";
 import { examplesFor } from "../config/examples";
 
 interface Props {
@@ -7,6 +8,11 @@ interface Props {
   activeDriver?: string | null;
 }
 const { activeDriver = null } = Astro.props;
+
+// Agnostic hub: the per-card generated/driver-specific snippets are blurred
+// behind a "Select a database" prompt (the `sc pull` adopt snippet + CLI chips
+// stay visible — they're driver-agnostic).
+const isHub = activeDriver == null;
 
 const vr = "text-accent-2";
 const cm = "text-code-comment";
@@ -79,7 +85,10 @@ const icons: Record<string, string> = {
           A 1:1 drop-in for <code class="font-mono text-accent-soft">z.*</code> — refinements,
           defaults, coercion, and <code class="font-mono text-accent-soft">infer / input / output</code>.
         </p>
-        <CodeBlock lines={dropInLines} />
+        <div class="relative">
+          {isHub && <SelectOverlay compact />}
+          <CodeBlock lines={dropInLines} />
+        </div>
         <p class="text-[13px] leading-relaxed text-ink-3">
           Migrate an existing schema by find-replacing <code class="font-mono text-ink-2">z.</code>
           → <code class="font-mono text-ink-2">s.</code> Nothing new to learn.
@@ -138,7 +147,10 @@ const icons: Record<string, string> = {
           <h3 class="font-display text-lg font-semibold text-ink">End-to-end types</h3>
         </div>
         <p class="text-sm leading-relaxed text-ink-2">Infer row shapes straight from the schema.</p>
-        <CodeBlock lines={endTypesLines} size={12} />
+        <div class="relative">
+          {isHub && <SelectOverlay compact />}
+          <CodeBlock lines={endTypesLines} size={12} />
+        </div>
         <p class="text-[13px] leading-relaxed text-ink-3">
           Unsupported types are flagged in your editor — not at migration time.
         </p>
@@ -153,7 +165,10 @@ const icons: Record<string, string> = {
           <h3 class="font-display text-lg font-semibold text-ink">Bring your own types</h3>
         </div>
         <p class="text-sm leading-relaxed text-ink-2">Store any class with a typed codec — app value in, wire type out.</p>
-        <CodeBlock lines={byoLines} size={12} />
+        <div class="relative">
+          {isHub && <SelectOverlay compact />}
+          <CodeBlock lines={byoLines} size={12} />
+        </div>
       </article>
 
       <!-- Live round-trip -->
@@ -165,7 +180,10 @@ const icons: Record<string, string> = {
           <h3 class="font-display text-lg font-semibold text-ink">Live round-trip</h3>
         </div>
         <p class="text-sm leading-relaxed text-ink-2">Diff against the running database.</p>
-        <CodeBlock lines={liveLines} size={12} />
+        <div class="relative">
+          {isHub && <SelectOverlay compact />}
+          <CodeBlock lines={liveLines} size={12} />
+        </div>
       </article>
     </div>
   </div>

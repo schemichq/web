@@ -1,5 +1,6 @@
 ---
 import { examplesFor } from "../config/examples";
+import SelectOverlay from "./SelectOverlay.astro";
 
 interface Props {
   /** Slug of the driver this site represents; null = agnostic hub. */
@@ -8,7 +9,10 @@ interface Props {
 const { activeDriver = null } = Astro.props;
 
 // Driver-aware terminal session (generated artifacts/dialect differ; the `sc`
-// commands themselves are driver-agnostic). See config/examples.ts.
+// commands themselves are driver-agnostic). See config/examples.ts. On the
+// agnostic hub the terminal output is blurred behind a "Select a database"
+// prompt (the generated artifacts are driver-specific).
+const isHub = activeDriver == null;
 const blocks = examplesFor(activeDriver).cli;
 ---
 
@@ -52,8 +56,9 @@ const blocks = examplesFor(activeDriver).cli;
 
       <!-- body -->
       <div
-        class="flex flex-col gap-1.5 overflow-x-auto px-[22px] pt-[18px] pb-[22px] font-mono text-[13px] leading-[1.6]"
+        class="relative flex flex-col gap-1.5 overflow-x-auto px-[22px] pt-[18px] pb-[22px] font-mono text-[13px] leading-[1.6]"
       >
+        {isHub && <SelectOverlay />}
         {
           blocks.map((block, i) => (
             <Fragment>

@@ -6,6 +6,7 @@ import {
   ctaFor,
 } from "../config/drivers";
 import { examplesFor } from "../config/examples";
+import SelectOverlay from "./SelectOverlay.astro";
 
 interface Props {
   /** Slug of the driver this site represents; null = agnostic hub. */
@@ -14,16 +15,21 @@ interface Props {
 
 const { activeDriver = null } = Astro.props;
 
+// The agnostic hub (no driver selected): the schema INPUT shows a neutral
+// @schemic/core example, while every generated/OUTPUT region is rendered behind
+// a "Select a database" blur overlay.
+const isHub = activeDriver == null;
+
 // Seed the schema -> DDL panel from the site's driver. A coming-soon driver
 // also seeds the overlay shown over the generated-DDL pane. The hero's picker
 // can still change all of this client-side via the `schemic:driver` event.
 const selected = findDriver(activeDriver) ?? flagshipDriver;
 const selectedAvailable = isAvailable(selected);
-// All driver-specific code blocks in this Demo (schema input + generated DDL +
-// map note, migrations terminal, end-to-end types, live round-trip) come from
-// the centralized per-driver example set, selected by the active driver and
-// falling back to the flagship. See config/examples.ts.
-const ex = examplesFor(selected.slug);
+// All code blocks in this Demo (schema input + generated DDL + map note,
+// migrations terminal, end-to-end types, live round-trip) come from the
+// centralized example set, selected by the active driver — null on the hub,
+// which yields the neutral @schemic/core schema. See config/examples.ts.
+const ex = examplesFor(activeDriver);
 const initialDialect = { lang: ex.lang, file: ex.file };
 // Driver-aware coming-soon overlay copy + action (Postgres-centric on the
 // postgres site; never pushes the flagship for a coming-soon driver).
@@ -291,6 +297,8 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
                       >{cta.overlay.action.label}</a
                     >
                   </div>
+                  {/* agnostic hub: blur the generated DDL behind a picker prompt */}
+                  {isHub && <SelectOverlay />}
                   {
                     outputLines.map((line) => (
                       <div
@@ -342,7 +350,7 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
             <!-- map note -->
             <div
               id="demo-mapnote"
-              hidden={!selectedAvailable}
+              hidden={isHub || !selectedAvailable}
               class="flex items-center gap-2 border-t border-border-subtle bg-accent/10 px-4 py-2.5 text-xs text-ink-2"
             >
               <span class="size-1.5 shrink-0 rounded-full bg-gradient-to-r from-accent to-accent-2"></span>
@@ -366,7 +374,8 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
               <span class="font-mono text-xs text-ink-2">{tabHead.migrations.l}</span>
               <span class="font-mono text-[11px] text-ink-3">{tabHead.migrations.lt}</span>
             </div>
-            <div class="bg-code-bg px-4 py-4 font-mono text-[13px] leading-[1.7]">
+            <div class="relative bg-code-bg px-4 py-4 font-mono text-[13px] leading-[1.7]">
+              {isHub && <SelectOverlay />}
               {
                 migrationsLines.map((l) => (
                   <div class="whitespace-pre"><span class={l.symC}>{l.sym}</span><span class={l.msgC}>{l.msg}</span></div>
@@ -390,6 +399,7 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
               <span class="font-mono text-[10px] text-code-fn">{tabHead.types.lt}</span>
             </div>
             <div class="relative bg-code-bg px-4 py-4 font-mono text-[13px] leading-6">
+              {isHub && <SelectOverlay />}
               {
                 typesLines.map((line) => (
                   <div class="flex">
@@ -434,7 +444,8 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
               <span class="font-mono text-xs text-ink-2">{tabHead.live.l}</span>
               <span class="font-mono text-[11px] text-ink-3">{tabHead.live.lt}</span>
             </div>
-            <div class="bg-code-bg px-4 py-4 font-mono text-[13px] leading-[1.7]">
+            <div class="relative bg-code-bg px-4 py-4 font-mono text-[13px] leading-[1.7]">
+              {isHub && <SelectOverlay />}
               <div class="whitespace-pre text-ink-3"><span class="text-accent-2">$</span> sc diff --live</div>
               <div class="mb-2 whitespace-pre text-ink-3">~ comparing schema.ts ↔ running database</div>
               {

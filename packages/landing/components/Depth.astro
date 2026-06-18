@@ -1,5 +1,6 @@
 ---
 import { examplesFor } from "../config/examples";
+import SelectOverlay from "./SelectOverlay.astro";
 
 interface Props {
   /** Slug of the driver this site represents; null = agnostic hub. */
@@ -9,7 +10,10 @@ const { activeDriver = null } = Astro.props;
 
 // Driver-aware events / functions / access -> DDL. `depth.available` is false
 // for drivers with no analog of DEFINE ACCESS/EVENT/FUNCTION, in which case the
-// whole section is hidden. See config/examples.ts.
+// whole section is hidden. On the agnostic hub the section IS shown (neutral
+// placeholder) but blurred behind a "Select a database" prompt — only the
+// postgres no-analog case hides it outright. See config/examples.ts.
+const isHub = activeDriver == null;
 const depth = examplesFor(activeDriver).depth;
 const tsLines = depth.input;
 const surqlLines = depth.output;
@@ -54,6 +58,7 @@ const surqlLines = depth.output;
 
       <!-- panes: side-by-side w/ bare seam arrow on desktop, stacked on mobile -->
       <div class="relative grid font-mono text-[12.5px] leading-6 lg:grid-cols-2">
+        {isHub && <SelectOverlay />}
         <!-- left pane (access.ts) -->
         <div
           class="flex min-w-0 flex-col border-b border-border-subtle bg-white/[0.02] lg:border-b-0"

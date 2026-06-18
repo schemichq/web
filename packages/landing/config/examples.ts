@@ -429,9 +429,117 @@ const postgres: DriverExamples = {
   },
 };
 
+// ===========================================================================
+// AGNOSTIC HUB — the database-agnostic schemic.dev landing (no driver selected).
+// Only `schema.input` is surfaced UNBLURRED: a NEUTRAL @schemic/core schema built
+// from universal primitives ONLY (no s.email()/$readonly/surql/sqlExpr — nothing
+// driver-specific). Every generated/OUTPUT region (DDL, migrations, types, live,
+// cli, depth, bento) is rendered behind a "Select a database" blur overlay on the
+// hub, so those slots hold neutral placeholders that never actually surface.
+//
+// NEUTRAL hub schema — confirm core API with core-dev.
+// ===========================================================================
+const agnostic: DriverExamples = {
+  // Agnostic prose: H2 reads "to generated native DDL"; header chips stay neutral.
+  lang: "native DDL",
+  file: "schema.ddl",
+
+  schema: {
+    input: [
+      { num: 1, tokens: [{ t: "import ", c: kw }, { t: "{ ", c: pl }, { t: "s", c: pl }, { t: ", ", c: pl }, { t: "defineTable", c: fn }, { t: " } ", c: pl }, { t: "from ", c: kw }, { t: '"@schemic/core"', c: st }, { t: ";", c: pl }] },
+      blank(2),
+      { num: 3, tokens: [{ t: "// NEUTRAL hub schema — confirm core API with core-dev", c: cm }] },
+      { num: 4, tokens: [{ t: "export ", c: kw }, { t: "const ", c: kw }, { t: "User", c: ty }, { t: " = ", c: pl }, { t: "defineTable", c: fn }, { t: "(", c: pl }, { t: '"user"', c: st }, { t: ", {", c: pl }] },
+      { num: 5, tokens: [{ t: "  name", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "string", c: fn }, { t: "(),", c: pl }] },
+      { num: 6, tokens: [{ t: "  email", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "string", c: fn }, { t: "(),", c: pl }] },
+      { num: 7, tokens: [{ t: "  createdAt", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "datetime", c: fn }, { t: "(),", c: pl }] },
+      { num: 8, tokens: [{ t: "});", c: pl }] },
+    ],
+    // Blurred on the hub — neutral placeholder (the map note is hidden there).
+    output: [
+      { num: 1, tokens: [{ t: "-- Pick a database to generate native DDL.", c: cm }] },
+    ],
+    mapNote: [{ t: "Pick a database to generate native DDL." }],
+  },
+
+  // All of the following render behind the hub's "Select a database" blur — they
+  // never surface, so they stay deliberately neutral.
+  migrations: [
+    { sym: "$", symC: vr, msg: " sc generate add_users", msgC: pl },
+    { sym: "~", symC: mut, msg: " diffing schema.ts against snapshot…", msgC: mut },
+    { sym: "✓", symC: ok, msg: " select a database to generate migrations", msgC: sec },
+  ],
+
+  types: {
+    query: [
+      { num: 1, tokens: [{ t: "// Pick a database to see decoded, end-to-end types.", c: cm }] },
+    ],
+    members: [
+      { name: "name", type: "string" },
+      { name: "email", type: "string" },
+      { name: "createdAt", type: "Date" },
+    ],
+  },
+
+  live: [
+    { c: pl, tokens: [{ t: "ON TABLE ", c: kw }, { t: "user", c: ty }] },
+    { c: mut, tokens: [{ t: "~ ", c: mut }, { t: "select a database to diff against a live DB", c: mut }] },
+  ],
+
+  cli: [
+    { cmd: "sc generate add_users", outputs: [{ t: "  ~ select a database to see generated artifacts", c: mut }] },
+    { cmd: "sc migrate", outputs: [{ t: "  ~ select a database to apply migrations", c: mut }] },
+    { cmd: "sc diff --live", outputs: [{ t: "  ~ select a database to diff against a live DB", c: mut }] },
+  ],
+
+  // Rendered (so the section shows) but blurred on the hub — neutral placeholder.
+  // available=true so Depth is shown-then-blurred (only the pg no-analog case hides it).
+  depth: {
+    available: true,
+    title: "access.ts → native DDL",
+    inputFile: "access.ts",
+    inputLang: "TypeScript",
+    outputFile: "access.ddl",
+    outputLang: "native DDL",
+    input: [
+      { num: 1, tokens: [{ t: "// Events, functions & access — one typed file.", c: cm }] },
+      { num: 2, tokens: [{ t: "// Pick a database to generate native DDL.", c: cm }] },
+    ],
+    output: [
+      { num: 1, tokens: [{ t: "-- Select a database to generate native DDL.", c: cm }] },
+    ],
+  },
+
+  bento: {
+    dropIn: [
+      [{ t: "email", c: pl }, { t: ": ", c: pl }, { t: "s", c: fn }, { t: ".", c: pl }, { t: "string", c: fn }, { t: "(),", c: pl }],
+      [{ t: "name", c: pl }, { t: ": ", c: pl }, { t: "s", c: fn }, { t: ".", c: pl }, { t: "string", c: fn }, { t: "().", c: pl }, { t: "optional", c: fn }, { t: "(),", c: pl }],
+      [{ t: "createdAt", c: pl }, { t: ": ", c: pl }, { t: "s", c: fn }, { t: ".", c: pl }, { t: "datetime", c: fn }, { t: "(),", c: pl }],
+    ],
+    endTypes: [
+      [{ t: "type ", c: kw }, { t: "User", c: ty }, { t: " = ", c: pl }, { t: "App", c: fn }, { t: "<", c: pl }, { t: "typeof", c: kw }, { t: " User>", c: ty }],
+      [{ t: "// Pick a database to infer row types.", c: cm }],
+    ],
+    byo: [
+      [{ t: "// Pick a database to bring your own", c: cm }],
+      [{ t: "// types with a typed codec.", c: cm }],
+    ],
+    live: [
+      [{ t: "~ ", c: cm }, { t: "sc diff --live", c: pl }],
+      [{ t: "// Pick a database to diff a live DB.", c: cm }],
+    ],
+  },
+};
+
 export const examples: Record<string, DriverExamples> = { surrealdb, postgres };
 
-/** The full example set for a driver slug, falling back to the flagship. */
+/**
+ * The full example set for a driver slug. On the agnostic hub (null slug) this
+ * returns the NEUTRAL @schemic/core example (universal schema input + placeholder
+ * outputs shown behind the "Select a database" blur). A known driver slug returns
+ * that driver's verified examples; an unknown slug falls back to the neutral set.
+ */
 export function examplesFor(slug: string | null | undefined): DriverExamples {
-  return (slug && examples[slug]) || examples.surrealdb;
+  if (slug == null) return agnostic;
+  return examples[slug] ?? agnostic;
 }

@@ -1,0 +1,59 @@
+---
+// "Select a database" blur overlay — covers every driver-specific OUTPUT /
+// generated region on the agnostic hub (schemic.dev, activeDriver = null). It
+// reuses the Demo coming-soon overlay's blur/opacity treatment: an absolutely
+// positioned panel with a translucent code-bg wash + backdrop blur, so the
+// generated DDL behind it reads as "pick a database to reveal this". The CTA
+// (`data-open-picker`) opens the nav picker via config/picker.ts.
+//
+// Mount inside a `relative` container that wraps ONLY the output region (so any
+// agnostic prose / footer caption stays outside it, fully legible).
+interface Props {
+  /** Compact variant for the small Bento cards (button only, tighter). */
+  compact?: boolean;
+}
+const { compact = false } = Astro.props;
+---
+
+<div
+  class:list={[
+    "absolute inset-0 z-20 flex flex-col items-center justify-center bg-code-bg/90 text-center backdrop-blur-[3px]",
+    compact ? "gap-2 px-3" : "gap-3 px-6",
+  ]}
+>
+  {
+    !compact && (
+      <span
+        class="size-2.5 rounded-full bg-gradient-to-r from-accent to-accent-2"
+        aria-hidden="true"
+      />
+    )
+  }
+  {
+    !compact && (
+      <p class="max-w-xs font-sans text-sm text-ink-2">
+        Pick a database to see the generated output.
+      </p>
+    )
+  }
+  <button
+    type="button"
+    data-open-picker
+    class:list={[
+      "inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-accent to-accent-2 font-sans font-semibold text-white transition-transform hover:scale-[1.03]",
+      compact ? "px-3 py-1.5 text-[11px]" : "px-4 py-2 text-xs",
+    ]}
+  >
+    Select a database
+    <svg
+      class="size-[0.85em]"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg
+    >
+  </button>
+</div>

@@ -2,9 +2,30 @@
 // NOTE (IA TBD): the hub (schemic.dev) has no /docs of its own — docs live on
 // the per-driver subdomains. Pointing at the shipped flagship driver for now;
 // revisit once the hub IA is settled.
-import { driverUrl, flagshipDriver, REPO_URL } from "../config/drivers";
+import {
+  drivers as driverList,
+  driverUrl,
+  flagshipDriver,
+  findDriver,
+  REPO_URL,
+  SUGGEST_DRIVER_URL,
+} from "../config/drivers";
+import DbMenu from "./DbMenu.astro";
+
+interface Props {
+  /** Slug of the driver this site represents; null = agnostic hub. */
+  activeDriver?: string | null;
+}
+const { activeDriver = null } = Astro.props;
 
 const flagship = driverUrl(flagshipDriver.slug);
+
+// Compact nav picker — persistent while scrolling (the nav is sticky). On the
+// agnostic hub no driver is selected: it shows a "Select database" prompt; on a
+// driver subdomain it shows that driver's name + brand dot. Shares the roster +
+// select behavior with the hero picker (config/picker.ts wires both).
+const isHub = activeDriver == null;
+const navDriver = findDriver(activeDriver);
 
 const links = [
   { label: "Docs", href: `${flagship}/docs/introduction` },
@@ -51,7 +72,55 @@ const githubMark =
     </div>
 
     <!-- right: actions -->
-    <div class="flex items-center gap-5 justify-self-end">
+    <div class="flex items-center gap-3 justify-self-end sm:gap-5">
+      <!--
+        Compact database picker — sticky/persistent while scrolling. Shares the
+        roster + select/theme/redirect behavior with the hero picker.
+      -->
+      <div data-db-picker="nav" class="relative">
+        <button
+          type="button"
+          data-db-trigger
+          data-db-prompt={isHub ? "" : null}
+          aria-haspopup="listbox"
+          aria-expanded="false"
+          aria-label="Choose your database"
+          class:list={[
+            "group inline-flex items-center gap-2 rounded-full border bg-surface px-3 py-1.5 text-sm transition-colors",
+            isHub
+              ? "border-dashed border-accent/60 text-accent-soft hover:border-accent hover:text-ink"
+              : "border-border text-ink-2 hover:border-accent/50 hover:text-ink",
+          ]}
+        >
+          {
+            !isHub && navDriver && (
+              <span
+                class="size-2.5 rounded-full"
+                style={`background:${navDriver.color}`}
+                aria-hidden="true"
+              />
+            )
+          }
+          <span data-db-label>{navDriver?.name ?? "Select database"}</span>
+          <svg
+            class="size-3.5 text-accent-soft transition-transform group-aria-expanded:rotate-180"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg
+          >
+        </button>
+
+        <DbMenu
+          drivers={driverList}
+          selectedSlug={navDriver?.slug ?? null}
+          suggestHref={SUGGEST_DRIVER_URL}
+          align="right"
+        />
+      </div>
       <!--
         GitHub star button. Plain "GitHub" link by default; the star-count chip
         is hidden until the island confirms a numeric count, so when the count

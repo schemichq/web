@@ -36,6 +36,12 @@ const migrationsLines = ex.migrations;
 const typesLines = ex.types.query;
 const typeMembers = ex.types.members;
 const driftLines = ex.live;
+// The live array is a header row (`ON TABLE …`) + N diff lines, each opening
+// with a `+`/`~`/`-` marker token. Count only the marker lines so the footer
+// reflects the active driver's real change count (surreal: 3, postgres: 2).
+const driftCount = driftLines.filter((line) =>
+  ["+", "~", "-"].includes(line.tokens[0]?.t.trim() ?? ""),
+).length;
 
 const icons: Record<string, string> = {
   file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/>',
@@ -436,7 +442,7 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
                   <div class="whitespace-pre pl-2">{line.tokens.map((tk) => <span class={tk.c}>{tk.t}</span>)}</div>
                 ))
               }
-              <div class="mt-2 whitespace-pre text-ink-2">3 changes · run <span class="text-accent-soft">sc sync</span> to reconcile</div>
+              <div class="mt-2 whitespace-pre text-ink-2">{driftCount} {driftCount === 1 ? "change" : "changes"} · run <span class="text-accent-soft">sc sync</span> to reconcile</div>
             </div>
             <div
               class="flex items-center gap-2 border-t border-border-subtle bg-accent/10 px-4 py-2.5 text-xs text-ink-2"

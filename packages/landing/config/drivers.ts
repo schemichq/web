@@ -174,10 +174,38 @@ export function paneKeyFor(activeDriver?: string | null): string {
   return activeDriver ?? HUB_PANE;
 }
 
-/** The pane key for a URL pathname ("/" -> "hub", "/surrealdb" -> "surrealdb"). */
+/**
+ * The pane key for a URL pathname — the FIRST path segment if it's a driver
+ * slug, else the hub. Section-agnostic, so it resolves both landing paths
+ * ("/" -> "hub", "/surrealdb" -> "surrealdb") AND examples paths
+ * ("/examples" -> "hub", "/surrealdb/examples" -> "surrealdb").
+ */
 export function paneKeyForPath(pathname: string): string {
-  const slug = pathname.replace(/^\/+|\/+$/g, "");
-  return slug && drivers.some((d) => d.slug === slug) ? slug : HUB_PANE;
+  const first = pathname.replace(/^\/+/, "").split("/")[0];
+  return first && drivers.some((d) => d.slug === first) ? first : HUB_PANE;
+}
+
+/** Whether a path is in the Examples SECTION (its last segment is "examples"). */
+export function isExamplesPath(pathname: string): boolean {
+  const segs = pathname
+    .replace(/^\/+|\/+$/g, "")
+    .split("/")
+    .filter(Boolean);
+  return segs[segs.length - 1] === "examples";
+}
+
+/**
+ * The same-origin path for a pane key, KEEPING the current section. On a landing
+ * path it is "/" or "/<key>"; on an examples path it is "/examples" or
+ * "/<key>/examples". The client-side picker pushes this so selecting a driver
+ * swaps the driver WITHOUT leaving the section (landing<->landing,
+ * examples<->examples). On landing paths it is identical to the previous
+ * "/"|"/<key>" behavior, so the landing switch is unchanged.
+ */
+export function pathForPane(key: string, pathname: string): string {
+  const base = key === HUB_PANE ? "" : `/${key}`;
+  if (isExamplesPath(pathname)) return base ? `${base}/examples` : "/examples";
+  return base || "/";
 }
 
 /** The full token set for a slug, falling back to the agnostic hub (neutral). */

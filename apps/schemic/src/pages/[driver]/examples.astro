@@ -1,0 +1,26 @@
+---
+// schemic.dev/<driver>/examples — the per-driver cookbook gallery (SSG). Mirrors
+// the landing's [driver].astro: getStaticPaths emits one page per driver in the
+// roster (/surrealdb/examples, /postgres/examples), each rendering the SAME shared
+// gallery pre-selected for that driver, with the Landing layout inlining that
+// driver's full theme on :root so the first paint is already in-palette (no
+// flash). Selecting another driver in the nav picker switches CLIENT-SIDE within
+// the Examples section (no reload). See components/ExamplesGallery.astro.
+import Landing from "../../layouts/Landing.astro";
+import ExamplesGallery from "../../components/ExamplesGallery.astro";
+import { drivers } from "@schemic/landing/config/drivers";
+
+export function getStaticPaths() {
+  return drivers.map((d) => ({ params: { driver: d.slug } }));
+}
+
+const { driver } = Astro.params;
+---
+
+<Landing
+  title="Examples — Schemic"
+  description="A verified cookbook of Schemic examples: TypeScript schema authoring and the native DDL it generates, for SurrealDB and PostgreSQL."
+  activeDriver={driver}
+>
+  <ExamplesGallery activeDriver={driver} />
+</Landing>

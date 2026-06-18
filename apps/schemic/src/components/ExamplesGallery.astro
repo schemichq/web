@@ -1,0 +1,172 @@
+---
+// The verified cookbook gallery — the body of /examples and /<driver>/examples.
+//
+// SINGLE-ORIGIN, NO RELOAD (mirrors the landing): every driver's example set is
+// rendered up-front behind `[data-driver-pane="<key>"]` (key = a driver slug, or
+// "hub" for the agnostic state); only the active pane is visible and the SHARED
+// nav picker (config/picker.ts) toggles which — cross-fading the theme and
+// pushState-ing /<driver>/examples client-side. There is NO standalone driver
+// filter: the picker is the only control, kept in sync with the landing.
+//
+// Each example pairs a TS authoring source with the DDL it generates; both are
+// highlighted at BUILD time with Astro's Shiki <Code> using the brand theme.
+//
+// The agnostic "hub" pane shows the FLAGSHIP driver's examples as reference
+// content (unblurred — examples are reference, not teaser), while the picker
+// keeps its "Database" prompt. Driver routes inline that driver's full theme via
+// the Landing layout (activeDriver), so the first paint is flash-free.
+//
+// Data comes from a STUB catalog (config/examples-catalog.ts) seeded from the
+// driver-verified landing examples — to be swapped for the vendored verified
+// manifest from schemic (core-dev) without touching this component.
+import { Code } from "astro:components";
+import { brandShikiTheme } from "@schemic/content/code-theme";
+import Nav from "@schemic/landing/components/Nav.astro";
+import Footer from "@schemic/landing/components/Footer.astro";
+import {
+  drivers,
+  flagshipDriver,
+  paneKeyFor,
+} from "@schemic/landing/config/drivers";
+import {
+  examplesCatalog,
+  type CatalogExample,
+} from "../config/examples-catalog";
+
+interface Props {
+  /** Slug of the driver this route represents; null = the agnostic /examples. */
+  activeDriver?: string | null;
+}
+const { activeDriver = null } = Astro.props;
+
+// Only the drivers that actually have catalog examples, ordered by the roster.
+const driverTabs = drivers.filter((d) =>
+  examplesCatalog.some((e) => e.driver === d.slug),
+);
+
+// Group a driver's examples by `group`, preserving first-seen order.
+function groupsFor(slug: string): { group: string; items: CatalogExample[] }[] {
+  const out: { group: string; items: CatalogExample[] }[] = [];
+  for (const ex of examplesCatalog) {
+    if (ex.driver !== slug) continue;
+    let g = out.find((x) => x.group === ex.group);
+    if (!g) {
+      g = { group: ex.group, items: [] };
+      out.push(g);
+    }
+    g.items.push(ex);
+  }
+  return out;
+}
+
+// The up-front panes (same shape as the landing): the agnostic "hub" pane renders
+// the FLAGSHIP driver's examples; then one pane per driver. The SSR'd page shows
+// the pane matching its route — "hub" on /examples, the slug on /<driver>/examples.
+const visibleKey = paneKeyFor(activeDriver);
+const panes = [
+  { key: "hub", slug: flagshipDriver.slug },
+  ...driverTabs.map((d) => ({ key: d.slug, slug: d.slug })),
+];
+
+// Shiki has no surql/postgres-specific grammar here; highlight every DDL block
+// as plain SQL (matches the surreal site's surql -> sql langAlias).
+const DDL_LANG = "sql";
+
+// Shared <Code> options so TS + DDL blocks render with identical brand colors.
+const codeAttrs = { theme: brandShikiTheme, wrap: false } as const;
+---
+
+<Nav activeDriver={activeDriver} />
+<main class="mx-auto max-w-6xl px-6 py-16 sm:py-20">
+  <!-- header -->
+  <header class="max-w-2xl">
+    <p
+      class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-accent-soft"
+    >
+      Cookbook
+    </p>
+    <h1 class="mt-3 text-4xl font-semibold tracking-tight text-ink sm:text-5xl">
+      Examples
+    </h1>
+    <p class="mt-4 text-lg leading-relaxed text-ink-2">
+      Every example is generated and verified against the live driver — the
+      TypeScript you author on the left, the native DDL Schemic emits on the
+      right. Switch databases with the picker in the nav.
+    </p>
+  </header>
+
+  <!-- per-driver galleries — only the active pane is visible; the nav picker
+       toggles them (config/picker.ts). No standalone filter. -->
+  {
+    panes.map((pane) => (
+      <section
+        data-driver-pane={pane.key}
+        hidden={pane.key !== visibleKey}
+        class="mt-12 space-y-14"
+      >
+        {groupsFor(pane.slug).map((grp) => (
+          <div>
+            <h2 class="text-sm font-semibold uppercase tracking-[0.12em] text-ink-3">
+              {grp.group}
+            </h2>
+            <div class="mt-5 space-y-8">
+              {grp.items.map((ex) => (
+                <article class="overflow-hidden rounded-2xl border border-border bg-surface">
+                  <div class="border-b border-border-subtle px-5 py-4">
+                    <h3 class="text-base font-semibold text-ink">{ex.title}</h3>
+                    {ex.note && (
+                      <p class="mt-1 text-sm leading-relaxed text-ink-2">
+                        {ex.note}
+                      </p>
+                    )}
+                  </div>
+                  <div class="grid grid-cols-1 divide-y divide-border-subtle md:grid-cols-2 md:divide-x md:divide-y-0">
+                    {/* TS authoring source */}
+                    <div class="min-w-0">
+                      <div class="flex items-center gap-2 border-b border-border-subtle px-4 py-2.5">
+                        <span class="font-mono text-[11px] font-medium uppercase tracking-wide text-ink-3">
+                          schema.ts
+                        </span>
+                        <span class="rounded-full bg-canvas-2 px-2 py-0.5 font-mono text-[10px] text-ink-3">
+                          TypeScript
+                        </span>
+                      </div>
+                      <div class="overflow-x-auto p-4 text-sm [&_pre]:!bg-transparent">
+                        <Code code={ex.code} lang="ts" {...codeAttrs} />
+                      </div>
+                    </div>
+                    {/* generated DDL */}
+                    <div class="min-w-0">
+                      <div class="flex items-center gap-2 border-b border-border-subtle px-4 py-2.5">
+                        <span class="font-mono text-[11px] font-medium uppercase tracking-wide text-ink-3">
+                          Generated
+                        </span>
+                        <span class="rounded-full bg-canvas-2 px-2 py-0.5 font-mono text-[10px] text-accent-soft">
+                          {ex.lang}
+                        </span>
+                      </div>
+                      <div class="overflow-x-auto p-4 text-sm [&_pre]:!bg-transparent">
+                        <Code code={ex.ddl} lang={DDL_LANG} {...codeAttrs} />
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        ))}
+      </section>
+    ))
+  }
+</main>
+<Footer activeDriver={activeDriver} />
+
+<script>
+  // Wire the shared database picker (the nav picker is the only control on this
+  // page — no Hero here, so initPickers() must run from the gallery). It toggles
+  // the [data-driver-pane] galleries + nav links, cross-fades the theme, and
+  // pushState-s /<driver>/examples — keeping the Examples section in sync with
+  // the landing's switch.
+  import { initPickers } from "@schemic/landing/config/picker";
+  initPickers();
+</script>

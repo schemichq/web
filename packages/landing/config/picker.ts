@@ -22,7 +22,7 @@
 // "Select a database" overlay buttons (`[data-open-picker]`, rendered over every
 // blurred output region on the agnostic hub) open the nav picker on click.
 
-import { driverThemes, HUB_PANE, paneKeyForPath } from "./drivers";
+import { driverThemes, HUB_PANE, paneKeyForPath, pathForPane } from "./drivers";
 
 const root = document.documentElement;
 const TRANSITION_MS = 600;
@@ -135,8 +135,11 @@ export function initPickers(): void {
         TRANSITION_MS,
       );
     if (push) {
-      const path = key === HUB_PANE ? "/" : `/${key}`;
-      history.pushState({ pane: key }, "", path);
+      // Section-aware: keep the current section (landing or /examples) while
+      // swapping the driver. On landing paths this is the same "/"|"/<key>" path
+      // as before, so the landing switch is byte-identical; examples paths get
+      // "/examples"|"/<key>/examples".
+      history.pushState({ pane: key }, "", pathForPane(key, location.pathname));
     }
   };
 

@@ -35,6 +35,11 @@ const linkStates = paneStates.map((s) => ({
   hidden: s.key !== activeKey,
   docs: s.slug ? `${driverUrl(s.slug)}/docs/introduction` : null,
   start: s.slug ? driverUrl(s.slug) : null,
+  // Examples live on the hub origin, one route per driver (+ the agnostic
+  // /examples). Driver-aware like Docs/Get-started: a [data-driver-pane] variant
+  // per pane so the client-side switch keeps it on the current driver — from the
+  // hub it's /examples, from /surrealdb it's /surrealdb/examples.
+  examples: s.slug ? `${hubUrl}/${s.slug}/examples` : `${hubUrl}/examples`,
 }));
 ---
 
@@ -84,14 +89,21 @@ const linkStates = paneStates.map((s) => ({
           ),
         )
       }
-      {/* Hub-level, driver-agnostic: the verified cookbook gallery. Lives on
-          the hub origin, so it's a normal same-origin link (no driver pane). */}
-      <a
-        href={`${hubUrl}/examples`}
-        class="text-sm text-ink-2 transition-colors hover:text-ink"
-      >
-        Examples
-      </a>
+      {/* The verified cookbook gallery — driver+section-aware: each pane variant
+          points at that driver's examples route (the hub variant -> /examples),
+          so the client-side picker switch keeps it tracking the current driver. */}
+      {
+        linkStates.map((st) => (
+          <a
+            href={st.examples}
+            data-driver-pane={st.key}
+            hidden={st.hidden}
+            class="text-sm text-ink-2 transition-colors hover:text-ink"
+          >
+            Examples
+          </a>
+        ))
+      }
       {/* Neutral, not driver-specific: the agnostic hub home. */}
       <a
         href="/"

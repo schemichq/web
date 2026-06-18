@@ -158,6 +158,12 @@ export function initPickers(): void {
     );
     const suggest = menu.querySelector<HTMLAnchorElement>("[data-db-suggest]");
     const items: HTMLElement[] = suggest ? [...options, suggest] : options;
+    // Overlay pickers ("Select a database") sit inside the demo/depth windows,
+    // which clip overflow — so an absolutely-positioned dropdown would be cut off.
+    // For these we anchor the menu with FIXED positioning under the trigger
+    // (relative to the viewport, escaping every overflow:hidden ancestor) and
+    // close it on scroll so it never drifts away from its button.
+    const isOverlay = el.dataset.dbPicker === "overlay";
     let open = false;
     let active = Math.max(
       0,
@@ -172,9 +178,46 @@ export function initPickers(): void {
       items[active].focus();
     };
 
+    // Pin an overlay menu directly under its trigger, in viewport coords, above
+    // everything (incl. the sticky nav). Opens upward if it would overflow below.
+    const placeFixed = (): void => {
+      const r = trigger.getBoundingClientRect();
+      const width = menu.offsetWidth || 288;
+      const height = menu.offsetHeight || 160;
+      const gap = 8;
+      const cx = r.left + r.width / 2;
+      const left = Math.min(
+        Math.max(8 + width / 2, cx),
+        window.innerWidth - 8 - width / 2,
+      );
+      const below = r.bottom + gap;
+      const top =
+        below + height > window.innerHeight - 8 && r.top - gap - height > 8
+          ? r.top - gap - height
+          : below;
+      menu.style.position = "fixed";
+      menu.style.top = `${top}px`;
+      menu.style.left = `${left}px`;
+      menu.style.right = "auto";
+      menu.style.marginTop = "0";
+      menu.style.transform = "translateX(-50%)";
+      menu.style.zIndex = "60";
+    };
+
+    const clearFixed = (): void => {
+      menu.style.position = "";
+      menu.style.top = "";
+      menu.style.left = "";
+      menu.style.right = "";
+      menu.style.marginTop = "";
+      menu.style.transform = "";
+      menu.style.zIndex = "";
+    };
+
     const openMenu = (): void => {
       open = true;
       menu.hidden = false;
+      if (isOverlay) placeFixed();
       trigger.setAttribute("aria-expanded", "true");
       setActive(active);
     };
@@ -182,9 +225,19 @@ export function initPickers(): void {
     const closeMenu = (focusTrigger = true): void => {
       open = false;
       menu.hidden = true;
+      if (isOverlay) clearFixed();
       trigger.setAttribute("aria-expanded", "false");
       if (focusTrigger) trigger.focus();
     };
+
+    if (isOverlay)
+      window.addEventListener(
+        "scroll",
+        () => {
+          if (open) closeMenu(false);
+        },
+        { passive: true },
+      );
 
     trigger.addEventListener("click", () => (open ? closeMenu() : openMenu()));
     trigger.addEventListener("keydown", (e) => {
@@ -254,25 +307,33 @@ export function initPickers(): void {
     ctls.push({ el, label, options, open: openMenu, close: closeMenu });
   }
 
-  // "Select a database" overlay CTAs + hub nav links + the hero primary CTA
-  // (`[data-open-picker]`) open the NAV picker IN PLACE. The nav is sticky/always
-  // pinned to the top of the viewport, so its dropdown appears inline with NO page
-  // scroll. (Opening the hero/headline picker would scrollIntoView up to the hero,
-  // which reads as a jarring "redirect" from buttons lower on the page.) No
-  // scrollIntoView: the sticky nav is already on screen, and scrolling a sticky
-  // element jumps to its document-flow position (the very top). Fall back to the
-  // first picker if there's no nav one.
+  // `[data-open-picker]` triggers that aren't themselves pickers — the hero +
+  // FinalCTA "Choose your database" CTAs and the hub nav links — open the picker
+  // NEAREST them: the one in their own region (the hero headline picker for the
+  // hero CTA, the nav picker for the nav links), so its dropdown appears INLINE
+  // with no page scroll. Falls back to the sticky nav picker when the region has
+  // none of its own (e.g. the FinalCTA section). The "Select a database" overlays
+  // are self-contained pickers and don't go through this path at all.
   const navCtl = ctls.find((c) => c.el.dataset.dbPicker === "nav") ?? ctls[0];
-  if (navCtl)
-    for (const btn of document.querySelectorAll<HTMLElement>(
-      "[data-open-picker]",
-    ))
-      btn.addEventListener("click", (e) => {
-        // Stop the click bubbling to the document click-outside handler, which
-        // would otherwise immediately re-close the menu we just opened.
-        e.stopPropagation();
-        navCtl.open();
-      });
+  const pickerNear = (btn: HTMLElement): RootCtl | undefined => {
+    const region = btn.closest("section, header, nav, footer");
+    const pickerEl = region?.querySelector<HTMLElement>(
+      "[data-db-picker]:not([data-db-picker='overlay'])",
+    );
+    return ctls.find((c) => c.el === pickerEl) ?? navCtl;
+  };
+  for (const btn of document.querySelectorAll<HTMLElement>(
+    "[data-open-picker]",
+  )) {
+    const ctl = pickerNear(btn);
+    if (!ctl) continue;
+    btn.addEventListener("click", (e) => {
+      // Stop the click bubbling to the document click-outside handler, which
+      // would otherwise immediately re-close the menu we just opened.
+      e.stopPropagation();
+      ctl.open();
+    });
+  }
 
   // Back/forward re-applies the pane for the path (animated unless reduced). The
   // SSR'd first paint already matches the path, so no initial switch is needed —

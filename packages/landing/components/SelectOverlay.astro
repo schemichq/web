@@ -1,18 +1,30 @@
 ---
-// "Select a database" blur overlay — covers every driver-specific OUTPUT /
+// "Select a database" picker overlay — covers every driver-specific OUTPUT /
 // generated region on the agnostic hub (schemic.dev, activeDriver = null). It
 // reuses the Demo coming-soon overlay's blur/opacity treatment: an absolutely
 // positioned panel with a translucent code-bg wash + backdrop blur, so the
-// generated DDL behind it reads as "pick a database to reveal this". The CTA
-// (`data-open-picker`) opens the nav picker via config/picker.ts.
+// generated DDL behind it reads as "pick a database to reveal this".
+//
+// It is a SELF-CONTAINED database picker: the "Select a database" button is its
+// OWN [data-db-trigger] and opens its OWN roster dropdown IN PLACE — not the
+// hero's, not the nav's. config/picker.ts's initPickers() wires every
+// [data-db-picker] on the page (these included); because these overlays live
+// inside the demo/depth windows that clip overflow, the island renders an
+// `overlay` picker's menu with FIXED positioning so the dropdown is never
+// clipped. Choosing a database switches the page client-side (panes + theme +
+// history).
 //
 // Mount inside a `relative` container that wraps ONLY the output region (so any
 // agnostic prose / footer caption stays outside it, fully legible).
+import DbMenu from "./DbMenu.astro";
+import { drivers, SUGGEST_DRIVER_URL } from "../config/drivers";
+
 interface Props {
   /** Compact variant for the small Bento cards (button only, tighter). */
   compact?: boolean;
 }
 const { compact = false } = Astro.props;
+const chevron = '<path d="m6 9 6 6 6-6"/>';
 ---
 
 <div
@@ -36,24 +48,37 @@ const { compact = false } = Astro.props;
       </p>
     )
   }
-  <button
-    type="button"
-    data-open-picker
-    class:list={[
-      "inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-accent to-accent-2 font-sans font-semibold text-on-accent transition-transform hover:scale-[1.03]",
-      compact ? "px-3 py-1.5 text-[11px]" : "px-4 py-2 text-xs",
-    ]}
-  >
-    Select a database
-    <svg
-      class="size-[0.85em]"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2.5"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg
+  <div data-db-picker="overlay" class="relative">
+    <button
+      type="button"
+      data-db-trigger
+      aria-haspopup="listbox"
+      aria-expanded="false"
+      aria-label="Choose your database"
+      class:list={[
+        "group inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-accent to-accent-2 font-sans font-semibold text-on-accent transition-transform hover:scale-[1.03]",
+        compact ? "px-3 py-1.5 text-[11px]" : "px-4 py-2 text-xs",
+      ]}
     >
-  </button>
+      Select a database
+      <svg
+        class="size-[0.85em] transition-transform group-aria-expanded:rotate-180"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+        set:html={chevron}
+      />
+    </button>
+
+    <DbMenu
+      drivers={drivers}
+      selectedSlug={null}
+      suggestHref={SUGGEST_DRIVER_URL}
+      align="center"
+    />
+  </div>
 </div>

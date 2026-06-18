@@ -215,14 +215,10 @@ export function ctaFor(activeDriver?: string | null): DriverCTA {
 }
 
 /**
- * "Suggest a database" destination — opens a pre-filled driver-request issue on
- * the library repo so community demand is tracked (👍 reactions = signal).
- * Swap this single constant to change where requests land.
+ * "Vote or request a database" destination — the GitHub Discussions
+ * driver-requests category, so demand is deduplicated: people upvote an existing
+ * thread instead of filing duplicate issues. Swap this single constant to change
+ * where requests land.
  */
 export const SUGGEST_DRIVER_URL =
-  "https://github.com/schemichq/schemic/issues/new?labels=driver-request&title=" +
-  encodeURIComponent("Driver request: ") +
-  "&body=" +
-  encodeURIComponent(
-    "**Which database should Schemic support?**\n\n_e.g. CockroachDB, DuckDB, Cassandra…_\n\n**What would you build with it?** (optional)\n\n",
-  );
+  "https://github.com/schemichq/schemic/discussions/categories/driver-requests";

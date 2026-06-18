@@ -17,6 +17,12 @@ export interface Driver {
   name: string;
   status: DriverStatus;
   /**
+   * Release-maturity label surfaced as the picker option's BADGE (e.g. "Beta",
+   * "Alpha"). Purely informational — independent of `status`/`site`, which still
+   * drive availability + navigation.
+   */
+  maturity: string;
+  /**
    * Whether this driver has its OWN published subdomain/site. Selecting a
    * `site` driver navigates there (with an animated theme transition); a
    * driver without a site has no page yet, so selecting it stays in-page and
@@ -39,6 +45,7 @@ export const drivers: Driver[] = [
     slug: "surrealdb",
     name: "SurrealDB",
     status: "available",
+    maturity: "Beta",
     site: true,
     color: "var(--color-driver-surrealdb)",
     color2: "var(--color-driver-surrealdb-2)",
@@ -48,6 +55,7 @@ export const drivers: Driver[] = [
     slug: "postgres",
     name: "PostgreSQL",
     status: "available",
+    maturity: "Alpha",
     site: true,
     color: "var(--color-driver-postgres)",
     dialect: { lang: "PostgreSQL", file: "user.sql" },

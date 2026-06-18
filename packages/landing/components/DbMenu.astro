@@ -30,7 +30,9 @@ const options = driverList.map((d) => ({
   name: d.name,
   selected: selectedSlug != null && d.slug === selectedSlug,
   available: isAvailable(d),
-  status: isAvailable(d) ? "Available" : "Coming soon",
+  // Visible badge = release maturity ("Beta"/"Alpha"), independent of the
+  // availability/navigation logic below (which still keys off status/site).
+  maturity: d.maturity,
   // Navigable when the driver ships its OWN subdomain (`site`), regardless of
   // availability — PostgreSQL ships a site while still coming-soon.
   site: d.site,
@@ -79,12 +81,12 @@ const options = driverList.map((d) => ({
         <span
           class:list={[
             "rounded-full px-2 py-0.5 font-mono text-[10px] tracking-wide",
-            d.available
+            d.maturity === "Beta"
               ? "bg-success/15 text-success"
-              : "bg-surface-2 text-ink-3",
+              : "bg-accent-soft/15 text-accent-soft",
           ]}
         >
-          {d.status}
+          {d.maturity}
         </span>
       </div>
     ))

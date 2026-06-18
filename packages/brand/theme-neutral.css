@@ -1,0 +1,37 @@
+/*
+ * Schemic theme — NEUTRAL (no flavor). The hub's (schemic.dev) own theme:
+ * the warm graphite canvas from theme-schemic, but a MONOCHROME white→gray
+ * accent (NO hue) so the hub reads as database-agnostic. Selecting a database
+ * in the picker cross-fades from this neutral gray toward the driver's color
+ * ("no flavor → flavored"). Pair with base.css:
+ *   @import "@schemic/brand/base.css";
+ *   @import "@schemic/brand/theme-neutral.css";
+ */
+@theme {
+  /* Surfaces — warm graphite (unchanged from theme-schemic) */
+  --color-canvas: #0c0d10;
+  --color-canvas-2: #14151a;
+  --color-surface: #181a20;
+  --color-surface-2: #20222b;
+  --color-code-bg: #0e0f13;
+
+  /* Borders */
+  --color-border: #2b2d38;
+  --color-border-subtle: #212430;
+
+  /* Ink — light, faintly warm */
+  --color-ink: #f5f4f1;
+  --color-ink-2: #aea79c;
+  --color-ink-3: #74706a;
+
+  /* Accent — MONOCHROME white → gray (no hue): the gradient reads neutral */
+  --color-accent: #d8d6da;
+  --color-accent-2: #98969a;
+  --color-accent-soft: #e7e5e9;
+  --color-accent-hot: #b6b4b8;
+
+  /* Neutral code tokens (grayscale — no flavor in the hub's schema input) */
+  --color-code-comment: #6a676e;
+  --color-code-keyword: #c8c5cd;
+  --color-code-string: #a8a5ad;
+}

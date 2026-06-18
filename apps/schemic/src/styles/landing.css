@@ -4,8 +4,10 @@
  * The structural, theme-agnostic landing styles (full Tailwind import + brand
  * BASE tokens + a @source that scans the shared @schemic/landing package) come
  * from that package. This app only layers ITS theme on top — the hub wears the
- * Amber umbrella theme. Swapping the theme import is the only per-subdomain
- * change; the same semantic-token markup re-themes for free.
+ * NEUTRAL (no-flavor) theme: a monochrome white/gray accent on the graphite
+ * canvas, so the page reads database-agnostic and selecting a driver visibly
+ * goes from no-flavor → flavored. Swapping the theme import is the only
+ * per-subdomain change; the same semantic-token markup re-themes for free.
  */
 @import "@schemic/landing/landing.css";
-@import "@schemic/brand/theme-schemic.css";
+@import "@schemic/brand/theme-neutral.css";

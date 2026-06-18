@@ -51,12 +51,12 @@
 @property --color-accent {
   syntax: "<color>";
   inherits: true;
-  initial-value: #ffb454;
+  initial-value: #d8d6da;
 }
 @property --color-accent-2 {
   syntax: "<color>";
   inherits: true;
-  initial-value: #ff6a3d;
+  initial-value: #98969a;
 }
 @property --color-ink {
   syntax: "<color>";

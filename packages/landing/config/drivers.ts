@@ -58,7 +58,7 @@ export const drivers: Driver[] = [
  * The key themeable color values for each driver (concrete hex — NOT CSS vars —
  * so the picker island can assign them straight to `:root` for a cross-fade).
  * These mirror the per-app build-time theme in @schemic/brand/theme-<slug>.css;
- * `hub` is the agnostic schemic.dev amber theme. Used to animate the page toward
+ * `hub` is the agnostic schemic.dev NEUTRAL theme. Used to animate the page toward
  * a driver's palette on select (see Hero's island).
  */
 export interface DriverTheme {
@@ -71,10 +71,12 @@ export interface DriverTheme {
 }
 
 export const driverThemes: Record<string, DriverTheme> = {
-  // schemic.dev hub — amber → coral (theme-schemic.css)
+  // schemic.dev hub — NEUTRAL, no flavor: monochrome white → gray accent on the
+  // graphite canvas (theme-neutral.css). The picker cross-fade STARTS here and
+  // animates toward a driver's color on select (no-flavor → flavored).
   hub: {
-    accent: "#ffb454",
-    accent2: "#ff6a3d",
+    accent: "#d8d6da",
+    accent2: "#98969a",
     canvas: "#0c0d10",
     canvas2: "#14151a",
     surface: "#181a20",
@@ -100,7 +102,7 @@ export const driverThemes: Record<string, DriverTheme> = {
   },
 };
 
-/** Theme values for a slug, falling back to the agnostic hub (amber). */
+/** Theme values for a slug, falling back to the agnostic hub (neutral). */
 export function driverTheme(slug: string | null | undefined): DriverTheme {
   return (slug && driverThemes[slug]) || driverThemes.hub;
 }

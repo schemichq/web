@@ -6,6 +6,7 @@
   "description": "Shared Schemic brand kit: base design tokens (Tailwind v4 @theme) + per-theme palettes (schemic/surrealdb/postgres) + fixed per-driver brand colors.",
   "exports": {
     "./base.css": "./base.css",
+    "./theme-neutral.css": "./theme-neutral.css",
     "./theme-schemic.css": "./theme-schemic.css",
     "./theme-surrealdb.css": "./theme-surrealdb.css",
     "./theme-postgres.css": "./theme-postgres.css",
@@ -13,6 +14,7 @@
   },
   "files": [
     "base.css",
+    "theme-neutral.css",
     "theme-schemic.css",
     "theme-surrealdb.css",
     "theme-postgres.css",

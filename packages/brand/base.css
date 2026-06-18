@@ -40,6 +40,9 @@
   --color-accent-2: #b9bfcd;
   --color-accent-soft: #aeb3c0;
   --color-accent-hot: #c8ccd8;
+  /* Text drawn ON the accent gradient (pills/badges). White suits the colored
+   * driver themes; theme-neutral overrides this to a dark value for its light accent. */
+  --color-on-accent: #ffffff;
 
   /* ---- Status (fixed across themes) ---- */
   --color-success: #46d39a;

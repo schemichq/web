@@ -29,9 +29,11 @@
   --color-accent-2: #98969a;
   --color-accent-soft: #e7e5e9;
   --color-accent-hot: #b6b4b8;
+  /* On-accent text must be DARK here — the accent is light, so white-on-accent
+   * pills/badges were unreadable. (Colored driver themes keep white via base.) */
+  --color-on-accent: #141519;
 
-  /* Neutral code tokens (grayscale — no flavor in the hub's schema input) */
-  --color-code-comment: #6a676e;
-  --color-code-keyword: #c8c5cd;
-  --color-code-string: #a8a5ad;
+  /* Code tokens: intentionally NOT overridden — keep base.css's readable COLORED
+   * syntax so the hub's visible TypeScript stays legible (grayscale was too low
+   * contrast / monochrome). The neutral look lives in the brand chrome, not the code. */
 }

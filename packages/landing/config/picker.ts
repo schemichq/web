@@ -238,7 +238,10 @@ export function initPickers(): void {
     for (const btn of document.querySelectorAll<HTMLElement>(
       "[data-open-picker]",
     ))
-      btn.addEventListener("click", () => {
+      btn.addEventListener("click", (e) => {
+        // Stop the click bubbling to the document click-outside handler, which
+        // would otherwise immediately re-close the menu we just opened.
+        e.stopPropagation();
         navCtl.el.scrollIntoView({ block: "nearest" });
         navCtl.open();
       });

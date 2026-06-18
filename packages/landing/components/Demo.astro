@@ -1,9 +1,9 @@
 ---
 import {
-  driverUrl,
   isAvailable,
   flagshipDriver,
   findDriver,
+  ctaFor,
 } from "../config/drivers";
 
 interface Props {
@@ -19,7 +19,9 @@ const { activeDriver = null } = Astro.props;
 const selected = findDriver(activeDriver) ?? flagshipDriver;
 const selectedAvailable = isAvailable(selected);
 const initialDialect = selected.dialect;
-const flagshipUrl = driverUrl(flagshipDriver.slug);
+// Driver-aware coming-soon overlay copy + action (Postgres-centric on the
+// postgres site; never pushes the flagship for a coming-soon driver).
+const cta = ctaFor(activeDriver);
 
 // Token color classes (brand code tokens)
 const kw = "text-code-keyword";
@@ -338,14 +340,13 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
                       style={`background:${selected.color}`}
                       aria-hidden="true"></span>
                     <p id="demo-soon-text" class="max-w-xs font-sans text-sm text-ink-2">
-                      {selectedAvailable
-                        ? `This driver is coming soon — start with ${flagshipDriver.name} today.`
-                        : `The ${selected.name} driver is coming soon — start with ${flagshipDriver.name} today.`}
+                      {cta.overlay.text}
                     </p>
                     <a
-                      href={flagshipUrl}
+                      id="demo-soon-cta"
+                      href={cta.overlay.action.href}
                       class="rounded-full bg-gradient-to-r from-accent to-accent-2 px-4 py-2 font-sans text-xs font-semibold text-white"
-                      >Start with {flagshipDriver.name}</a
+                      >{cta.overlay.action.label}</a
                     >
                   </div>
                   {
@@ -571,9 +572,6 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
   const dialects: Record<string, { lang: string; file: string }> = {
     SurrealDB: { lang: "SurrealQL", file: "user.surql" },
     PostgreSQL: { lang: "PostgreSQL", file: "user.sql" },
-    MySQL: { lang: "MySQL", file: "user.sql" },
-    SQLite: { lang: "SQLite", file: "user.sql" },
-    MongoDB: { lang: "MongoDB", file: "user.json" },
   };
   const dialectEl = document.getElementById("demo-dialect");
   const fileEl = document.getElementById("demo-file");
@@ -596,7 +594,7 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
     if (mapNote) mapNote.hidden = !available;
     if (soon) soon.hidden = available;
     if (!available && soonText)
-      soonText.textContent = `The ${name} driver is coming soon — start with SurrealDB today.`;
+      soonText.textContent = `The ${name} driver is coming soon — follow progress on GitHub.`;
     if (!available && soonDot && accent)
       soonDot.style.background = accent;
   });

@@ -1,4 +1,15 @@
 ---
+import { ctaFor } from "../config/drivers";
+
+interface Props {
+  /** Slug of the driver this site represents; null = agnostic hub. */
+  activeDriver?: string | null;
+}
+
+const { activeDriver = null } = Astro.props;
+// Driver-aware primary/secondary (flagship on the hub, the site's driver
+// otherwise). Coming-soon drivers stay honest and never push the flagship.
+const cta = ctaFor(activeDriver);
 const arrow = '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>';
 ---
 
@@ -27,16 +38,16 @@ const arrow = '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>';
 
     <div class="mt-8 flex flex-wrap items-center justify-center gap-3.5">
       <a
-        href="/docs/quickstart"
+        href={cta.primary.href}
         class="rounded-full bg-gradient-to-r from-accent to-accent-2 px-6 py-3.5 text-[15px] font-semibold text-white shadow-[0_8px_30px_-6px_var(--color-accent)] transition-transform hover:scale-[1.03]"
       >
-        Get started
+        {cta.primary.label}
       </a>
       <a
-        href="/docs/introduction"
+        href={cta.secondary.href}
         class="inline-flex items-center gap-2 rounded-full border border-border bg-code-bg px-5 py-3 text-sm font-medium text-ink transition-colors hover:border-ink-3"
       >
-        Read the docs
+        {cta.secondary.label}
         <svg
           class="size-3.5 text-ink-2"
           viewBox="0 0 24 24"

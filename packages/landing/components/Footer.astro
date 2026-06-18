@@ -1,5 +1,5 @@
 ---
-import { driverUrl, flagshipDriver } from "../config/drivers";
+import { drivers, driverUrl, flagshipDriver } from "../config/drivers";
 
 interface Props {
   /** Slug of the driver this site represents; null = agnostic hub. */
@@ -27,12 +27,12 @@ const columns: { heading: string; links: { label: string; href: string }[] }[] =
   },
   {
     heading: "Databases",
-    links: [
-      { label: "SurrealDB", href: surreal },
-      { label: "PostgreSQL", href: "#" },
-      { label: "MySQL", href: "#" },
-      { label: "SQLite", href: "#" },
-    ],
+    // Derived from the shared roster so the footer stays in lockstep with the
+    // picker; a driver links to its subdomain once it ships a site.
+    links: drivers.map((d) => ({
+      label: d.name,
+      href: d.site ? driverUrl(d.slug) : "#",
+    })),
   },
   {
     heading: "Community",

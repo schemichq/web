@@ -52,30 +52,6 @@ export const drivers: Driver[] = [
     color: "var(--color-driver-postgres)",
     dialect: { lang: "PostgreSQL", file: "user.sql" },
   },
-  {
-    slug: "mysql",
-    name: "MySQL",
-    status: "coming-soon",
-    site: false,
-    color: "var(--color-driver-mysql)",
-    dialect: { lang: "MySQL", file: "user.sql" },
-  },
-  {
-    slug: "sqlite",
-    name: "SQLite",
-    status: "coming-soon",
-    site: false,
-    color: "var(--color-driver-sqlite)",
-    dialect: { lang: "SQLite", file: "user.sql" },
-  },
-  {
-    slug: "mongodb",
-    name: "MongoDB",
-    status: "coming-soon",
-    site: false,
-    color: "var(--color-driver-mongodb)",
-    dialect: { lang: "MongoDB", file: "user.json" },
-  },
 ];
 
 /**
@@ -122,33 +98,6 @@ export const driverThemes: Record<string, DriverTheme> = {
     surface: "#121823",
     ink: "#eef3f8",
   },
-  // MySQL — teal/navy brand (--color-driver-mysql), sensible dark canvas
-  mysql: {
-    accent: "#00758f",
-    accent2: "#3bb6c9",
-    canvas: "#0a0f12",
-    canvas2: "#0e151a",
-    surface: "#121b21",
-    ink: "#eef4f6",
-  },
-  // SQLite — blue brand (--color-driver-sqlite), sensible dark canvas
-  sqlite: {
-    accent: "#0f80cc",
-    accent2: "#4aa9e6",
-    canvas: "#0a0e13",
-    canvas2: "#0e141b",
-    surface: "#121a22",
-    ink: "#eef3f7",
-  },
-  // MongoDB — green brand (--color-driver-mongodb), sensible dark canvas
-  mongodb: {
-    accent: "#13aa52",
-    accent2: "#4cd07d",
-    canvas: "#0a110d",
-    canvas2: "#0e1812",
-    surface: "#121f17",
-    ink: "#eef6f0",
-  },
 };
 
 /** Theme values for a slug, falling back to the agnostic hub (amber). */
@@ -176,6 +125,69 @@ export const flagshipDriver: Driver = drivers.find(isAvailable) ?? drivers[0];
 export function findDriver(slug: string | null | undefined): Driver | null {
   if (!slug) return null;
   return drivers.find((d) => d.slug === slug) ?? null;
+}
+
+/** The Schemic library repository (used by driver-agnostic CTAs). */
+export const REPO_URL = "https://github.com/schemichq/schemic";
+
+export interface CTALink {
+  label: string;
+  href: string;
+}
+
+/**
+ * The driver-aware landing CTAs for a given site. Everything the marketing
+ * surfaces (Hero primary, FinalCTA primary/secondary, Demo coming-soon overlay)
+ * should derive from here so copy + destinations stay centralized and honest.
+ */
+export interface DriverCTA {
+  /** The driver these CTAs are about — the active site driver, or the flagship on the hub. */
+  driver: Driver;
+  /** Primary action. */
+  primary: CTALink;
+  /** Secondary "Read the docs" action. */
+  secondary: CTALink;
+  /** Demo coming-soon overlay copy + action (only surfaced for coming-soon drivers). */
+  overlay: { text: string; action: CTALink };
+}
+
+/**
+ * Resolve the landing CTAs for a site from its `activeDriver` slug (null on the
+ * hub -> the flagship). AVAILABLE drivers get "Start with <name>" pointing at
+ * their own subdomain + their own docs. COMING-SOON drivers get honest,
+ * driver-centric CTAs pointing at THEIR subdomain / the repo and the core
+ * (flagship) docs — they never push the flagship driver.
+ */
+export function ctaFor(activeDriver?: string | null): DriverCTA {
+  const driver = findDriver(activeDriver) ?? flagshipDriver;
+  const url = driverUrl(driver.slug);
+  const docs = `${url}/docs/introduction`;
+
+  if (isAvailable(driver)) {
+    return {
+      driver,
+      primary: { label: `Start with ${driver.name}`, href: url },
+      secondary: { label: "Read the docs", href: docs },
+      overlay: {
+        text: `This driver is coming soon — start with ${driver.name} today.`,
+        action: { label: `Start with ${driver.name}`, href: url },
+      },
+    };
+  }
+
+  // Coming-soon: about THIS driver, honest about being unshipped, and never
+  // redirecting to the flagship. Docs fall back to the core (flagship) docs
+  // since the driver has none of its own yet.
+  const coreDocs = `${driverUrl(flagshipDriver.slug)}/docs/introduction`;
+  return {
+    driver,
+    primary: { label: `${driver.name} — coming soon`, href: url },
+    secondary: { label: "Read the docs", href: coreDocs },
+    overlay: {
+      text: `The ${driver.name} driver is coming soon — follow progress on GitHub.`,
+      action: { label: "Follow progress", href: REPO_URL },
+    },
+  };
 }
 
 /**

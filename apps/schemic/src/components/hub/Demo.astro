@@ -112,13 +112,14 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
     <!-- header -->
     <div class="text-center">
       <p class="font-mono text-xs uppercase tracking-[0.22em] text-ink-3">
-        // schema in, surrealql out
+        // schema in, native ddl out
       </p>
       <h2
         class="mx-auto mt-4 max-w-2xl font-display text-3xl font-semibold tracking-tight text-balance text-ink-2 sm:text-4xl"
       >
         From <code class="font-mono text-soft">s.*</code> schema to generated{" "}
         <span
+          id="demo-dialect"
           class="bg-gradient-to-r from-purple to-pink bg-clip-text text-transparent"
           >SurrealQL</span
         >.
@@ -293,8 +294,8 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
                 <div
                   class="flex items-center justify-between border-b border-border-subtle bg-pink/[0.03] px-4 py-2.5"
                 >
-                  <span class="font-mono text-xs text-ink-2">{tabHead.schema.r}</span>
-                  <span class="font-mono text-[10px] text-pink">{tabHead.schema.rt}</span>
+                  <span id="demo-file" class="font-mono text-xs text-ink-2">{tabHead.schema.r}</span>
+                  <span id="demo-lang" class="font-mono text-[10px] text-pink">{tabHead.schema.rt}</span>
                 </div>
                 <div
                   class="relative min-w-0 overflow-x-auto bg-code-bg py-4 font-mono text-[13px] leading-6 lg:pl-5"
@@ -302,6 +303,26 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
                   <div
                     class="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent to-pink/[0.04]"
                   >
+                  </div>
+                  <!-- coming-soon overlay (shown when a not-yet-shipped driver is picked) -->
+                  <div
+                    id="demo-soon"
+                    hidden
+                    class="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-code-bg/90 px-6 text-center backdrop-blur-[2px]"
+                  >
+                    <span
+                      class="size-2.5 rounded-full"
+                      id="demo-soon-dot"
+                      style="background:#4aa3df"
+                      aria-hidden="true"></span>
+                    <p id="demo-soon-text" class="max-w-xs font-sans text-sm text-ink-2">
+                      This driver is coming soon — start with SurrealDB today.
+                    </p>
+                    <a
+                      href="https://surreal.schemic.dev"
+                      class="rounded-full bg-gradient-to-r from-purple to-pink px-4 py-2 font-sans text-xs font-semibold text-white"
+                      >Start with SurrealDB</a
+                    >
                   </div>
                   {
                     surqlLines.map((line) => (
@@ -353,6 +374,7 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
 
             <!-- map note -->
             <div
+              id="demo-mapnote"
               class="flex items-center gap-2 border-t border-border-subtle bg-purple/10 px-4 py-2.5 text-xs text-ink-2"
             >
               <span class="size-1.5 shrink-0 rounded-full bg-gradient-to-r from-purple to-pink"></span>
@@ -519,4 +541,38 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
       });
     }
   }
+
+  // Reflect the hero's database picker in the schema -> DDL panel.
+  const dialects: Record<string, { lang: string; file: string }> = {
+    SurrealDB: { lang: "SurrealQL", file: "user.surql" },
+    PostgreSQL: { lang: "PostgreSQL", file: "user.sql" },
+    MySQL: { lang: "MySQL", file: "user.sql" },
+    SQLite: { lang: "SQLite", file: "user.sql" },
+    MongoDB: { lang: "MongoDB", file: "user.json" },
+  };
+  const dialectEl = document.getElementById("demo-dialect");
+  const fileEl = document.getElementById("demo-file");
+  const langEl = document.getElementById("demo-lang");
+  const mapNote = document.getElementById("demo-mapnote");
+  const soon = document.getElementById("demo-soon");
+  const soonText = document.getElementById("demo-soon-text");
+  const soonDot = document.getElementById("demo-soon-dot");
+
+  document.addEventListener("schemic:driver", (e) => {
+    const { name, available, accent } = (e as CustomEvent).detail as {
+      name: string;
+      available: boolean;
+      accent: string;
+    };
+    const d = dialects[name] ?? dialects.SurrealDB;
+    if (dialectEl) dialectEl.textContent = d.lang;
+    if (fileEl) fileEl.textContent = d.file;
+    if (langEl) langEl.textContent = d.lang;
+    if (mapNote) mapNote.hidden = !available;
+    if (soon) soon.hidden = available;
+    if (!available && soonText)
+      soonText.textContent = `The ${name} driver is coming soon — start with SurrealDB today.`;
+    if (!available && soonDot && accent)
+      soonDot.style.background = accent;
+  });
 </script>

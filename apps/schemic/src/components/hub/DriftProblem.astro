@@ -14,7 +14,10 @@ const x = '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>';
 const down = '<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>';
 ---
 
-<section class="border-y border-border-subtle bg-canvas-2 px-6 py-24 sm:py-28">
+<section
+  data-drift-section
+  class="border-y border-border-subtle bg-canvas-2 px-6 py-24 sm:py-28"
+>
   <div class="mx-auto flex max-w-4xl flex-col items-center text-center">
     <h2
       class="font-display text-[34px] font-semibold leading-[1.1] tracking-tight text-balance sm:text-5xl"
@@ -86,3 +89,48 @@ const down = '<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>';
     />
   </div>
 </section>
+
+<script>
+  // Drift -> settle: chips start scattered/over-rotated and ease into their
+  // resting rotation when the section scrolls into view. Reduced-motion: skip
+  // (chips already render at rest via their inline transform).
+  const section = document.querySelector<HTMLElement>("[data-drift-section]");
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  if (section && !reduce && "IntersectionObserver" in window) {
+    const chips = Array.from(
+      section.querySelectorAll<HTMLElement>(".drift-chip"),
+    );
+
+    // Arm the drifted (pre-settle) state.
+    chips.forEach((chip, i) => {
+      const rest = chip.dataset.restRotate || "0deg";
+      const dir = i % 2 === 0 ? -1 : 1;
+      const dx = dir * (22 + i * 7);
+      const dy = -18 - i * 5;
+      const spin = dir * (9 + i * 2);
+      chip.style.transition = "none";
+      chip.style.transform = `translate(${dx}px, ${dy}px) rotate(calc(${rest} + ${spin}deg))`;
+      chip.style.opacity = "0";
+    });
+    // Force a reflow so the armed state is committed before transitioning.
+    void section.offsetHeight;
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          chips.forEach((chip, i) => {
+            const rest = chip.dataset.restRotate || "0deg";
+            chip.style.transition = `transform 0.62s cubic-bezier(0.22, 1, 0.36, 1) ${i * 90}ms, opacity 0.5s ease ${i * 90}ms`;
+            chip.style.transform = `rotate(${rest})`;
+            chip.style.opacity = "1";
+          });
+          io.disconnect();
+        }
+      },
+      { threshold: 0.35, rootMargin: "0px 0px -10% 0px" },
+    );
+    io.observe(section);
+  }
+</script>

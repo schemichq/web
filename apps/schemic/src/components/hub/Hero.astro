@@ -52,6 +52,7 @@ const chevron = '<path d="m6 9 6 6 6-6"/>';
             class="group inline-flex items-center gap-2 rounded-2xl border border-purple/40 bg-surface/70 px-3 py-0.5 align-middle shadow-[0_0_24px_-6px_var(--color-purple)] transition-colors hover:border-purple/70"
           >
             <span
+              id="db-label"
               class="bg-gradient-to-r from-purple to-pink bg-clip-text text-transparent"
               >SurrealDB</span
             >
@@ -76,17 +77,15 @@ const chevron = '<path d="m6 9 6 6 6-6"/>';
             class="absolute left-1/2 top-full z-30 mt-3 w-72 -translate-x-1/2 rounded-2xl border border-border bg-canvas-2/95 p-1.5 text-left shadow-2xl backdrop-blur"
           >
             {
-              drivers.map((d) => (
+              drivers.map((d, i) => (
                 <div
                   role="option"
-                  aria-selected={d.available}
+                  aria-selected={i === 0}
+                  tabindex={i === 0 ? 0 : -1}
                   data-driver={d.name}
-                  class:list={[
-                    "flex items-center justify-between rounded-xl px-3 py-2 font-sans text-sm",
-                    d.available
-                      ? "text-ink"
-                      : "cursor-not-allowed text-ink-3 opacity-60",
-                  ]}
+                  data-available={d.available ? "true" : "false"}
+                  data-accent={d.dot ?? ""}
+                  class="flex cursor-pointer items-center justify-between rounded-xl px-3 py-2 font-sans text-sm text-ink-2 outline-none transition-colors hover:bg-white/[0.05] focus-visible:bg-white/[0.07] aria-selected:text-ink"
                 >
                   <span class="flex items-center gap-2.5">
                     {d.available ? (
@@ -172,3 +171,120 @@ const chevron = '<path d="m6 9 6 6 6-6"/>';
     </p>
   </div>
 </section>
+
+<script>
+  // Database-switcher dropdown — the sole DB picker. Selecting a driver updates
+  // the headline label and broadcasts `schemic:driver` so the Demo reflects it.
+  const picker = document.getElementById("db-picker");
+  const menu = document.getElementById("db-menu");
+  const label = document.getElementById("db-label");
+
+  if (picker && menu && label) {
+    const options = Array.from(
+      menu.querySelectorAll<HTMLElement>('[role="option"]'),
+    );
+    let open = false;
+    let active = Math.max(
+      0,
+      options.findIndex((o) => o.getAttribute("aria-selected") === "true"),
+    );
+
+    const setActive = (i: number) => {
+      active = (i + options.length) % options.length;
+      options.forEach((o, idx) =>
+        o.setAttribute("tabindex", idx === active ? "0" : "-1"),
+      );
+      options[active].focus();
+    };
+
+    const openMenu = () => {
+      open = true;
+      menu.hidden = false;
+      picker.setAttribute("aria-expanded", "true");
+      setActive(active);
+    };
+
+    const closeMenu = (focusTrigger = true) => {
+      open = false;
+      menu.hidden = true;
+      picker.setAttribute("aria-expanded", "false");
+      if (focusTrigger) picker.focus();
+    };
+
+    const select = (opt: HTMLElement) => {
+      options.forEach((o) =>
+        o.setAttribute("aria-selected", String(o === opt)),
+      );
+      const name = opt.getAttribute("data-driver") || "SurrealDB";
+      label.textContent = name;
+      document.dispatchEvent(
+        new CustomEvent("schemic:driver", {
+          detail: {
+            name,
+            available: opt.getAttribute("data-available") === "true",
+            accent: opt.getAttribute("data-accent") || "",
+          },
+        }),
+      );
+      closeMenu();
+    };
+
+    picker.addEventListener("click", () => (open ? closeMenu() : openMenu()));
+    picker.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openMenu();
+      }
+    });
+
+    menu.addEventListener("keydown", (e) => {
+      switch (e.key) {
+        case "Escape":
+          e.preventDefault();
+          closeMenu();
+          break;
+        case "ArrowDown":
+          e.preventDefault();
+          setActive(active + 1);
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setActive(active - 1);
+          break;
+        case "Home":
+          e.preventDefault();
+          setActive(0);
+          break;
+        case "End":
+          e.preventDefault();
+          setActive(options.length - 1);
+          break;
+        case "Enter":
+        case " ":
+          e.preventDefault();
+          select(options[active]);
+          break;
+        case "Tab":
+          closeMenu(false);
+          break;
+      }
+    });
+
+    options.forEach((o, i) => {
+      o.addEventListener("click", () => select(o));
+      o.addEventListener("mousemove", () => {
+        if (active !== i) setActive(i);
+      });
+    });
+
+    document.addEventListener("click", (e) => {
+      if (
+        open &&
+        e.target instanceof Node &&
+        !menu.contains(e.target) &&
+        !picker.contains(e.target)
+      )
+        closeMenu(false);
+    });
+  }
+</script>

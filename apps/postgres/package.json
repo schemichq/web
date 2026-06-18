@@ -3,16 +3,23 @@
   "type": "module",
   "private": true,
   "version": "0.0.0",
-  "description": "PostgreSQL driver site - postgres.schemic.dev (in the works). Placeholder scaffold.",
+  "description": "PostgreSQL driver site - postgres.schemic.dev. Driver coming soon; scaffolds the shared landing (postgres theme).",
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "astro": "astro"
   },
   "dependencies": {
+    "@fontsource-variable/geist": "^5.2.9",
+    "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "@schemic/brand": "workspace:*",
-    "astro": "^6.4.6"
+    "@schemic/landing": "workspace:*",
+    "@tailwindcss/vite": "^4.3.0",
+    "astro": "^6.4.6",
+    "sharp": "^0.35.0",
+    "tailwindcss": "^4.3.0"
   },
   "devDependencies": {
     "vite": "^7.3.5"

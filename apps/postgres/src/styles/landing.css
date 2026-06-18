@@ -1,0 +1,10 @@
+/*
+ * postgres.schemic.dev — landing entry.
+ *
+ * The structural, theme-agnostic landing styles (full Tailwind import + brand
+ * BASE tokens + a @source that scans the shared @schemic/landing package) come
+ * from that package. This app only layers ITS theme on top — PostgreSQL's blue
+ * palette. Swapping the theme import is the only per-subdomain change.
+ */
+@import "@schemic/landing/landing.css";
+@import "@schemic/brand/theme-postgres.css";

@@ -1,17 +1,13 @@
 ---
-// postgres.schemic.dev - placeholder. The PostgreSQL driver is in the works.
+// postgres.schemic.dev — the PostgreSQL driver site. The driver is in the works,
+// so the site renders the shared @schemic/landing themed for Postgres (blue)
+// with activeDriver="postgres": the hero's database picker shows PostgreSQL
+// selected, the demo opens in its COMING-SOON state (overlay pointing at the
+// shipped flagship driver), and the picker still offers cross-subdomain nav.
+import HubLanding from "@schemic/landing/HubLanding.astro";
+import Landing from "../layouts/Landing.astro";
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Schemic for PostgreSQL</title>
-  </head>
-  <body>
-    <main>
-      <h1>Schemic for PostgreSQL - coming soon</h1>
-    </main>
-  </body>
-</html>
+<Landing>
+  <HubLanding activeDriver="postgres" />
+</Landing>

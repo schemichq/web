@@ -1,0 +1,27 @@
+/*
+ * Landing entry (standalone marketing pages under src/pages/**).
+ * Full Tailwind import (includes preflight/reset). Brand tokens come from the
+ * shared @schemic/brand package so every driver site stays in sync.
+ */
+@import "tailwindcss";
+@import "@schemic/brand/tokens.css";
+
+@layer base {
+  html {
+    color-scheme: dark;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--color-purple) 40%, transparent);
+    color: var(--color-ink);
+  }
+}

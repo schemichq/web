@@ -22,8 +22,8 @@ export interface Driver {
    * driver without a site has no page yet, so selecting it stays in-page and
    * surfaces the Demo's coming-soon overlay instead of redirecting.
    *
-   * Note this is independent of `status`: PostgreSQL ships a themed subdomain
-   * (`site: true`) even while its driver is still `coming-soon`.
+   * Note this is independent of `status`: a driver can ship a themed subdomain
+   * (`site: true`) while its driver is still `coming-soon`.
    */
   site: boolean;
   /** Fixed brand color (CSS var into @schemic/brand's --color-driver-*). */
@@ -47,7 +47,7 @@ export const drivers: Driver[] = [
   {
     slug: "postgres",
     name: "PostgreSQL",
-    status: "coming-soon",
+    status: "available",
     site: true,
     color: "var(--color-driver-postgres)",
     dialect: { lang: "PostgreSQL", file: "user.sql" },

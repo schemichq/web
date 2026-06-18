@@ -38,8 +38,8 @@ const linkStates = paneStates.map((s) => ({
   // Examples live on the hub origin, one route per driver (+ the agnostic
   // /examples). Driver-aware like Docs/Get-started: a [data-driver-pane] variant
   // per pane so the client-side switch keeps it on the current driver — from the
-  // hub it's /examples, from /surrealdb it's /surrealdb/examples.
-  examples: s.slug ? `${hubUrl}/${s.slug}/examples` : `${hubUrl}/examples`,
+  // hub it's /examples, from /surrealdb it's /examples/surrealdb.
+  examples: s.slug ? `${hubUrl}/examples/${s.slug}` : `${hubUrl}/examples`,
 }));
 ---
 

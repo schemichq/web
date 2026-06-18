@@ -4,8 +4,8 @@
 // Mirrors the landing's single-origin model: this is the agnostic entry (neutral
 // theme, picker shows the "Database" prompt) and shows the FLAGSHIP examples as
 // reference content. Selecting a driver in the nav picker switches CLIENT-SIDE to
-// /<driver>/examples (no reload); the themed driver routes are emitted by
-// [driver]/examples.astro. See components/ExamplesGallery.astro.
+// /examples/<driver> (no reload); the themed driver routes are emitted by
+// examples/[driver].astro. See components/ExamplesGallery.astro.
 import Landing from "../layouts/Landing.astro";
 import ExamplesGallery from "../components/ExamplesGallery.astro";
 ---

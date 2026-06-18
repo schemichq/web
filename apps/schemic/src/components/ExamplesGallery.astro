@@ -50,6 +50,16 @@ const driverTabs = drivers.filter((d) =>
   examplesCatalog.some((e) => e.driver === d.slug),
 );
 
+// A stable URL/DOM slug for a category name, computed identically for the chip
+// and its group section so the client filter can pair them by data-group-slug
+// (also what `?group=` carries for shareable links).
+function slugifyGroup(group: string): string {
+  return group
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 // Group a driver's examples by `group`, preserving first-seen order.
 function groupsFor(slug: string): { group: string; items: CatalogExample[] }[] {
   const out: { group: string; items: CatalogExample[] }[] = [];
@@ -107,25 +117,60 @@ const codeAttrs = { theme: brandShikiTheme, wrap: false } as const;
     <p class="mt-4 text-lg leading-relaxed text-ink-2">
       Every example is generated and verified against the live driver — the
       TypeScript you author on the left, the native DDL Schemic emits on the
-      right. Switch databases with the picker in the nav.
+      right. Switch databases with the picker in the nav, and filter by category
+      below.
     </p>
   </header>
 
   <!-- per-driver galleries — only the active pane is visible; the nav picker
-       toggles them (config/picker.ts). No standalone filter. -->
+       toggles which (config/picker.ts). Within a pane, the category chips filter
+       by `group` (client-side, `?group=` for shareable links). The nav picker is
+       still the only DRIVER control — no standalone driver filter. -->
   {
-    panes.map((pane) => (
-      <section
-        data-driver-pane={pane.key}
-        hidden={pane.key !== visibleKey}
-        class="mt-12 space-y-14"
-      >
-        {groupsFor(pane.slug).map((grp) => (
-          <div>
-            <h2 class="text-sm font-semibold uppercase tracking-[0.12em] text-ink-3">
-              {grp.group}
-            </h2>
-            <div class="mt-5 space-y-8">
+    panes.map((pane) => {
+      const grps = groupsFor(pane.slug);
+      return (
+        <section
+          data-driver-pane={pane.key}
+          hidden={pane.key !== visibleKey}
+          class="mt-12"
+        >
+          {grps.length > 1 && (
+            <div
+              data-cat-row
+              class="flex flex-wrap gap-2"
+              role="group"
+              aria-label="Filter examples by category"
+            >
+              <button
+                type="button"
+                data-cat-chip
+                data-group-slug=""
+                aria-pressed="true"
+                class="rounded-full border border-border px-3.5 py-1.5 font-mono text-[12px] tracking-tight text-ink-2 transition-colors hover:border-accent hover:text-ink aria-pressed:border-accent aria-pressed:bg-accent aria-pressed:text-on-accent"
+              >
+                All
+              </button>
+              {grps.map((grp) => (
+                <button
+                  type="button"
+                  data-cat-chip
+                  data-group-slug={slugifyGroup(grp.group)}
+                  aria-pressed="false"
+                  class="rounded-full border border-border px-3.5 py-1.5 font-mono text-[12px] tracking-tight text-ink-2 transition-colors hover:border-accent hover:text-ink aria-pressed:border-accent aria-pressed:bg-accent aria-pressed:text-on-accent"
+                >
+                  {grp.group}
+                </button>
+              ))}
+            </div>
+          )}
+          <div class="mt-10 space-y-14">
+            {grps.map((grp) => (
+              <div data-group-section data-group-slug={slugifyGroup(grp.group)}>
+                <h2 class="text-sm font-semibold uppercase tracking-[0.12em] text-ink-3">
+                  {grp.group}
+                </h2>
+                <div class="mt-5 space-y-8">
               {grp.items.map((ex) => (
                 <article class="overflow-hidden rounded-2xl border border-border bg-surface">
                   <div class="border-b border-border-subtle px-5 py-4">
@@ -167,12 +212,14 @@ const codeAttrs = { theme: brandShikiTheme, wrap: false } as const;
                     </div>
                   </div>
                 </article>
-              ))}
-            </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </section>
-    ))
+        </section>
+      );
+    })
   }
 </main>
 <Footer activeDriver={activeDriver} />
@@ -181,8 +228,73 @@ const codeAttrs = { theme: brandShikiTheme, wrap: false } as const;
   // Wire the shared database picker (the nav picker is the only control on this
   // page — no Hero here, so initPickers() must run from the gallery). It toggles
   // the [data-driver-pane] galleries + nav links, cross-fades the theme, and
-  // pushState-s /<driver>/examples — keeping the Examples section in sync with
+  // pushState-s /examples/<driver> — keeping the Examples section in sync with
   // the landing's switch.
   import { initPickers } from "@schemic/landing/config/picker";
   initPickers();
+
+  // Category (group) filter — a per-pane chip row that filters the visible
+  // driver pane's example sections by `group`. Client-side, URL-synced via
+  // `?group=<slug>` for shareable deep links. This filters only WITHIN a pane;
+  // the nav picker stays the only DRIVER control.
+  (() => {
+    const panes = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-driver-pane]"),
+    );
+    if (panes.length === 0) return;
+
+    const currentGroup = (): string =>
+      new URLSearchParams(location.search).get("group") || "";
+
+    // Apply the active `?group=` to every pane independently: a pane honors the
+    // slug only if it HAS that category, else it shows All. Chips reflect the
+    // effective selection via aria-pressed; sections hide when filtered out.
+    const reconcile = (): void => {
+      const want = currentGroup();
+      for (const pane of panes) {
+        const chips = Array.from(
+          pane.querySelectorAll<HTMLElement>("[data-cat-chip]"),
+        );
+        const eff = chips.some((c) => (c.dataset.groupSlug || "") === want)
+          ? want
+          : "";
+        for (const c of chips)
+          c.setAttribute(
+            "aria-pressed",
+            String((c.dataset.groupSlug || "") === eff),
+          );
+        for (const sec of pane.querySelectorAll<HTMLElement>(
+          "[data-group-section]",
+        ))
+          sec.hidden = eff !== "" && (sec.dataset.groupSlug || "") !== eff;
+      }
+    };
+
+    // Chip click: set (or clear) `?group=` WITHOUT a history entry, then re-sync.
+    for (const chip of document.querySelectorAll<HTMLElement>(
+      "[data-cat-chip]",
+    )) {
+      chip.addEventListener("click", () => {
+        const slug = chip.dataset.groupSlug || "";
+        const params = new URLSearchParams(location.search);
+        if (slug) params.set("group", slug);
+        else params.delete("group");
+        const qs = params.toString();
+        history.replaceState(
+          history.state,
+          "",
+          location.pathname + (qs ? `?${qs}` : ""),
+        );
+        reconcile();
+      });
+    }
+
+    // Re-sync when the active driver pane changes — the nav picker pushState's a
+    // new path which strips `?group=`, so the new pane defaults to All — and on
+    // back/forward (which restores the pane + any `?group=`).
+    document.addEventListener("schemic:driverswitch", reconcile);
+    window.addEventListener("popstate", reconcile);
+
+    reconcile(); // honor a deep-linked `?group=` on first paint
+  })();
 </script>

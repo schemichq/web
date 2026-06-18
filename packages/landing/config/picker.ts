@@ -138,9 +138,16 @@ export function initPickers(): void {
       // Section-aware: keep the current section (landing or /examples) while
       // swapping the driver. On landing paths this is the same "/"|"/<key>" path
       // as before, so the landing switch is byte-identical; examples paths get
-      // "/examples"|"/<key>/examples".
+      // "/examples"|"/examples/<key>".
       history.pushState({ pane: key }, "", pathForPane(key, location.pathname));
     }
+    // Notify section-specific UI (e.g. the Examples gallery's category picker)
+    // that the active driver pane changed, so it can re-sync to the new pane.
+    // pushState fires no popstate, so this is the only signal for an in-page
+    // driver select; the landing has no listener, so this is a no-op there.
+    document.dispatchEvent(
+      new CustomEvent("schemic:driverswitch", { detail: { key } }),
+    );
   };
 
   // Selecting a driver option: close the menus, then switch in place (no nav).

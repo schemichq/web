@@ -175,36 +175,42 @@ export function paneKeyFor(activeDriver?: string | null): string {
 }
 
 /**
- * The pane key for a URL pathname — the FIRST path segment if it's a driver
- * slug, else the hub. Section-agnostic, so it resolves both landing paths
- * ("/" -> "hub", "/surrealdb" -> "surrealdb") AND examples paths
- * ("/examples" -> "hub", "/surrealdb/examples" -> "surrealdb").
+ * The pane key for a URL pathname — the driver slug it represents, else the hub.
+ * Section-agnostic: on landing paths the driver is the FIRST segment
+ * ("/" -> "hub", "/surrealdb" -> "surrealdb"); on examples paths (first segment
+ * "examples") the driver is the SECOND segment ("/examples" -> "hub",
+ * "/examples/surrealdb" -> "surrealdb"). Unknown slugs fall back to the hub.
  */
 export function paneKeyForPath(pathname: string): string {
-  const first = pathname.replace(/^\/+/, "").split("/")[0];
-  return first && drivers.some((d) => d.slug === first) ? first : HUB_PANE;
+  const segs = pathname
+    .replace(/^\/+|\/+$/g, "")
+    .split("/")
+    .filter(Boolean);
+  // On examples paths the driver lives in the second segment; otherwise the first.
+  const slug = segs[0] === "examples" ? segs[1] : segs[0];
+  return slug && drivers.some((d) => d.slug === slug) ? slug : HUB_PANE;
 }
 
-/** Whether a path is in the Examples SECTION (its last segment is "examples"). */
+/** Whether a path is in the Examples SECTION (its first segment is "examples"). */
 export function isExamplesPath(pathname: string): boolean {
   const segs = pathname
     .replace(/^\/+|\/+$/g, "")
     .split("/")
     .filter(Boolean);
-  return segs[segs.length - 1] === "examples";
+  return segs[0] === "examples";
 }
 
 /**
  * The same-origin path for a pane key, KEEPING the current section. On a landing
  * path it is "/" or "/<key>"; on an examples path it is "/examples" or
- * "/<key>/examples". The client-side picker pushes this so selecting a driver
+ * "/examples/<key>". The client-side picker pushes this so selecting a driver
  * swaps the driver WITHOUT leaving the section (landing<->landing,
  * examples<->examples). On landing paths it is identical to the previous
  * "/"|"/<key>" behavior, so the landing switch is unchanged.
  */
 export function pathForPane(key: string, pathname: string): string {
   const base = key === HUB_PANE ? "" : `/${key}`;
-  if (isExamplesPath(pathname)) return base ? `${base}/examples` : "/examples";
+  if (isExamplesPath(pathname)) return base ? `/examples${base}` : "/examples";
   return base || "/";
 }
 

@@ -1,30 +1,13 @@
 ---
-import Banner from "../components/landing/Banner.astro";
-import Bento from "../components/landing/Bento.astro";
-import CLISpotlight from "../components/landing/CLISpotlight.astro";
-import Demo from "../components/landing/Demo.astro";
-import Depth from "../components/landing/Depth.astro";
-import FAQ from "../components/landing/FAQ.astro";
-import FinalCTA from "../components/landing/FinalCTA.astro";
-import Footer from "../components/landing/Footer.astro";
-import Hero from "../components/landing/Hero.astro";
-import Nav from "../components/landing/Nav.astro";
-import StopHandwriting from "../components/landing/StopHandwriting.astro";
+// surrealdb.schemic.dev — the SurrealDB driver site. Its landing is now the
+// shared @schemic/landing, themed for SurrealDB (purple/pink). activeDriver
+// seeds the hero's database picker on SurrealDB and the demo on SurrealQL; the
+// picker still offers cross-subdomain navigation to the other drivers. The
+// docs + blog routes are untouched and keep their own chrome/tokens.
+import HubLanding from "@schemic/landing/HubLanding.astro";
 import Landing from "../layouts/Landing.astro";
 ---
 
 <Landing>
-  <Banner />
-  <Nav />
-  <main>
-    <Hero />
-    <Demo />
-    <StopHandwriting />
-    <Bento />
-    <CLISpotlight />
-    <Depth />
-    <FAQ />
-    <FinalCTA />
-  </main>
-  <Footer />
+  <HubLanding activeDriver="surrealdb" />
 </Landing>

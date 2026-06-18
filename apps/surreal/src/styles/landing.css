@@ -1,27 +1,11 @@
 /*
- * Landing entry (standalone marketing pages under src/pages/**).
- * Full Tailwind import (includes preflight/reset). Brand tokens come from the
- * shared @schemic/brand package so every driver site stays in sync.
+ * surrealdb.schemic.dev — landing entry.
+ *
+ * The structural, theme-agnostic landing styles (full Tailwind import + brand
+ * BASE tokens + a @source that scans the shared @schemic/landing package) come
+ * from that package. This app only layers ITS theme on top — SurrealDB's
+ * purple/pink palette. The docs + blog keep their own tokens.css import; this
+ * file is the LANDING stylesheet only.
  */
-@import "tailwindcss";
-@import "@schemic/brand/tokens.css";
-
-@layer base {
-  html {
-    color-scheme: dark;
-    scroll-behavior: smooth;
-  }
-
-  body {
-    background-color: var(--color-canvas);
-    color: var(--color-ink);
-    font-family: var(--font-sans);
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-  }
-
-  ::selection {
-    background-color: color-mix(in oklab, var(--color-purple) 40%, transparent);
-    color: var(--color-ink);
-  }
-}
+@import "@schemic/landing/landing.css";
+@import "@schemic/brand/theme-surrealdb.css";

@@ -18,6 +18,7 @@
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "@schemic/brand": "workspace:*",
     "@schemic/content": "workspace:*",
+    "@schemic/landing": "workspace:*",
     "@schemic/ui": "workspace:*",
     "@tailwindcss/vite": "^4.3.0",
     "astro": "^6.4.6",

@@ -1,0 +1,45 @@
+---
+// The Schemic brand mark — the amber block-"S" (gradient face over a dark-amber
+// depth shadow). This is the MASTER identity mark: it stays amber on every theme
+// (its depth color is amber-specific), unlike the theme-accent gradients used
+// elsewhere. Pair it with the "Schemic" wordmark; the svg is aria-hidden since
+// the lockups carry the visible wordmark text.
+//
+// The <linearGradient> needs a DOM-unique id: several brand marks render on one
+// page (nav + footer), and a shared id would make them all resolve to the first
+// gradient. crypto.randomUUID() gives each instance its own.
+interface Props {
+  /** Sizing class for the <svg> box (default size-8 = 32px). */
+  class?: string;
+}
+const { class: className = "size-8" } = Astro.props;
+const gid = `schemic-mark-${crypto.randomUUID()}`;
+---
+
+<svg
+  class={className}
+  viewBox="0 0 126 136"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+  aria-hidden="true"
+>
+  <defs>
+    <linearGradient id={gid} x1="0" y1="0" x2="126" y2="136" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffb454"></stop>
+      <stop offset="1" stop-color="#ff6a3d"></stop>
+    </linearGradient>
+  </defs>
+  <path
+    d="M96 28l-62 0 0 38 52 0 0 38-62 0"
+    transform="translate(6 8)"
+    fill="none"
+    stroke="#9c3414"
+    stroke-width="24"
+    stroke-linecap="square"></path>
+  <path
+    d="M96 28l-62 0 0 38 52 0 0 38-62 0"
+    fill="none"
+    stroke={`url(#${gid})`}
+    stroke-width="24"
+    stroke-linecap="square"></path>
+</svg>

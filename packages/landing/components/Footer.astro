@@ -1,5 +1,6 @@
 ---
 import { drivers, driverUrl, flagshipDriver } from "../config/drivers";
+import BrandMark from "./BrandMark.astro";
 
 interface Props {
   /** Slug of the driver this site represents; null = agnostic hub. */
@@ -57,10 +58,7 @@ const award =
     <!-- brand -->
     <div class="max-w-xs">
       <a href="/" class="flex items-center gap-2.5">
-        <span
-          class="grid size-8 place-items-center rounded-xl bg-gradient-to-br from-accent to-accent-2 text-[13px] font-bold text-on-accent shadow-[0_0_20px_-4px_var(--color-accent)]"
-          aria-hidden="true">S</span
-        >
+        <BrandMark class="size-8" />
         <span class="font-mono text-[15px] font-medium tracking-tight text-ink"
           >Schemic</span
         >

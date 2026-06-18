@@ -1,0 +1,101 @@
+{
+  "$comment": "Hand-written, focused SurrealQL TextMate grammar for the Schemic Examples gallery. Covers the DDL constructs that appear in the vendored examples manifest (DEFINE TABLE/FIELD/INDEX/ACCESS/EVENT/FUNCTION/ANALYZER, clauses, types, namespaced functions, params, strings, numbers, comments). Scopes map to STANDARD TextMate names so the brand Shiki theme colors them like SQL/TS.",
+  "name": "surrealql",
+  "scopeName": "source.surql",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#functions" },
+    { "include": "#params" },
+    { "include": "#keywords" },
+    { "include": "#constants" },
+    { "include": "#types" },
+    { "include": "#keyword-fallback" },
+    { "include": "#numbers" },
+    { "include": "#operators" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        { "name": "comment.line.double-dash.surql", "match": "--.*$" },
+        { "name": "comment.line.number-sign.surql", "match": "#.*$" },
+        {
+          "name": "comment.block.surql",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.surql",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [{ "name": "constant.character.escape.surql", "match": "\\\\." }]
+        },
+        {
+          "name": "string.quoted.single.surql",
+          "begin": "'",
+          "end": "'",
+          "patterns": [{ "name": "constant.character.escape.surql", "match": "\\\\." }]
+        },
+        {
+          "name": "string.quoted.other.backtick.surql",
+          "begin": "`",
+          "end": "`"
+        }
+      ]
+    },
+    "functions": {
+      "name": "support.function.surql",
+      "match": "\\b[A-Za-z_][A-Za-z0-9_]*(?:::[A-Za-z_][A-Za-z0-9_]*)+\\b"
+    },
+    "params": {
+      "name": "variable.language.surql",
+      "match": "\\$[A-Za-z_][A-Za-z0-9_]*"
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.surql",
+          "match": "\\b(DEFINE|REMOVE|UNSET|OVERWRITE|IF|NOT|EXISTS|TABLE|FIELD|INDEX|EVENT|FUNCTION|PARAM|ACCESS|ANALYZER|NAMESPACE|DATABASE|USER|ON|TYPE|NORMAL|RELATION|SCHEMAFULL|SCHEMALESS|DROP|ENFORCED|CHANGEFEED|INCLUDE|ORIGINAL|COMMENT|PERMISSIONS|FOR|WHERE|FROM|TO|AS|GROUP|ORDER|LIMIT|START|SPLIT|FETCH|SELECT|RETURN|THEN|WHEN|SET|LET|RELATE|CREATE|UPDATE|UPSERT|DELETE|INSERT|CONTENT|MERGE|DEFAULT|ALWAYS|VALUE|VALUES|COMPUTED|ASSERT|READONLY|FLEXIBLE|REFERENCE|FIELDS|COLUMNS|UNIQUE|SEARCH|COUNT|HNSW|DISKANN|FULLTEXT|HIGHLIGHTS|DIMENSION|DIST|EFC|TOKENIZERS|FILTERS|KEY|ALGORITHM|JWT|BEARER|RECORD|SESSION|TOKEN|DURATION|SIGNUP|SIGNIN|AUTHENTICATE|GRANT|REFRESH|CASCADE|REJECT|IGNORE|ANY|AND|OR|IN|CONTAINS)\\b"
+        },
+        {
+          "name": "keyword.control.permission.surql",
+          "match": "\\b(select|create|update|delete)\\b"
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        { "name": "constant.language.null.surql", "match": "\\b(NONE|NULL)\\b" },
+        { "name": "constant.language.boolean.surql", "match": "\\b(true|false)\\b" }
+      ]
+    },
+    "types": {
+      "name": "support.type.surql",
+      "match": "\\b(string|number|int|integer|float|decimal|bool|boolean|datetime|duration|uuid|bytes|object|array|set|record|option|geometry|point|line|polygon|multipoint|multiline|multipolygon|collection|any|null|file|range|future|regex)\\b"
+    },
+    "keyword-fallback": {
+      "name": "keyword.other.surql",
+      "match": "\\b[A-Z][A-Z0-9_]+\\b"
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.duration.surql",
+          "match": "\\b\\d+(ns|us|ms|s|m|h|d|w|y)\\b"
+        },
+        {
+          "name": "constant.numeric.surql",
+          "match": "\\b\\d+(\\.\\d+)?\\b"
+        }
+      ]
+    },
+    "operators": {
+      "name": "keyword.operator.surql",
+      "match": "(\\+=|-=|==|!=|<=|>=|->|<-|\\|\\||&&|[+\\-*/%<>=|])"
+    }
+  }
+}

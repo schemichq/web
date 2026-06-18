@@ -16,9 +16,10 @@
 // keeps its "Database" prompt. Driver routes inline that driver's full theme via
 // the Landing layout (activeDriver), so the first paint is flash-free.
 //
-// Data comes from a STUB catalog (config/examples-catalog.ts) seeded from the
-// driver-verified landing examples — to be swapped for the vendored verified
-// manifest from schemic (core-dev) without touching this component.
+// Data comes from the VENDORED verified manifest (config/examples-manifest.json,
+// read via config/examples-catalog.ts) — 69 driver-verified cookbook entries
+// copied from schemic main. Re-sync by replacing that JSON; this component is
+// shape-stable across syncs.
 import { Code } from "astro:components";
 import { brandShikiTheme } from "@schemic/content/code-theme";
 import Nav from "@schemic/landing/components/Nav.astro";
@@ -32,6 +33,11 @@ import {
   examplesCatalog,
   type CatalogExample,
 } from "../config/examples-catalog";
+// Hand-written SurrealQL TextMate grammar (source.surql) — passed to Astro's
+// <Code> as a custom Shiki language so DDL highlights correctly with the brand
+// theme (DEFINE/TYPE/ASSERT as keywords, record/datetime as types,
+// string::is_email/time::now as functions, $value as a variable).
+import surrealqlGrammar from "../shiki/surrealql.tmLanguage.json";
 
 interface Props {
   /** Slug of the driver this route represents; null = the agnostic /examples. */
@@ -68,9 +74,19 @@ const panes = [
   ...driverTabs.map((d) => ({ key: d.slug, slug: d.slug })),
 ];
 
-// Shiki has no surql/postgres-specific grammar here; highlight every DDL block
-// as plain SQL (matches the surreal site's surql -> sql langAlias).
-const DDL_LANG = "sql";
+// Per-entry DDL language: SurrealQL DDL (lang:"surrealql") uses the vendored
+// custom grammar; Postgres DDL (lang:"sql") uses Shiki's built-in `sql`. Astro's
+// <Code> accepts a custom grammar object for `lang` (it highlights via
+// grammar.name = "surrealql"), so DEFINE/ASSERT/record/etc. no longer mis-color
+// as plain SQL. The TS authoring source always renders as "ts".
+function ddlLang(lang: string): string | typeof surrealqlGrammar {
+  return lang === "surrealql" ? surrealqlGrammar : "sql";
+}
+// Human-readable dialect label for the per-block badge (the manifest stores the
+// lowercase grammar id).
+function ddlLabel(lang: string): string {
+  return lang === "surrealql" ? "SurrealQL" : "PostgreSQL";
+}
 
 // Shared <Code> options so TS + DDL blocks render with identical brand colors.
 const codeAttrs = { theme: brandShikiTheme, wrap: false } as const;
@@ -142,11 +158,11 @@ const codeAttrs = { theme: brandShikiTheme, wrap: false } as const;
                           Generated
                         </span>
                         <span class="rounded-full bg-canvas-2 px-2 py-0.5 font-mono text-[10px] text-accent-soft">
-                          {ex.lang}
+                          {ddlLabel(ex.lang)}
                         </span>
                       </div>
                       <div class="overflow-x-auto p-4 text-sm [&_pre]:!bg-transparent">
-                        <Code code={ex.ddl} lang={DDL_LANG} {...codeAttrs} />
+                        <Code code={ex.ddl} lang={ddlLang(ex.lang)} {...codeAttrs} />
                       </div>
                     </div>
                   </div>

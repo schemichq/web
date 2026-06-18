@@ -1,14 +1,12 @@
 ---
 import {
-  drivers as driverList,
   driverUrl,
   findDriver,
   hubUrl,
   paneStates,
   paneKeyFor,
-  SUGGEST_DRIVER_URL,
 } from "../config/drivers";
-import DbMenu from "./DbMenu.astro";
+import NavDbPicker from "./NavDbPicker.astro";
 
 interface Props {
   /** Slug of the driver this site represents; null = agnostic hub. */
@@ -16,19 +14,22 @@ interface Props {
 }
 const { activeDriver = null } = Astro.props;
 
-// Compact nav picker — persistent while scrolling (the nav is sticky). On the
-// agnostic hub no driver is selected: it shows a "Select database" prompt; on a
-// driver subdomain it shows that driver's name + brand dot. Shares the roster +
-// select behavior with the hero picker (config/picker.ts wires both).
+// Progressive-disclosure nav (Manuel's spec). The database picker is the primary
+// control: on the agnostic hub (no driver) it sits CENTERED as a prominent
+// "Select database" prompt and the Docs/Examples links are hidden. Once a driver
+// is selected — on a driver route OR via a client-side switch — the picker
+// SLIDES to the right beside Get started and the Docs/Examples links reveal. The
+// resting state is SSR'd via [data-db-selected]; a FLIP (below) animates live
+// transitions. The picker element is rendered into exactly one slot (center on
+// the hub, right when selected) and reparented between them on switch.
 const isHub = activeDriver == null;
 const navDriver = findDriver(activeDriver);
 
 // Driver-specific nav links resolve to the ACTIVE driver. Each is rendered as a
 // `[data-driver-pane]` variant (like the hero CTAs) so the client-side picker
 // switch keeps it pointed at the current driver with NO reload. On the agnostic
-// hub (no driver) they OPEN the hero picker (`data-open-picker`) instead of
-// pointing at a wrong/dead driver link. Non-driver links (the brand, and
-// "Drivers" → the hub home) stay static.
+// hub the whole links row is hidden, so the hub variants never show — but we
+// still render them so config/picker.ts's pane machinery stays uniform.
 const activeKey = paneKeyFor(activeDriver);
 const linkStates = paneStates.map((s) => ({
   key: s.key,
@@ -44,10 +45,11 @@ const linkStates = paneStates.map((s) => ({
 ---
 
 <header
+  data-db-selected={String(!isHub)}
   class="sticky top-0 z-50 bg-canvas/70 backdrop-blur-md"
 >
   <nav
-    class="mx-auto grid h-16 max-w-6xl grid-cols-[1fr_auto_1fr] items-center px-6"
+    class="mx-auto grid h-16 max-w-6xl grid-cols-[1fr_auto_1fr] items-center px-4 md:px-6"
     aria-label="Primary"
   >
     <!-- left: brand -->
@@ -61,111 +63,63 @@ const linkStates = paneStates.map((s) => ({
       >
     </a>
 
-    <!-- center: nav links -->
-    <div class="hidden items-center gap-8 justify-self-center md:flex">
-      {/* Docs — resolves to the ACTIVE driver's docs; on the hub it opens the
-          hero picker so the visitor chooses a database first. */}
-      {
-        linkStates.map((st) =>
-          st.docs ? (
+    <!-- center: the Docs/Examples links (revealed once a database is selected)
+         sit beside the centered picker slot. The links row is desktop-only and
+         hidden until selected; the center slot holds the picker on the hub. -->
+    <div class="flex items-center justify-self-center">
+      <div data-nav-links class="items-center gap-8">
+        {/* Docs — resolves to the ACTIVE driver's docs. */}
+        {
+          linkStates.map((st) =>
+            st.docs ? (
+              <a
+                href={st.docs}
+                data-driver-pane={st.key}
+                hidden={st.hidden}
+                class="text-sm text-ink-2 transition-colors hover:text-ink"
+              >
+                Docs
+              </a>
+            ) : (
+              <button
+                type="button"
+                data-open-picker
+                data-driver-pane={st.key}
+                hidden={st.hidden}
+                class="text-sm text-ink-2 transition-colors hover:text-ink"
+              >
+                Docs
+              </button>
+            ),
+          )
+        }
+        {/* The verified cookbook gallery — driver+section-aware. */}
+        {
+          linkStates.map((st) => (
             <a
-              href={st.docs}
+              href={st.examples}
               data-driver-pane={st.key}
               hidden={st.hidden}
               class="text-sm text-ink-2 transition-colors hover:text-ink"
             >
-              Docs
+              Examples
             </a>
-          ) : (
-            <button
-              type="button"
-              data-open-picker
-              data-driver-pane={st.key}
-              hidden={st.hidden}
-              class="text-sm text-ink-2 transition-colors hover:text-ink"
-            >
-              Docs
-            </button>
-          ),
-        )
-      }
-      {/* The verified cookbook gallery — driver+section-aware: each pane variant
-          points at that driver's examples route (the hub variant -> /examples),
-          so the client-side picker switch keeps it tracking the current driver. */}
-      {
-        linkStates.map((st) => (
-          <a
-            href={st.examples}
-            data-driver-pane={st.key}
-            hidden={st.hidden}
-            class="text-sm text-ink-2 transition-colors hover:text-ink"
-          >
-            Examples
-          </a>
-        ))
-      }
-      {/* Neutral, not driver-specific: the agnostic hub home. */}
-      <a
-        href="/"
-        class="text-sm text-ink-2 transition-colors hover:text-ink"
-      >
-        Drivers
-      </a>
+          ))
+        }
+      </div>
+      <!-- picker home on the agnostic hub (centered) -->
+      <div data-picker-slot="center" class="flex items-center">
+        {isHub && <NavDbPicker navDriver={navDriver} isHub={isHub} />}
+      </div>
     </div>
 
     <!-- right: actions -->
     <div class="flex items-center gap-3 justify-self-end sm:gap-5">
-      <!--
-        Compact database picker — sticky/persistent while scrolling. Shares the
-        roster + select/theme/redirect behavior with the hero picker.
-      -->
-      <div data-db-picker="nav" class="relative">
-        <button
-          type="button"
-          data-db-trigger
-          data-db-prompt={isHub ? "" : null}
-          aria-haspopup="listbox"
-          aria-expanded="false"
-          aria-label="Choose your database"
-          class:list={[
-            "group inline-flex items-center gap-2 rounded-full border bg-surface px-3 py-1.5 text-sm transition-colors",
-            isHub
-              ? "border-dashed border-accent/60 text-accent-soft hover:border-accent hover:text-ink"
-              : "border-border text-ink-2 hover:border-accent/50 hover:text-ink",
-          ]}
-        >
-          <span
-            data-db-dot
-            hidden={isHub || !navDriver}
-            class="size-2.5 rounded-full"
-            style={navDriver ? `background:${navDriver.color}` : ""}
-            aria-hidden="true"
-          />
-          <span data-db-label data-db-prompt-label="Select database"
-            >{navDriver?.name ?? "Select database"}</span
-          >
-          <svg
-            class="size-3.5 text-accent-soft transition-transform group-aria-expanded:rotate-180"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg
-          >
-        </button>
-
-        <DbMenu
-          drivers={driverList}
-          selectedSlug={navDriver?.slug ?? null}
-          suggestHref={SUGGEST_DRIVER_URL}
-          align="right"
-        />
+      <!-- picker home once a database is selected (beside Get started) -->
+      <div data-picker-slot="right" class="flex items-center">
+        {!isHub && <NavDbPicker navDriver={navDriver} isHub={isHub} />}
       </div>
-      <!-- Get started — driver-dynamic (resolves to the ACTIVE driver's site);
-           on the hub it opens the hero picker. Rendered as `[data-driver-pane]`
-           variants so the client-side switch keeps it on the current driver. -->
+      <!-- Get started — driver-dynamic; on the hub it opens the picker. -->
       {
         linkStates.map((st) =>
           st.start ? (
@@ -193,6 +147,117 @@ const linkStates = paneStates.map((s) => ({
     </div>
   </nav>
 </header>
+
+<style is:global>
+  /* The Docs/Examples links stay hidden until a database is selected, and only
+     on desktop (md+). Driven by the header attribute so a client-side switch
+     reveals/hides them with no reload. */
+  [data-nav-links] {
+    display: none;
+  }
+  @media (min-width: 768px) {
+    header[data-db-selected="true"] [data-nav-links] {
+      display: flex;
+    }
+  }
+
+  /* Picker trigger appearance reacts to the selection state (SSR + live switch).
+     Unselected = a dashed accent "Select database" prompt; selected = a compact
+     solid pill. Mirrors the prior SSR-only Tailwind variants. */
+  header[data-db-selected="false"] [data-db-trigger] {
+    border-style: dashed;
+    border-color: color-mix(in oklab, var(--color-accent) 60%, transparent);
+    color: var(--color-accent-soft);
+  }
+  header[data-db-selected="false"] [data-db-trigger]:hover {
+    border-color: var(--color-accent);
+    color: var(--color-ink);
+  }
+  header[data-db-selected="true"] [data-db-trigger] {
+    border-style: solid;
+    border-color: var(--color-border);
+    color: var(--color-ink-2);
+  }
+  header[data-db-selected="true"] [data-db-trigger]:hover {
+    border-color: color-mix(in oklab, var(--color-accent) 50%, transparent);
+    color: var(--color-ink);
+  }
+</style>
+
+<script>
+  // Progressive-disclosure FLIP: when the active database changes, slide the nav
+  // picker between its centered (hub) slot and its right-hand (selected) slot,
+  // and reveal/hide the Docs/Examples links. The single source of truth is the
+  // `schemic:driverswitch` CustomEvent that config/picker.ts dispatches on BOTH
+  // an in-page select AND back/forward (popstate) — so this one listener covers
+  // every transition. The SSR'd first paint already matches the route, so we
+  // animate ONLY on events, never on load.
+  import { HUB_PANE } from "../config/drivers";
+
+  const header = document.querySelector<HTMLElement>("header[data-db-selected]");
+  const picker = document.querySelector<HTMLElement>('[data-db-picker="nav"]');
+  const centerSlot = document.querySelector<HTMLElement>(
+    '[data-picker-slot="center"]',
+  );
+  const rightSlot = document.querySelector<HTMLElement>(
+    '[data-picker-slot="right"]',
+  );
+  const links = document.querySelector<HTMLElement>("[data-nav-links]");
+
+  if (header && picker && centerSlot && rightSlot) {
+    const reduce = (): boolean =>
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const setSelected = (selected: boolean): void => {
+      // No-op when already in the requested state.
+      if ((header.dataset.dbSelected === "true") === selected) return;
+
+      const target = selected ? rightSlot : centerSlot;
+      if (picker.parentElement === target) {
+        header.dataset.dbSelected = String(selected);
+        return;
+      }
+
+      // FLIP: measure, reparent + flip the state attribute (which restyles the
+      // trigger + reveals the links), measure again, then play the inverse.
+      const first = picker.getBoundingClientRect();
+      target.appendChild(picker);
+      header.dataset.dbSelected = String(selected);
+      const last = picker.getBoundingClientRect();
+      const dx = first.left - last.left;
+      const dy = first.top - last.top;
+
+      if (!reduce() && typeof picker.animate === "function" && (dx || dy)) {
+        picker.animate(
+          [
+            { transform: `translate(${dx}px, ${dy}px)` },
+            { transform: "none" },
+          ],
+          { duration: 420, easing: "cubic-bezier(.4, 0, .2, 1)" },
+        );
+      }
+
+      // Subtle reveal of the links when entering the selected state.
+      if (
+        selected &&
+        links &&
+        !reduce() &&
+        typeof links.animate === "function"
+      ) {
+        links.animate([{ opacity: 0 }, { opacity: 1 }], {
+          duration: 300,
+          delay: 120,
+          easing: "ease-out",
+        });
+      }
+    };
+
+    document.addEventListener("schemic:driverswitch", (e) => {
+      const key = (e as CustomEvent<{ key: string }>).detail?.key;
+      if (typeof key === "string") setSelected(key !== HUB_PANE);
+    });
+  }
+</script>
 
 <script>
   // Single star-count island for the whole page. Fetches the cached worker once

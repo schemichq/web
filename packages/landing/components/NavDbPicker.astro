@@ -1,0 +1,64 @@
+---
+// The sticky nav's compact database picker — extracted so Nav.astro can render
+// the SAME single picker into EITHER the centered slot (agnostic hub: a
+// prominent "Select database" prompt) or the right-hand actions slot (a driver
+// is selected: a compact pill beside Get started). Only one is rendered at SSR
+// (matching the resting state); a FLIP in Nav.astro reparents this element
+// between the two slots on a live switch. Trigger appearance (dashed prompt vs
+// solid pill) is driven by the header's [data-db-selected] in Nav.astro's style,
+// so it updates on the client-side switch too. Wiring is config/picker.ts.
+import DbMenu from "./DbMenu.astro";
+import {
+  drivers as driverList,
+  SUGGEST_DRIVER_URL,
+} from "../config/drivers";
+import type { Driver } from "../config/drivers";
+
+interface Props {
+  /** The active driver (for the SSR label + brand dot), or null on the hub. */
+  navDriver: Driver | null;
+  /** Whether this is the agnostic hub (no driver selected). */
+  isHub: boolean;
+}
+const { navDriver, isHub } = Astro.props;
+---
+
+<div data-db-picker="nav" class="relative">
+  <button
+    type="button"
+    data-db-trigger
+    data-db-prompt={isHub ? "" : null}
+    aria-haspopup="listbox"
+    aria-expanded="false"
+    aria-label="Choose your database"
+    class="group inline-flex items-center gap-2 rounded-full border bg-surface px-3 py-1.5 text-sm transition-colors"
+  >
+    <span
+      data-db-dot
+      hidden={isHub || !navDriver}
+      class="size-2.5 rounded-full"
+      style={navDriver ? `background:${navDriver.color}` : ""}
+      aria-hidden="true"
+    />
+    <span data-db-label data-db-prompt-label="Select database"
+      >{navDriver?.name ?? "Select database"}</span
+    >
+    <svg
+      class="size-3.5 text-accent-soft transition-transform group-aria-expanded:rotate-180"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg
+    >
+  </button>
+
+  <DbMenu
+    drivers={driverList}
+    selectedSlug={navDriver?.slug ?? null}
+    suggestHref={SUGGEST_DRIVER_URL}
+    align="right"
+  />
+</div>

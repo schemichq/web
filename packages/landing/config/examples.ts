@@ -321,10 +321,10 @@ const postgres: DriverExamples = {
     { sym: "~", symC: mut, msg: " diffing schema.ts against snapshot…", msgC: mut },
     { sym: "+", symC: ok, msg: " CREATE TABLE \"user\" (…)", msgC: ok },
     { sym: "+", symC: ok, msg: " CREATE UNIQUE INDEX \"user_email_key\" ON \"user\" (\"email\")", msgC: ok },
-    { sym: "✓", symC: ok, msg: " wrote migrations/0001_add_users.sql", msgC: sec },
+    { sym: "✓", symC: ok, msg: " wrote migrations/0001_add_users.surql", msgC: sec },
     { sym: " ", symC: mut, msg: "", msgC: mut },
     { sym: "$", symC: vr, msg: " sc migrate", msgC: pl },
-    { sym: "▸", symC: soft, msg: " applying 0001_add_users.sql → postgres", msgC: soft },
+    { sym: "▸", symC: soft, msg: " applying 0001_add_users.surql → postgres", msgC: soft },
     { sym: "✓", symC: ok, msg: " migrated user · 3 fields · 1 index", msgC: sec },
     { sym: "✓", symC: ok, msg: " recorded 0001 · sha 9f2c… · up to date", msgC: ok },
   ],
@@ -364,13 +364,13 @@ const postgres: DriverExamples = {
         { t: "  ~ diffing schema.ts against the live schema…", c: mut },
         { t: '  + CREATE TABLE "user" (…)', c: ok },
         { t: '  + CREATE UNIQUE INDEX "user_email_key" ON "user" ("email")', c: ok },
-        { t: "  ✓ wrote migrations/0001_add_users.sql", c: sec },
+        { t: "  ✓ wrote migrations/0001_add_users.surql", c: sec },
       ],
     },
     {
       cmd: "sc migrate",
       outputs: [
-        { t: "  ▸ applying 0001_add_users.sql → postgres", c: soft },
+        { t: "  ▸ applying 0001_add_users.surql → postgres", c: soft },
         { t: "  ✓ migrated user · 3 fields · 1 index", c: sec },
         { t: "  ✓ schema up to date", c: ok },
       ],
@@ -385,28 +385,53 @@ const postgres: DriverExamples = {
   ],
 
   // The Depth section renders on EVERY route with the SAME layout — only the code
-  // shown changes (Depth.astro no longer gates on `available`). Postgres has no
-  // analog of DEFINE ACCESS/EVENT/FUNCTION today (@schemic/postgres registers only
-  // table/index/constraint), so we show a graceful placeholder note instead of
-  // real DDL. available stays true so the section is present.
-  // TODO: confirm postgres depth content (roles / RLS policies / triggers) once
-  // the @schemic/postgres driver authors them.
+  // shown changes (Depth.astro no longer gates on `available`). VERIFIED by
+  // driver-dev-postgres: this customer/order schema round-trips through the real
+  // @schemic/postgres driver with a zero diff — one typed file compiles to tables,
+  // a FOREIGN KEY with ON DELETE CASCADE, CHECK constraints, and a STORED generated
+  // column, all native PostgreSQL DDL.
   depth: {
     available: true,
-    title: "access.ts → access.sql",
-    inputFile: "access.ts",
+    title: "Relations, checks & generated columns",
+    inputFile: "schema.ts",
     inputLang: "TypeScript",
-    outputFile: "access.sql",
+    outputFile: "schema.ddl",
     outputLang: "PostgreSQL",
     input: [
-      { num: 1, tokens: [{ t: "// TODO: confirm postgres depth content", c: cm }] },
-      { num: 2, tokens: [{ t: "// Roles, RLS policies & triggers — authored from", c: cm }] },
-      { num: 3, tokens: [{ t: "// the same typed source. @schemic/postgres", c: cm }] },
-      { num: 4, tokens: [{ t: "// driver support coming.", c: cm }] },
+      { num: 1, tokens: [{ t: "import ", c: kw }, { t: "{ ", c: pl }, { t: "defineTable", c: fn }, { t: ", ", c: pl }, { t: "s", c: pl }, { t: ", ", c: pl }, { t: "sqlExpr", c: fn }, { t: " } ", c: pl }, { t: "from ", c: kw }, { t: '"@schemic/postgres"', c: st }, { t: ";", c: pl }] },
+      blank(2),
+      { num: 3, tokens: [{ t: "export ", c: kw }, { t: "const ", c: kw }, { t: "customer", c: ty }, { t: " = ", c: pl }, { t: "defineTable", c: fn }, { t: "(", c: pl }, { t: '"customer"', c: st }, { t: ", {", c: pl }] },
+      { num: 4, hl: true, tokens: [{ t: "  email", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "text", c: fn }, { t: "().", c: pl }, { t: "$unique", c: fn }, { t: "().", c: pl }, { t: "$check", c: fn }, { t: "(", c: pl }, { t: "sqlExpr", c: fn }, { t: "(", c: pl }, { t: "\"email ~* '^[^@]+@[^@]+$'\"", c: st }, { t: ")),", c: pl }] },
+      { num: 5, tokens: [{ t: "  name", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "text", c: fn }, { t: "(),", c: pl }] },
+      { num: 6, tokens: [{ t: "});", c: pl }] },
+      blank(7),
+      { num: 8, tokens: [{ t: "export ", c: kw }, { t: "const ", c: kw }, { t: "order", c: ty }, { t: " = ", c: pl }, { t: "defineTable", c: fn }, { t: "(", c: pl }, { t: '"order"', c: st }, { t: ", {", c: pl }] },
+      { num: 9, hl: true, tokens: [{ t: "  customer", c: pl }, { t: ": ", c: pl }, { t: "customer", c: pl }, { t: ".", c: pl }, { t: "record", c: fn }, { t: "({ ", c: pl }, { t: "onDelete", c: pl }, { t: ": ", c: pl }, { t: '"cascade"', c: st }, { t: " }),", c: pl }] },
+      { num: 10, hl: true, tokens: [{ t: "  quantity", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "integer", c: fn }, { t: "().", c: pl }, { t: "$check", c: fn }, { t: "(", c: pl }, { t: "sqlExpr", c: fn }, { t: "(", c: pl }, { t: '"quantity > 0"', c: st }, { t: ")),", c: pl }] },
+      { num: 11, tokens: [{ t: "  unitPrice", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "numeric", c: fn }, { t: "(", c: pl }, { t: "10", c: ty }, { t: ", ", c: pl }, { t: "2", c: ty }, { t: "),", c: pl }] },
+      { num: 12, hl: true, tokens: [{ t: "  total", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "numeric", c: fn }, { t: "(", c: pl }, { t: "12", c: ty }, { t: ", ", c: pl }, { t: "2", c: ty }, { t: ").", c: pl }, { t: "$generated", c: fn }, { t: "(", c: pl }, { t: "'quantity * \"unitPrice\"'", c: st }, { t: "),", c: pl }] },
+      { num: 13, tokens: [{ t: "  createdAt", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "timestamptz", c: fn }, { t: "().", c: pl }, { t: "$default", c: fn }, { t: "(", c: pl }, { t: "sqlExpr", c: fn }, { t: "(", c: pl }, { t: '"now()"', c: st }, { t: ")),", c: pl }] },
+      { num: 14, tokens: [{ t: "});", c: pl }] },
     ],
     output: [
-      { num: 1, tokens: [{ t: "-- Postgres: roles, RLS policies & triggers —", c: cm }] },
-      { num: 2, tokens: [{ t: "-- driver support coming.", c: cm }] },
+      { num: 1, tokens: [{ t: "CREATE TABLE ", c: kw }, { t: '"customer" ', c: ty }, { t: "(", c: pl }] },
+      { num: 2, tokens: [{ t: '  "id" ', c: pl }, { t: "text ", c: ty }, { t: "PRIMARY KEY", c: kw }, { t: ",", c: pl }] },
+      { num: 3, hl: true, tokens: [{ t: '  "email" ', c: pl }, { t: "text ", c: ty }, { t: "NOT NULL ", c: kw }, { t: "CHECK ", c: kw }, { t: "(", c: pl }, { t: "email ", c: pl }, { t: "~* ", c: kw }, { t: "'^[^@]+@[^@]+$'", c: st }, { t: "),", c: pl }] },
+      { num: 4, tokens: [{ t: '  "name" ', c: pl }, { t: "text ", c: ty }, { t: "NOT NULL", c: kw }] },
+      { num: 5, tokens: [{ t: ");", c: pl }] },
+      blank(6),
+      { num: 7, tokens: [{ t: "CREATE TABLE ", c: kw }, { t: '"order" ', c: ty }, { t: "(", c: pl }] },
+      { num: 8, tokens: [{ t: '  "id" ', c: pl }, { t: "text ", c: ty }, { t: "PRIMARY KEY", c: kw }, { t: ",", c: pl }] },
+      { num: 9, tokens: [{ t: '  "createdAt" ', c: pl }, { t: "timestamp with time zone ", c: ty }, { t: "NOT NULL ", c: kw }, { t: "DEFAULT ", c: kw }, { t: "now", c: fn }, { t: "()", c: pl }, { t: ",", c: pl }] },
+      { num: 10, hl: true, tokens: [{ t: '  "customer" ', c: pl }, { t: "text ", c: ty }, { t: "NOT NULL", c: kw }, { t: ",", c: pl }] },
+      { num: 11, hl: true, tokens: [{ t: '  "quantity" ', c: pl }, { t: "integer ", c: ty }, { t: "NOT NULL ", c: kw }, { t: "CHECK ", c: kw }, { t: "(", c: pl }, { t: "quantity > 0", c: pl }, { t: "),", c: pl }] },
+      { num: 12, hl: true, tokens: [{ t: '  "total" ', c: pl }, { t: "numeric", c: ty }, { t: "(", c: pl }, { t: "12", c: ty }, { t: ", ", c: pl }, { t: "2", c: ty }, { t: ") ", c: pl }, { t: "NOT NULL ", c: kw }, { t: "GENERATED ALWAYS AS ", c: kw }, { t: "(", c: pl }, { t: 'quantity * "unitPrice"', c: pl }, { t: ") ", c: pl }, { t: "STORED", c: kw }, { t: ",", c: pl }] },
+      { num: 13, tokens: [{ t: '  "unitPrice" ', c: pl }, { t: "numeric", c: ty }, { t: "(", c: pl }, { t: "10", c: ty }, { t: ", ", c: pl }, { t: "2", c: ty }, { t: ") ", c: pl }, { t: "NOT NULL", c: kw }] },
+      { num: 14, tokens: [{ t: ");", c: pl }] },
+      blank(15),
+      { num: 16, hl: true, tokens: [{ t: "CREATE UNIQUE INDEX ", c: kw }, { t: '"customer_email_key" ', c: pl }, { t: "ON ", c: kw }, { t: '"customer" ', c: ty }, { t: "(", c: pl }, { t: '"email"', c: pl }, { t: ");", c: pl }] },
+      { num: 17, hl: true, tokens: [{ t: "ALTER TABLE ", c: kw }, { t: '"order" ', c: ty }, { t: "ADD CONSTRAINT ", c: kw }, { t: '"order_customer_fkey"', c: pl }] },
+      { num: null, hl: true, tokens: [{ t: "  FOREIGN KEY ", c: kw }, { t: "(", c: pl }, { t: '"customer"', c: pl }, { t: ") ", c: pl }, { t: "REFERENCES ", c: kw }, { t: '"customer" ', c: ty }, { t: "(", c: pl }, { t: '"id"', c: pl }, { t: ") ", c: pl }, { t: "ON DELETE CASCADE", c: kw }, { t: ";", c: pl }] },
     ],
   },
 

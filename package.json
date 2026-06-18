@@ -12,6 +12,7 @@
     "dev:postgres": "bun run --cwd apps/postgres dev"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.3"
+    "@biomejs/biome": "2.3.3",
+    "portless": "^0.14.0"
   }
 }

@@ -5,7 +5,7 @@
   "version": "0.0.0",
   "description": "PostgreSQL driver site - postgres.schemic.dev. Driver coming soon; scaffolds the shared landing (postgres theme).",
   "scripts": {
-    "dev": "astro dev",
+    "dev": "portless run --name postgres.schemic astro dev",
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",

@@ -5,7 +5,7 @@
   "version": "0.0.0",
   "description": "Schemic main landing - schemic.dev (library hub + database picker).",
   "scripts": {
-    "dev": "astro dev",
+    "dev": "portless run --name schemic astro dev",
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",

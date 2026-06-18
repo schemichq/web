@@ -204,11 +204,13 @@ const comingSoon = [
           </nav>
         </aside>
 
-        <!-- editor window -->
-        <div class="min-w-0 flex-1 overflow-hidden rounded-2xl border border-border bg-code-bg shadow-[0_0_60px_color-mix(in_oklab,var(--color-accent)_13%,transparent),0_30px_60px_-10px_#00000066]">
+        <!-- editor window — flex column so the active panel fills the window
+             (which stretches to the capabilities rail) and its footer caption
+             pins to the bottom edge instead of floating mid-pane. -->
+        <div class="flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-code-bg shadow-[0_0_60px_color-mix(in_oklab,var(--color-accent)_13%,transparent),0_30px_60px_-10px_#00000066]">
           <!-- window header -->
           <div
-            class="relative flex items-center border-b border-border-subtle bg-surface px-4 py-3"
+            class="relative flex shrink-0 items-center border-b border-border-subtle bg-surface px-4 py-3"
           >
             <div class="flex items-center gap-2">
               <span class="size-3 rounded-full bg-[#ff5f57]"></span>
@@ -222,9 +224,9 @@ const comingSoon = [
           </div>
 
           <!-- ============ STATE: schema -> DDL ============ -->
-          <div data-demo-panel="schema">
+          <div data-demo-panel="schema" class="flex flex-1 flex-col">
             <!-- panes: side-by-side on desktop (continuous header bar; gutter only in the code area), stacked on mobile -->
-            <div class="relative grid lg:grid-cols-2">
+            <div class="relative grid flex-1 lg:grid-cols-2">
               <!-- left pane -->
               <div
                 class="flex min-w-0 flex-col border-b border-border-subtle lg:border-b-0"
@@ -364,14 +366,14 @@ const comingSoon = [
           </div>
 
           <!-- ============ STATE: migrations ============ -->
-          <div data-demo-panel="migrations" hidden>
+          <div data-demo-panel="migrations" hidden class="flex flex-1 flex-col">
             <div
-              class="flex items-center justify-between border-b border-border-subtle px-4 py-2.5"
+              class="flex shrink-0 items-center justify-between border-b border-border-subtle px-4 py-2.5"
             >
               <span class="font-mono text-xs text-ink-2">terminal</span>
               <span class="font-mono text-[11px] text-ink-3">sc migrate</span>
             </div>
-            <div class="relative bg-code-bg px-4 py-4 font-mono text-[13px] leading-[1.7]">
+            <div class="relative flex-1 bg-code-bg px-4 py-4 font-mono text-[13px] leading-[1.7]">
               {
                 states.map((st) => (
                   <div data-driver-pane={st.key} hidden={st.hidden}>
@@ -392,14 +394,14 @@ const comingSoon = [
           </div>
 
           <!-- ============ STATE: end-to-end types ============ -->
-          <div data-demo-panel="types" hidden>
+          <div data-demo-panel="types" hidden class="flex flex-1 flex-col">
             <div
-              class="flex items-center justify-between border-b border-border-subtle px-4 py-2.5"
+              class="flex shrink-0 items-center justify-between border-b border-border-subtle px-4 py-2.5"
             >
               <span class="font-mono text-xs text-ink-2">query.ts</span>
               <span class="font-mono text-[10px] text-code-fn">TypeScript</span>
             </div>
-            <div class="relative bg-code-bg px-4 py-4 font-mono text-[13px] leading-6">
+            <div class="relative flex-1 bg-code-bg px-4 py-4 font-mono text-[13px] leading-6">
               {/* types = TypeScript, visible on the hub (not native code) */}
               {
                 states.map((st) => (
@@ -440,14 +442,14 @@ const comingSoon = [
           </div>
 
           <!-- ============ STATE: live round-trip ============ -->
-          <div data-demo-panel="live" hidden>
+          <div data-demo-panel="live" hidden class="flex flex-1 flex-col">
             <div
-              class="flex items-center justify-between border-b border-border-subtle px-4 py-2.5"
+              class="flex shrink-0 items-center justify-between border-b border-border-subtle px-4 py-2.5"
             >
               <span class="font-mono text-xs text-ink-2">sc diff --live</span>
               <span class="font-mono text-[11px] text-ink-3">drift</span>
             </div>
-            <div class="relative bg-code-bg px-4 py-4 font-mono text-[13px] leading-[1.7]">
+            <div class="relative flex-1 bg-code-bg px-4 py-4 font-mono text-[13px] leading-[1.7]">
               {
                 states.map((st) => (
                   <div data-driver-pane={st.key} hidden={st.hidden}>
@@ -518,11 +520,6 @@ const comingSoon = [
   for (const root of document.querySelectorAll<HTMLElement>("[data-demo]")) {
     const tabs = Array.from(root.querySelectorAll<HTMLElement>("[data-demo-tab]"));
     const panels = Array.from(root.querySelectorAll<HTMLElement>("[data-demo-panel]"));
-    const panelIds = panels.map((p) => p.getAttribute("data-demo-panel"));
-    // Tabs that map to a real panel (skip the disabled "coming soon" ones).
-    const cyclable = tabs.filter((t) =>
-      panelIds.includes(t.getAttribute("data-demo-tab")),
-    );
 
     const activate = (id: string | null) => {
       for (const t of tabs)
@@ -531,34 +528,8 @@ const comingSoon = [
         p.toggleAttribute("hidden", p.getAttribute("data-demo-panel") !== id);
     };
 
+    // Capabilities switch ONLY on click — no timer, no auto-advance.
     for (const tab of tabs)
       tab.addEventListener("click", () => activate(tab.getAttribute("data-demo-tab")));
-
-    // Auto-advance through the capabilities; pause while the user hovers the
-    // demo, and never run under prefers-reduced-motion.
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let timer: number | undefined;
-    const stop = () => {
-      if (timer) {
-        clearInterval(timer);
-        timer = undefined;
-      }
-    };
-    const start = () => {
-      if (reduce || cyclable.length < 2 || timer) return;
-      timer = window.setInterval(() => {
-        const curId =
-          cyclable
-            .find((t) => t.getAttribute("data-active") === "true")
-            ?.getAttribute("data-demo-tab") ?? panelIds[0];
-        const i = cyclable.findIndex(
-          (t) => t.getAttribute("data-demo-tab") === curId,
-        );
-        activate(cyclable[(i + 1) % cyclable.length].getAttribute("data-demo-tab"));
-      }, 3800);
-    };
-    root.addEventListener("mouseenter", stop);
-    root.addEventListener("mouseleave", start);
-    start();
   }
 </script>

@@ -164,6 +164,10 @@ export function initPickers(): void {
     // (relative to the viewport, escaping every overflow:hidden ancestor) and
     // close it on scroll so it never drifts away from its button.
     const isOverlay = el.dataset.dbPicker === "overlay";
+    // Where the overlay menu lives at rest, so we can put it back on close (see
+    // the portal-to-<body> note in openMenu).
+    const menuHome = menu.parentElement;
+    const menuAnchor = menu.nextSibling;
     let open = false;
     let active = Math.max(
       0,
@@ -217,7 +221,17 @@ export function initPickers(): void {
     const openMenu = (): void => {
       open = true;
       menu.hidden = false;
-      if (isOverlay) placeFixed();
+      if (isOverlay) {
+        // The blur wash this menu sits under uses backdrop-filter, which makes
+        // it the containing block for our position:fixed dropdown — so "fixed"
+        // resolves to the wash, not the viewport. That drops the menu off-pane
+        // and grows the pane's scroll area (scrollbars appear and the wash
+        // scrolls out of view, reading as an extra layer covering the output).
+        // Portal the menu to <body> so fixed positioning escapes to the
+        // viewport; only the existing blur wash + this dropdown remain.
+        document.body.appendChild(menu);
+        placeFixed();
+      }
       trigger.setAttribute("aria-expanded", "true");
       setActive(active);
     };
@@ -225,7 +239,10 @@ export function initPickers(): void {
     const closeMenu = (focusTrigger = true): void => {
       open = false;
       menu.hidden = true;
-      if (isOverlay) clearFixed();
+      if (isOverlay) {
+        clearFixed();
+        menuHome?.insertBefore(menu, menuAnchor); // back to its overlay wrapper
+      }
       trigger.setAttribute("aria-expanded", "false");
       if (focusTrigger) trigger.focus();
     };

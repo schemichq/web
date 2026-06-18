@@ -41,12 +41,13 @@ const states = paneStates.map((s) => ({
       </p>
     </div>
 
-    <!-- terminal -->
+    <!-- terminal — flex column so the body fills the window and any trailing
+         explanation line sits flush at the bottom edge, never mid-window. -->
     <div
-      class="mt-9 w-full overflow-hidden rounded-[14px] border border-border bg-code-bg shadow-[0_0_60px_0_color-mix(in_oklab,var(--color-accent)_13%,transparent),0_30px_60px_0_#00000066]"
+      class="mt-9 flex w-full flex-col overflow-hidden rounded-[14px] border border-border bg-code-bg shadow-[0_0_60px_0_color-mix(in_oklab,var(--color-accent)_13%,transparent),0_30px_60px_0_#00000066]"
     >
       <!-- title bar -->
-      <div class="relative flex items-center bg-surface px-4.5 py-[13px]">
+      <div class="relative flex shrink-0 items-center bg-surface px-4.5 py-[13px]">
         <div class="flex items-center gap-2">
           <span class="size-3 rounded-full bg-[#ff5f57]"></span>
           <span class="size-3 rounded-full bg-[#febc2e]"></span>
@@ -60,7 +61,7 @@ const states = paneStates.map((s) => ({
 
       <!-- body -->
       <div
-        class="relative flex flex-col gap-1.5 overflow-x-auto px-[22px] pt-[18px] pb-[22px] font-mono text-[13px] leading-[1.6]"
+        class="relative flex flex-1 flex-col gap-1.5 overflow-x-auto px-[22px] pt-[18px] pb-[22px] font-mono text-[13px] leading-[1.6]"
       >
         {
           states.map((st) => (

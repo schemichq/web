@@ -3,6 +3,7 @@ import {
   drivers as driverList,
   driverUrl,
   findDriver,
+  hubUrl,
   paneStates,
   paneKeyFor,
   SUGGEST_DRIVER_URL,
@@ -83,6 +84,14 @@ const linkStates = paneStates.map((s) => ({
           ),
         )
       }
+      {/* Hub-level, driver-agnostic: the verified cookbook gallery. Lives on
+          the hub origin, so it's a normal same-origin link (no driver pane). */}
+      <a
+        href={`${hubUrl}/examples`}
+        class="text-sm text-ink-2 transition-colors hover:text-ink"
+      >
+        Examples
+      </a>
       {/* Neutral, not driver-specific: the agnostic hub home. */}
       <a
         href="/"

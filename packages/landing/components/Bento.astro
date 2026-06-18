@@ -1,6 +1,5 @@
 ---
 import CodeBlock from "./CodeBlock.astro";
-import SelectOverlay from "./SelectOverlay.astro";
 import { examplesFor } from "../config/examples";
 
 interface Props {
@@ -86,7 +85,6 @@ const icons: Record<string, string> = {
           defaults, coercion, and <code class="font-mono text-accent-soft">infer / input / output</code>.
         </p>
         <div class="relative">
-          {isHub && <SelectOverlay compact />}
           <CodeBlock lines={dropInLines} />
         </div>
         <p class="text-[13px] leading-relaxed text-ink-3">
@@ -148,7 +146,6 @@ const icons: Record<string, string> = {
         </div>
         <p class="text-sm leading-relaxed text-ink-2">Infer row shapes straight from the schema.</p>
         <div class="relative">
-          {isHub && <SelectOverlay compact />}
           <CodeBlock lines={endTypesLines} size={12} />
         </div>
         <p class="text-[13px] leading-relaxed text-ink-3">
@@ -166,7 +163,6 @@ const icons: Record<string, string> = {
         </div>
         <p class="text-sm leading-relaxed text-ink-2">Store any class with a typed codec — app value in, wire type out.</p>
         <div class="relative">
-          {isHub && <SelectOverlay compact />}
           <CodeBlock lines={byoLines} size={12} />
         </div>
       </article>
@@ -181,7 +177,6 @@ const icons: Record<string, string> = {
         </div>
         <p class="text-sm leading-relaxed text-ink-2">Diff against the running database.</p>
         <div class="relative">
-          {isHub && <SelectOverlay compact />}
           <CodeBlock lines={liveLines} size={12} />
         </div>
       </article>

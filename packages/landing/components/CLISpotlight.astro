@@ -1,6 +1,5 @@
 ---
 import { examplesFor } from "../config/examples";
-import SelectOverlay from "./SelectOverlay.astro";
 
 interface Props {
   /** Slug of the driver this site represents; null = agnostic hub. */
@@ -58,7 +57,6 @@ const blocks = examplesFor(activeDriver).cli;
       <div
         class="relative flex flex-col gap-1.5 overflow-x-auto px-[22px] pt-[18px] pb-[22px] font-mono text-[13px] leading-[1.6]"
       >
-        {isHub && <SelectOverlay />}
         {
           blocks.map((block, i) => (
             <Fragment>

@@ -455,9 +455,17 @@ const agnostic: DriverExamples = {
       { num: 7, tokens: [{ t: "  createdAt", c: pl }, { t: ": ", c: pl }, { t: "s", c: pl }, { t: ".", c: pl }, { t: "datetime", c: fn }, { t: "(),", c: pl }] },
       { num: 8, tokens: [{ t: "});", c: pl }] },
     ],
-    // Blurred on the hub — neutral placeholder (the map note is hidden there).
+    // Blurred on the hub — padded to roughly the input's height so the "Select a
+    // database" overlay fills the whole generated-output pane (not just one line).
     output: [
       { num: 1, tokens: [{ t: "-- Pick a database to generate native DDL.", c: cm }] },
+      blank(2),
+      blank(3),
+      blank(4),
+      blank(5),
+      blank(6),
+      blank(7),
+      blank(8),
     ],
     mapNote: [{ t: "Pick a database to generate native DDL." }],
   },

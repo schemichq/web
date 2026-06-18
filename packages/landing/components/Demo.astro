@@ -399,7 +399,7 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
               <span class="font-mono text-[10px] text-code-fn">{tabHead.types.lt}</span>
             </div>
             <div class="relative bg-code-bg px-4 py-4 font-mono text-[13px] leading-6">
-              {isHub && <SelectOverlay />}
+              {/* types = TypeScript, visible on the hub (not native code) */}
               {
                 typesLines.map((line) => (
                   <div class="flex">
@@ -509,20 +509,50 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
 
 <script>
   for (const root of document.querySelectorAll<HTMLElement>("[data-demo]")) {
-    const tabs = root.querySelectorAll<HTMLElement>("[data-demo-tab]");
-    const panels = root.querySelectorAll<HTMLElement>("[data-demo-panel]");
-    for (const tab of tabs) {
-      tab.addEventListener("click", () => {
-        const id = tab.getAttribute("data-demo-tab");
-        for (const t of tabs)
-          t.setAttribute(
-            "data-active",
-            String(t.getAttribute("data-demo-tab") === id),
-          );
-        for (const p of panels)
-          p.toggleAttribute("hidden", p.getAttribute("data-demo-panel") !== id);
-      });
-    }
+    const tabs = Array.from(root.querySelectorAll<HTMLElement>("[data-demo-tab]"));
+    const panels = Array.from(root.querySelectorAll<HTMLElement>("[data-demo-panel]"));
+    const panelIds = panels.map((p) => p.getAttribute("data-demo-panel"));
+    // Tabs that map to a real panel (skip the disabled "coming soon" ones).
+    const cyclable = tabs.filter((t) =>
+      panelIds.includes(t.getAttribute("data-demo-tab")),
+    );
+
+    const activate = (id: string | null) => {
+      for (const t of tabs)
+        t.setAttribute("data-active", String(t.getAttribute("data-demo-tab") === id));
+      for (const p of panels)
+        p.toggleAttribute("hidden", p.getAttribute("data-demo-panel") !== id);
+    };
+
+    for (const tab of tabs)
+      tab.addEventListener("click", () => activate(tab.getAttribute("data-demo-tab")));
+
+    // Auto-advance through the capabilities; pause while the user hovers the
+    // demo, and never run under prefers-reduced-motion.
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let timer: number | undefined;
+    const stop = () => {
+      if (timer) {
+        clearInterval(timer);
+        timer = undefined;
+      }
+    };
+    const start = () => {
+      if (reduce || cyclable.length < 2 || timer) return;
+      timer = window.setInterval(() => {
+        const curId =
+          cyclable
+            .find((t) => t.getAttribute("data-active") === "true")
+            ?.getAttribute("data-demo-tab") ?? panelIds[0];
+        const i = cyclable.findIndex(
+          (t) => t.getAttribute("data-demo-tab") === curId,
+        );
+        activate(cyclable[(i + 1) % cyclable.length].getAttribute("data-demo-tab"));
+      }, 3800);
+    };
+    root.addEventListener("mouseenter", stop);
+    root.addEventListener("mouseleave", start);
+    start();
   }
 
   // Reflect the hero's database picker in the schema -> DDL panel.

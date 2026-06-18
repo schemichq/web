@@ -26,6 +26,7 @@
         "@fontsource-variable/geist": "^5.2.9",
         "@fontsource-variable/jetbrains-mono": "^5.2.8",
         "@schemic/brand": "workspace:*",
+        "@schemic/landing": "workspace:*",
         "@tailwindcss/vite": "^4.3.0",
         "astro": "^6.4.6",
         "sharp": "^0.35.0",
@@ -61,6 +62,14 @@
     "packages/content": {
       "name": "@schemic/content",
       "version": "0.0.0",
+    },
+    "packages/landing": {
+      "name": "@schemic/landing",
+      "version": "0.0.0",
+      "dependencies": {
+        "@schemic/brand": "workspace:*",
+        "tailwindcss": "^4.3.0",
+      },
     },
     "packages/ui": {
       "name": "@schemic/ui",
@@ -300,6 +309,8 @@
     "@schemic/brand": ["@schemic/brand@workspace:packages/brand"],
 
     "@schemic/content": ["@schemic/content@workspace:packages/content"],
+
+    "@schemic/landing": ["@schemic/landing@workspace:packages/landing"],
 
     "@schemic/ui": ["@schemic/ui@workspace:packages/ui"],
 

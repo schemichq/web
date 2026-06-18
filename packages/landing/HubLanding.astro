@@ -1,0 +1,48 @@
+---
+// @schemic/landing — the assembled Schemic marketing landing.
+//
+// ONE theme-agnostic landing, re-themed per subdomain. The consuming app wraps
+// it in its own document layout (which imports @schemic/landing/landing.css +
+// exactly one @schemic/brand theme), so the same markup wears Amber on the hub,
+// purple/pink on surrealdb, blue on postgres, …
+//
+// Blend v1 flow: Banner · Nav · Hero · DriftProblem · Demo · Bento ·
+// CLISpotlight · Depth · FAQ · FinalCTA · Footer.
+//
+// `activeDriver` = the driver this site represents (its slug), or null for the
+// agnostic hub. It seeds the hero's database picker selection and the demo's
+// schema -> DDL dialect (a coming-soon driver also seeds the demo's overlay).
+// The hero's picker is the cross-subdomain switcher regardless.
+import Banner from "./components/Banner.astro";
+import Nav from "./components/Nav.astro";
+import Hero from "./components/Hero.astro";
+import DriftProblem from "./components/DriftProblem.astro";
+import Demo from "./components/Demo.astro";
+import Bento from "./components/Bento.astro";
+import CLISpotlight from "./components/CLISpotlight.astro";
+import Depth from "./components/Depth.astro";
+import FAQ from "./components/FAQ.astro";
+import FinalCTA from "./components/FinalCTA.astro";
+import Footer from "./components/Footer.astro";
+
+interface Props {
+  /** Slug of the driver this site represents; null = agnostic hub. */
+  activeDriver?: string | null;
+}
+
+const { activeDriver = null } = Astro.props;
+---
+
+<Banner />
+<Nav />
+<main>
+  <Hero activeDriver={activeDriver} />
+  <DriftProblem />
+  <Demo activeDriver={activeDriver} />
+  <Bento />
+  <CLISpotlight />
+  <Depth />
+  <FAQ />
+  <FinalCTA />
+</main>
+<Footer />

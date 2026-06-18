@@ -1,37 +1,13 @@
 ---
-// schemic.dev hub — "Hub - Blend v1" (Pencil frame oLDJy).
-// Flow: Banner · Nav · Hero · DriftProblem · Demo · Bento · CLISpotlight ·
-// Depth · FAQ · FinalCTA · Footer. (No StopHandwriting / no separate driver
-// chooser — the hero dropdown is the database picker.)
-// PASS 1: static. PASS 2 wires the hero dropdown open/switch + the drift
-// chip animation. Demo/Bento/CLI/Depth/FAQ/FinalCTA copy is ported from the
-// surreal landing and is placeholder pending technical-writer's hub copy.
-import Banner from "../components/hub/Banner.astro";
-import Bento from "../components/hub/Bento.astro";
-import CLISpotlight from "../components/hub/CLISpotlight.astro";
-import Demo from "../components/hub/Demo.astro";
-import Depth from "../components/hub/Depth.astro";
-import DriftProblem from "../components/hub/DriftProblem.astro";
-import FAQ from "../components/hub/FAQ.astro";
-import FinalCTA from "../components/hub/FinalCTA.astro";
-import Footer from "../components/hub/Footer.astro";
-import Hero from "../components/hub/Hero.astro";
-import Nav from "../components/hub/Nav.astro";
+// schemic.dev — the agnostic library hub. Renders the shared @schemic/landing
+// with no active driver (activeDriver={null}): the hero's database picker
+// defaults to the flagship driver and offers cross-subdomain navigation, and
+// the demo shows the live schema -> DDL flow. The hub wears the Amber theme
+// (imported by its Landing layout's stylesheet).
+import HubLanding from "@schemic/landing/HubLanding.astro";
 import Landing from "../layouts/Landing.astro";
 ---
 
 <Landing>
-  <Banner />
-  <Nav />
-  <main>
-    <Hero />
-    <DriftProblem />
-    <Demo />
-    <Bento />
-    <CLISpotlight />
-    <Depth />
-    <FAQ />
-    <FinalCTA />
-  </main>
-  <Footer />
+  <HubLanding activeDriver={null} />
 </Landing>

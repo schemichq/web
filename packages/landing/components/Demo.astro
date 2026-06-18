@@ -1,4 +1,26 @@
 ---
+import {
+  driverUrl,
+  isAvailable,
+  flagshipDriver,
+  findDriver,
+} from "../config/drivers";
+
+interface Props {
+  /** Slug of the driver this site represents; null = agnostic hub. */
+  activeDriver?: string | null;
+}
+
+const { activeDriver = null } = Astro.props;
+
+// Seed the schema -> DDL panel from the site's driver. A coming-soon driver
+// also seeds the overlay shown over the generated-DDL pane. The hero's picker
+// can still change all of this client-side via the `schemic:driver` event.
+const selected = findDriver(activeDriver) ?? flagshipDriver;
+const selectedAvailable = isAvailable(selected);
+const initialDialect = selected.dialect;
+const flagshipUrl = driverUrl(flagshipDriver.slug);
+
 // Token color classes (brand code tokens)
 const kw = "text-code-keyword";
 const fn = "text-code-fn";
@@ -121,7 +143,7 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
         <span
           id="demo-dialect"
           class="bg-gradient-to-r from-accent to-accent-2 bg-clip-text text-transparent"
-          >SurrealQL</span
+          >{initialDialect.lang}</span
         >.
       </h2>
     </div>
@@ -294,8 +316,8 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
                 <div
                   class="flex items-center justify-between border-b border-border-subtle bg-accent-2/[0.03] px-4 py-2.5"
                 >
-                  <span id="demo-file" class="font-mono text-xs text-ink-2">{tabHead.schema.r}</span>
-                  <span id="demo-lang" class="font-mono text-[10px] text-accent-2">{tabHead.schema.rt}</span>
+                  <span id="demo-file" class="font-mono text-xs text-ink-2">{initialDialect.file}</span>
+                  <span id="demo-lang" class="font-mono text-[10px] text-accent-2">{initialDialect.lang}</span>
                 </div>
                 <div
                   class="relative min-w-0 overflow-x-auto bg-code-bg py-4 font-mono text-[13px] leading-6 lg:pl-5"
@@ -307,21 +329,23 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
                   <!-- coming-soon overlay (shown when a not-yet-shipped driver is picked) -->
                   <div
                     id="demo-soon"
-                    hidden
+                    hidden={selectedAvailable}
                     class="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-code-bg/90 px-6 text-center backdrop-blur-[2px]"
                   >
                     <span
                       class="size-2.5 rounded-full"
                       id="demo-soon-dot"
-                      style="background:var(--color-driver-postgres)"
+                      style={`background:${selected.color}`}
                       aria-hidden="true"></span>
                     <p id="demo-soon-text" class="max-w-xs font-sans text-sm text-ink-2">
-                      This driver is coming soon — start with SurrealDB today.
+                      {selectedAvailable
+                        ? `This driver is coming soon — start with ${flagshipDriver.name} today.`
+                        : `The ${selected.name} driver is coming soon — start with ${flagshipDriver.name} today.`}
                     </p>
                     <a
-                      href="https://surreal.schemic.dev"
+                      href={flagshipUrl}
                       class="rounded-full bg-gradient-to-r from-accent to-accent-2 px-4 py-2 font-sans text-xs font-semibold text-white"
-                      >Start with SurrealDB</a
+                      >Start with {flagshipDriver.name}</a
                     >
                   </div>
                   {
@@ -375,6 +399,7 @@ const tabHead: Record<string, { l: string; lt: string; r?: string; rt?: string }
             <!-- map note -->
             <div
               id="demo-mapnote"
+              hidden={!selectedAvailable}
               class="flex items-center gap-2 border-t border-border-subtle bg-accent/10 px-4 py-2.5 text-xs text-ink-2"
             >
               <span class="size-1.5 shrink-0 rounded-full bg-gradient-to-r from-accent to-accent-2"></span>

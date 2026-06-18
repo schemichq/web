@@ -1,30 +1,11 @@
 /*
- * Landing entry (standalone marketing pages under src/pages/**).
- * Full Tailwind import (includes preflight/reset). Brand tokens come from the
- * shared @schemic/brand package: the neutral BASE plus exactly one THEME. The
- * hub wears its own umbrella theme (Amber); the same semantic-token markup
- * re-themes per subdomain just by swapping the theme import.
+ * schemic.dev hub — landing entry.
+ *
+ * The structural, theme-agnostic landing styles (full Tailwind import + brand
+ * BASE tokens + a @source that scans the shared @schemic/landing package) come
+ * from that package. This app only layers ITS theme on top — the hub wears the
+ * Amber umbrella theme. Swapping the theme import is the only per-subdomain
+ * change; the same semantic-token markup re-themes for free.
  */
-@import "tailwindcss";
-@import "@schemic/brand/base.css";
+@import "@schemic/landing/landing.css";
 @import "@schemic/brand/theme-schemic.css";
-
-@layer base {
-  html {
-    color-scheme: dark;
-    scroll-behavior: smooth;
-  }
-
-  body {
-    background-color: var(--color-canvas);
-    color: var(--color-ink);
-    font-family: var(--font-sans);
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-  }
-
-  ::selection {
-    background-color: color-mix(in oklab, var(--color-accent) 40%, transparent);
-    color: var(--color-ink);
-  }
-}

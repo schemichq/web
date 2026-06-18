@@ -1,0 +1,22 @@
+{
+  "name": "@schemic/landing",
+  "type": "module",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Shared Schemic marketing landing: one theme-agnostic hub landing (Banner · Nav · Hero · DriftProblem · Demo · Bento · CLISpotlight · Depth · FAQ · FinalCTA · Footer) re-themed per subdomain. Parametrized by activeDriver; the cross-subdomain database switcher lives in the hero.",
+  "exports": {
+    "./landing.css": "./landing.css",
+    "./*": "./*"
+  },
+  "files": [
+    "HubLanding.astro",
+    "Landing.astro",
+    "landing.css",
+    "components",
+    "config"
+  ],
+  "dependencies": {
+    "@schemic/brand": "workspace:*",
+    "tailwindcss": "^4.3.0"
+  }
+}

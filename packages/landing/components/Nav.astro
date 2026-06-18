@@ -1,10 +1,14 @@
 ---
-// NOTE (PASS 1, IA TBD): the hub (schemic.dev) has no /docs of its own — docs
-// live on the per-driver subdomains. Pointing at the shipped SurrealDB driver
-// for now; revisit once the hub IA is settled.
+// NOTE (IA TBD): the hub (schemic.dev) has no /docs of its own — docs live on
+// the per-driver subdomains. Pointing at the shipped flagship driver for now;
+// revisit once the hub IA is settled.
+import { driverUrl, flagshipDriver } from "../config/drivers";
+
+const flagship = driverUrl(flagshipDriver.slug);
+
 const links = [
-  { label: "Docs", href: "https://surreal.schemic.dev/docs/introduction" },
-  { label: "Drivers", href: "https://surreal.schemic.dev" },
+  { label: "Docs", href: `${flagship}/docs/introduction` },
+  { label: "Drivers", href: flagship },
   { label: "GitHub", href: "https://github.com/schemichq/schemic" },
 ];
 ---
@@ -49,7 +53,7 @@ const links = [
         >GitHub</a
       >
       <a
-        href="https://surreal.schemic.dev"
+        href={flagship}
         class="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-canvas transition-colors hover:bg-white"
       >
         Get started

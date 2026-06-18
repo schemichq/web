@@ -1,8 +1,10 @@
 ---
+import { driverUrl, flagshipDriver } from "../config/drivers";
+
 const repo = "https://github.com/schemichq/schemic";
-// NOTE (PASS 1, IA TBD): docs live on the per-driver subdomains, not the hub;
-// pointing at the shipped SurrealDB driver for now.
-const surreal = "https://surreal.schemic.dev";
+// NOTE (IA TBD): docs live on the per-driver subdomains, not the hub; pointing
+// at the shipped flagship driver for now.
+const surreal = driverUrl(flagshipDriver.slug);
 
 const columns: { heading: string; links: { label: string; href: string }[] }[] = [
   {

@@ -1,0 +1,41 @@
+/*
+ * @schemic/landing — STRUCTURAL, theme-agnostic landing stylesheet.
+ *
+ * Full Tailwind import (preflight/reset) + the brand BASE tokens only. This
+ * file carries NO theme: the consuming app composes the active theme on top,
+ * e.g. its own src/styles/landing.css does
+ *
+ *   @import "@schemic/landing/landing.css";        // tailwind + base + scan
+ *   @import "@schemic/brand/theme-surrealdb.css";  // the per-subdomain theme
+ *
+ * Everything below uses SEMANTIC tokens (accent / canvas / ink / …) so the
+ * exact same markup re-themes per subdomain just by swapping the theme import.
+ *
+ * Tailwind excludes node_modules from content scanning by default, so this
+ * stylesheet (which ships from a workspace package) explicitly scans its own
+ * sources for the utility classes the landing components use.
+ */
+@import "tailwindcss";
+@import "@schemic/brand/base.css";
+
+@source "./";
+
+@layer base {
+  html {
+    color-scheme: dark;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--color-accent) 40%, transparent);
+    color: var(--color-ink);
+  }
+}

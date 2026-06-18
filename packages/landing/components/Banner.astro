@@ -1,5 +1,7 @@
 ---
-const href = "https://surreal.schemic.dev";
+import { driverUrl, flagshipDriver } from "../config/drivers";
+
+const href = driverUrl(flagshipDriver.slug);
 ---
 
 <a

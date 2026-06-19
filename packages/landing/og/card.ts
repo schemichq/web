@@ -278,6 +278,138 @@ function tree(t: Theme): El {
   );
 }
 
+// Amber Schemic MASTER brand — used by the GitHub README banner (a distinct
+// deliverable from the per-driver OG cards; the README represents the agnostic
+// core, in the amber identity rather than a driver hue or the gray hub).
+const BANNER_THEME: Theme = {
+  name: "database",
+  eyebrow: "",
+  ddl: "native DDL",
+  accent: "#ffb454",
+  accent2: "#ff6a3d",
+  markDepth: "#9c3414",
+  canvas: "#0c0d10",
+  surface: "#181a20",
+  codeBg: "#0e0f13",
+  border: "#2b2d38",
+  ink: "#f5f4f1",
+  ink2: "#aea79c",
+  ink3: "#74706a",
+};
+
+// The README banner tree: same brand lockup + install/repo row as the cards, but
+// a single hero line ("Schema-as-code for any database", "any database" in the
+// amber gradient) + a one-line subline, instead of the cards' two-tone headline.
+function bannerTree(t: Theme): El {
+  const gradient = `linear-gradient(120deg, ${t.accent}, ${t.accent2})`;
+
+  const markSvg =
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 126 136" fill="none">` +
+    `<defs><linearGradient id="m" x1="0" y1="0" x2="126" y2="136" gradientUnits="userSpaceOnUse">` +
+    `<stop offset="0" stop-color="${t.accent}"/><stop offset="1" stop-color="${t.accent2}"/>` +
+    `</linearGradient></defs>` +
+    `<path d="M96 28l-62 0 0 38 52 0 0 38-62 0" transform="translate(6 8)" fill="none" stroke="${t.markDepth}" stroke-width="24" stroke-linecap="square"/>` +
+    `<path d="M96 28l-62 0 0 38 52 0 0 38-62 0" fill="none" stroke="url(#m)" stroke-width="24" stroke-linecap="square"/>` +
+    `</svg>`;
+  const markSrc = `data:image/svg+xml;base64,${Buffer.from(markSvg).toString("base64")}`;
+
+  const brand = h({ display: "flex", alignItems: "center", gap: 16 }, [
+    { type: "img", props: { src: markSrc, width: 54, height: 58 } },
+    txt("schemic", {
+      fontFamily: "JetBrains Mono",
+      fontSize: 30,
+      fontWeight: 600,
+      color: t.ink,
+    }),
+  ]);
+  const top = h(
+    { display: "flex", alignItems: "center", justifyContent: "space-between" },
+    [
+      brand,
+      txt("MIT · TypeScript-first", {
+        fontFamily: "JetBrains Mono",
+        fontSize: 18,
+        color: t.ink3,
+      }),
+    ],
+  );
+
+  const hStyle = {
+    fontFamily: "Geist",
+    fontSize: 62,
+    fontWeight: 600,
+    letterSpacing: -2,
+    lineHeight: 1.1,
+    whiteSpace: "pre",
+  };
+  const primary = h({ display: "flex" }, [
+    txt("Schema-as-code for ", { ...hStyle, color: t.ink }),
+    txt("any database", {
+      ...hStyle,
+      backgroundImage: gradient,
+      backgroundClip: "text",
+      color: "transparent",
+    }),
+  ]);
+  const sub = txt("Author once in TypeScript — native DDL + migrations.", {
+    fontFamily: "Geist",
+    fontSize: 28,
+    fontWeight: 400,
+    color: t.ink2,
+    lineHeight: 1.4,
+  });
+  const mid = h({ display: "flex", flexDirection: "column", gap: 22 }, [
+    primary,
+    sub,
+  ]);
+
+  const install = h(
+    {
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      padding: "14px 20px",
+      borderRadius: 12,
+      backgroundColor: t.codeBg,
+      border: `1px solid ${t.border}`,
+    },
+    [
+      txt("$", { fontFamily: "JetBrains Mono", fontSize: 18, color: t.accent2 }),
+      txt("npm i @schemic/core", {
+        fontFamily: "JetBrains Mono",
+        fontSize: 18,
+        color: t.ink,
+      }),
+    ],
+  );
+  const bottom = h(
+    { display: "flex", alignItems: "center", justifyContent: "space-between" },
+    [
+      install,
+      txt("github.com/schemichq/schemic", {
+        fontFamily: "JetBrains Mono",
+        fontSize: 16,
+        color: t.ink3,
+      }),
+    ],
+  );
+
+  return h(
+    {
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "space-between",
+      width: 1200,
+      height: 630,
+      padding: 72,
+      backgroundColor: t.canvas,
+      backgroundImage: `radial-gradient(110% 80% at 50% -10%, ${t.accent}33, ${t.canvas} 62%)`,
+      fontFamily: "Geist",
+    },
+    [top, mid, bottom],
+  );
+}
+
 const FONTS = [
   { name: "Geist", data: geist, weight: 600 as const, style: "normal" as const },
   {
@@ -312,3 +444,18 @@ export async function renderCard(key: CardKey): Promise<Buffer> {
 }
 
 export const CARD_KEYS: CardKey[] = ["hub", "surrealdb", "postgres"];
+
+/** The GitHub README banner as a satori SVG string (1200×630, amber master). */
+export async function renderBannerSvg(): Promise<string> {
+  return satori(bannerTree(BANNER_THEME) as never, {
+    width: 1200,
+    height: 630,
+    fonts: FONTS,
+  });
+}
+
+/** The GitHub README banner rasterized to PNG bytes (1200×630). */
+export async function renderBanner(): Promise<Buffer> {
+  const svg = await renderBannerSvg();
+  return sharp(Buffer.from(svg)).png().toBuffer();
+}

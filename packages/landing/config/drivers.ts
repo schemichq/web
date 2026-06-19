@@ -45,7 +45,7 @@ export const drivers: Driver[] = [
     slug: "surrealdb",
     name: "SurrealDB",
     status: "available",
-    maturity: "Beta",
+    maturity: "Alpha",
     site: true,
     color: "var(--color-driver-surrealdb)",
     color2: "var(--color-driver-surrealdb-2)",

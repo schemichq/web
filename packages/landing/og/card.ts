@@ -374,7 +374,7 @@ function bannerTree(t: Theme): El {
       color: "transparent",
     }),
   ]);
-  const sub = txt("Author once in TypeScript — native DDL + migrations.", {
+  const sub = txt("In the Zod you already know — native DDL + migrations.", {
     fontFamily: "Geist",
     fontSize: 28,
     fontWeight: 400,

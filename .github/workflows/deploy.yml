@@ -1,0 +1,89 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # manual full redeploy of all apps + worker
+
+# Never cancel an in-flight deploy; queue instead.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.set.outputs.apps }} # JSON array of app names to deploy
+      worker: ${{ steps.set.outputs.worker }} # "true"/"false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          # Shared packages feed all 3 apps, so a packages/** change redeploys all.
+          filters: |
+            shared: &shared
+              - 'packages/**'
+              - 'bun.lock'
+              - 'biome.json'
+            schemic: [ *shared, 'apps/schemic/**' ]
+            surreal: [ *shared, 'apps/surreal/**' ]
+            postgres: [ *shared, 'apps/postgres/**' ]
+            worker: [ 'workers/github-stars/**' ]
+      - id: set
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo 'apps=["schemic","surreal","postgres"]' >> "$GITHUB_OUTPUT"
+            echo 'worker=true' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          apps=()
+          [ "${{ steps.filter.outputs.schemic }}" = "true" ] && apps+=("schemic")
+          [ "${{ steps.filter.outputs.surreal }}" = "true" ] && apps+=("surreal")
+          [ "${{ steps.filter.outputs.postgres }}" = "true" ] && apps+=("postgres")
+          if [ ${#apps[@]} -eq 0 ]; then
+            echo 'apps=[]' >> "$GITHUB_OUTPUT"
+          else
+            echo "apps=$(printf '%s\n' "${apps[@]}" | jq -R . | jq -cs .)" >> "$GITHUB_OUTPUT"
+          fi
+          echo "worker=${{ steps.filter.outputs.worker }}" >> "$GITHUB_OUTPUT"
+
+  deploy-apps:
+    name: Deploy ${{ matrix.app }}
+    needs: changes
+    if: needs.changes.outputs.apps != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJSON(needs.changes.outputs.apps) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bun run --cwd apps/${{ matrix.app }} build
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/${{ matrix.app }}
+          command: deploy
+
+  deploy-worker:
+    name: Deploy github-stars
+    needs: changes
+    if: needs.changes.outputs.worker == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # wrangler bundles the TypeScript worker; no separate build step needed.
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: workers/github-stars
+          command: deploy

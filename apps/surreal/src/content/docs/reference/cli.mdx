@@ -1,0 +1,177 @@
+---
+title: CLI commands
+description: Reference for the Schemic CLI — every schemic subcommand and flag, grouped by setup, migrations, and live-database operations, plus the global connection flags.
+---
+
+The CLI ships as `schemic`, with `sc` as a short alias. Run any command with `npx schemic <command>`. Commands that talk to a database accept the [global connection flags](#global-flags) and read defaults from `schemic.config.ts`.
+
+## Setup
+
+<CommandRef
+  id="init"
+  name="schemic init"
+  desc="Scaffold the database/ layout, a config file, a sample schema, and an empty migration snapshot. Never overwrites existing files."
+  synopsis="schemic init"
+  flags={[]}
+/>
+
+<CommandRef
+  id="doctor"
+  name="schemic doctor"
+  desc="Print the resolved configuration and test the database connection."
+  synopsis="schemic doctor"
+  flags={[]}
+/>
+
+## Migrations
+
+<CommandRef
+  id="gen"
+  name="schemic gen [name]"
+  desc="Diff the schema against the snapshot and write a migration for the difference. Writes nothing when there are no changes."
+  synopsis="schemic gen add_user_role"
+  flags={[
+    { flag: "-y", type: "boolean", desc: "Skip the confirmation prompt." },
+    { flag: "--baseline", type: "boolean", desc: "Regenerate the whole schema from an empty snapshot as one migration." },
+    { flag: "--force", type: "boolean", desc: "With --baseline, replace existing migrations with the fresh baseline." }
+  ]}
+/>
+
+<CommandRef
+  id="migrate"
+  name="schemic migrate [count]"
+  desc="Apply pending migrations in order — all, the next N, or up to a tag. Alias: up."
+  synopsis="schemic migrate --to 20260613090000_add_role"
+  flags={[
+    { flag: "--to <tag>", type: "string", desc: "Apply up to and including this migration." }
+  ]}
+/>
+
+<CommandRef
+  id="rollback"
+  name="schemic rollback [count]"
+  desc="Revert applied migrations newest-first. Alias: down."
+  synopsis="schemic rollback 2"
+  flags={[
+    { flag: "--to <tag>", type: "string", desc: "Revert everything applied after this tag." }
+  ]}
+/>
+
+<CommandRef
+  id="status"
+  name="schemic status"
+  desc="Show applied vs pending migrations, flagging files that changed after apply or are missing."
+  synopsis="schemic status --json"
+  flags={[
+    { flag: "--json", type: "boolean", desc: "Output the status as JSON." }
+  ]}
+/>
+
+<CommandRef
+  id="new"
+  name="schemic new <name>"
+  desc="Scaffold a blank, hand-written .surql migration with up/down branches."
+  synopsis="schemic new backfill_handles"
+  flags={[]}
+/>
+
+<CommandRef
+  id="check"
+  name="schemic check"
+  desc="Replay migrations in a throwaway engine and confirm they reproduce the schema. Exits non-zero on mismatch."
+  synopsis="schemic check --schema"
+  flags={[
+    { flag: "--schema", type: "boolean", desc: "Check the schema specifically." }
+  ]}
+/>
+
+<CommandRef
+  id="snapshot-reset"
+  name="schemic snapshot reset"
+  desc="Clear the migration snapshot so the next schemic gen baselines the full schema."
+  synopsis="schemic snapshot reset"
+  flags={[]}
+/>
+
+<CommandRef
+  id="unlock"
+  name="schemic unlock"
+  desc="Release a stale migration lock left by an interrupted run."
+  synopsis="schemic unlock"
+  flags={[]}
+/>
+
+## Live database
+
+<CommandRef
+  id="diff"
+  name="schemic diff"
+  desc="Preview the pending change without writing a migration. Diffs against the snapshot, or a live database with --live."
+  synopsis="schemic diff --live --ts"
+  flags={[
+    { flag: "--live", type: "boolean", desc: "Diff against the running database." },
+    { flag: "--ts", type: "boolean", desc: "Render the delta as TypeScript instead of SurrealQL." },
+    { flag: "--down", type: "boolean", desc: "Show the rollback (reverse) direction." },
+    { flag: "--full", type: "boolean", desc: "Show complete definitions, not only the delta." },
+    { flag: "--inline", type: "boolean", desc: "Inline format." },
+    { flag: "-p, --patch", type: "boolean", desc: "Patch-style output." },
+    { flag: "--pager", type: "boolean", desc: "Page long output." },
+    { flag: "--json", type: "boolean", desc: "Machine-readable output." },
+    { flag: "--watch", type: "boolean", desc: "Re-run as the schema changes." }
+  ]}
+/>
+
+<CommandRef
+  id="push"
+  name="schemic push"
+  desc="Apply the schema directly to the database, no migration files. Alias: sync. Prunes stale objects by default."
+  synopsis="schemic push --dry-run"
+  flags={[
+    { flag: "--dry-run", type: "boolean", desc: "Show what would change without applying." },
+    { flag: "--no-prune", type: "boolean", desc: "Apply additions and changes only; keep stale objects." },
+    { flag: "--watch", type: "boolean", desc: "Re-push as the schema changes." }
+  ]}
+/>
+
+<CommandRef
+  id="pull"
+  name="schemic pull"
+  desc="Introspect the database and update your s.* files to match. Previews by default; non-destructive."
+  synopsis="schemic pull --write"
+  flags={[
+    { flag: "--write", type: "boolean", desc: "Apply the preview to your .ts files." },
+    { flag: "--merge", type: "boolean", desc: "Keep local-only entities; apply the database's changes alongside them." },
+    { flag: "--discard", type: "boolean", desc: "Mirror the database exactly, dropping local-only definitions." }
+  ]}
+/>
+
+<CommandRef
+  id="seed"
+  name="schemic seed"
+  desc="Run the project's seed script (database/seed.ts) with a connected client."
+  synopsis="schemic seed"
+  flags={[]}
+/>
+
+## Global flags
+
+These apply to every command that connects to a database. Each overrides, for that command, the resolved connection from `schemic.config.ts`.
+
+| Flag | Description |
+|------|-------------|
+| `--url <url>` | Database endpoint, e.g. `ws://localhost:8000`. |
+| `--namespace <ns>` | Target namespace. |
+| `--database <db>` | Target database. |
+| `--username <user>` | Auth username. |
+| `--password <pass>` | Auth password. |
+| `--auth-level <level>` | Sign-in level: `root`, `namespace`, or `database`. |
+| `-c, --config <path>` | Path to the config file. |
+| `--[no-]tables` | Include or exclude tables from the operation. |
+| `--[no-]functions` | Include or exclude functions. |
+| `--[no-]access` | Include or exclude access definitions. |
+
+## Where to go next
+
+- [Generate & run migrations](/docs/guides/migrations) — the workflow these commands support.
+- [Configuration](/docs/reference/configuration) — the config file in full.
+- [The migration model](/docs/concepts/migrations-model) — migrate vs push vs pull.

@@ -1,0 +1,116 @@
+---
+title: The encoded and decoded sides
+description: Schemic maps between your app and the database using Zod's two native channels. Understand App vs Wire, encode vs decode, and the create and update shapes.
+---
+
+Schemic has one central idea: a field has two values, not one. The value you hold in TypeScript is rarely the value SurrealDB stores. A timestamp is a JavaScript `Date` in your code but a `datetime` on the wire; an id is a `string` in your code but a `Uuid` in the database. Schemic keeps both, and converts between them for you.
+
+It does this with machinery Zod already has — its two channels — so there is nothing new to learn about how parsing works.
+
+## Two sides of every schema
+
+Every Zod schema has two types, an input and an output. Schemic assigns each a meaning:
+
+- The **decoded side** is `z.output`. This is the **app value** — what you work with in TypeScript. Schemic exposes it as `App<typeof Table>`.
+- The **encoded side** is `z.input`. This is the **wire value** — what SurrealDB stores and returns. Schemic exposes it as `Wire<typeof Table>`.
+
+For a plain `s.string()` the two sides are identical. For a `s.datetime()` they differ: `App` is `Date`, `Wire` is `DateTime`. The field that bridges them is a [codec](/docs/concepts/codecs).
+
+<Callout variant="caution" title="Don't blur the two sides">
+"Encoded / wire / database" always means `z.input`; "decoded / app" always means `z.output`. Mixing them up — encoding when you meant to decode, typing a function with `Wire` when you meant `App` — is a correctness bug, not a style choice.
+</Callout>
+
+## Two operations move values across
+
+You cross between the sides with two methods on a table definition:
+
+- **`decode(row)`** reads a database row into app values: wire → app. Use it on anything you read back from SurrealDB.
+- **`encode(input)`** turns app values into a wire payload: app → wire. Use it on anything you write to SurrealDB.
+
+<CodeBlock lang="ts">
+
+```ts
+import { Surreal } from "surrealdb";
+import { User } from "./schema/user";
+
+const db = new Surreal();
+// ...connect...
+
+// app -> wire: build the payload and write it
+const [[row]] = await db.query("CREATE user CONTENT $data", {
+  data: User.encode({ name: "Ada", email: "ada@example.com" }),
+});
+
+// wire -> app: read the row back as app values
+const ada = User.decode(row);
+ada.createdAt; // Date
+```
+
+</CodeBlock>
+
+The direction is the thing to remember: **encode to write, decode to read.**
+
+## Create, update, and the two write shapes
+
+Writes come in two flavours, and Schemic gives each its own method and type.
+
+- **`encode(input)`** produces a payload for a full insert — a `CREATE` or `CONTENT`. Fields with a database default (`$default`) are optional in its input, because SurrealDB fills them. Its input type is `Create<typeof Table>`.
+- **`encodePartial(patch)`** produces a *partial* wire payload for an update — a `MERGE`, `UPDATE`, or `PATCH`. Every field is optional. Its input type is `Update<typeof Table>`.
+
+<CodeBlock lang="ts">
+
+```ts
+// full insert — createdAt is filled by the DB default, so omit it
+await db.query("CREATE user CONTENT $data", {
+  data: User.encode({ name: "Ada", email: "ada@example.com" }),
+});
+
+// partial update — send only what changed
+await db.query("UPDATE $id MERGE $patch", {
+  id: userId,
+  patch: User.encodePartial({ name: "Ada Lovelace" }),
+});
+```
+
+</CodeBlock>
+
+This is why there are four public types. They are the same schema seen from four angles:
+
+| Type | Side | Shape | Use it for |
+|------|------|-------|-----------|
+| `App<typeof T>` | decoded | full | the value you read and work with |
+| `Wire<typeof T>` | encoded | full | a full row as SurrealDB stores it |
+| `Create<typeof T>` | decoded input | default fields optional | the argument to `encode` |
+| `Update<typeof T>` | decoded input | all fields optional | the argument to `encodePartial` |
+
+## Safe and async variants
+
+Each operation has a non-throwing `safe*` variant that returns a result object instead of throwing on invalid input, mirroring Zod's `safeParse`:
+
+<CodeBlock lang="ts">
+
+```ts
+const result = User.safeDecode(row);
+if (!result.success) {
+  // result.error is a ZodError
+}
+```
+
+</CodeBlock>
+
+`safeDecode`, `safeEncode`, and `safeEncodePartial` cover the three operations. Async variants — `decodeAsync`, `encodeAsync`, `encodePartialAsync` — exist for schemas with async refinements. Individual fields also expose `.encode(value)` and `.decode(value)` when you need to convert a single value rather than a whole row.
+
+## The wire side is what becomes the DDL
+
+A field's SurrealQL `TYPE` is its **wire** (encoded) type. This is the rule that explains how Zod's own methods interact with the database:
+
+- **App-side methods leave the DDL unchanged.** `refine`, `check`, `brand`, `readonly`, `describe`, and `meta` are native Zod methods that act on the decoded app value or its validation. They run in TypeScript and do not alter the stored type or add a database constraint — `s.email().refine(...)` still emits `string ASSERT string::is_email($value)`.
+- **`transform` and `pipe` change only the decoded value.** The stored wire type stays the input side. A bare `transform` is one-directional, so to *write* a transformed field you need a bidirectional codec via `.$surreal(type, codec)`.
+
+This is the dividing line behind Schemic's method naming: non-`$` methods are native Zod and act app-side; `$`-prefixed methods emit DDL. A wire type SurrealDB cannot represent is rejected when the DDL is emitted, and `.$surreal(type, codec)` is the escape hatch. See [field methods](/docs/reference/field-methods) for the full split.
+
+## Where to go next
+
+- [Codecs](/docs/concepts/codecs) — the built-in conversions and how to write your own.
+- [Encode & decode rows](/docs/guides/encode-decode-rows) — the task-focused how-to with the SurrealDB SDK.
+- [Type utilities](/docs/reference/type-utilities) — the full reference for `App`, `Wire`, `Create`, and `Update`.

@@ -1,0 +1,110 @@
+---
+title: Definers
+description: Reference for the top-level definers in Schemic — defineTable, defineRelation, defineFunction, defineAccess, and defineEvent, with their chainable methods.
+---
+
+The definers are the entry points you import from `@schemic/surrealdb`. Each returns an immutable, chainable definition. This page lists their signatures and methods. For the codec methods (`encode`, `decode`, `encodePartial`) see [type utilities](/docs/reference/type-utilities) and the [encode/decode guide](/docs/guides/encode-decode-rows).
+
+## defineTable
+
+<CodeBlock lang="ts">
+
+```ts
+defineTable(name: string, fields: Shape): TableDef
+```
+
+</CodeBlock>
+
+Creates a table definition. `fields` is an object of `s.*` schemas. The `id` field sets the record-id type and is otherwise implicit (no `DEFINE FIELD id`).
+
+| Method | Description |
+|--------|-------------|
+| `.schemafull()` | Only defined fields are allowed (the default). |
+| `.schemaless()` | Allow arbitrary fields; defined fields are still validated. |
+| `.typeAny()` | `TYPE ANY` table. |
+| `.drop(drop = true)` | Mark the table `DROP` (writes are discarded). |
+| `.comment(text)` | Attach a table `COMMENT`. |
+| `.permissions(spec)` | Table-level `PERMISSIONS` for `select`/`create`/`update`/`delete`. |
+| `.index(name, fields, opts?)` | A composite index. `opts`: `{ unique?, count? }`. |
+| `.event(name, { when?, then })` | A row-change event. |
+| `.pick(...keys)` / `.omit(...keys)` | A derived table with a subset of fields. |
+| `.partial()` | A derived table with every field optional. |
+| `.extend({ ... })` | A derived table with extra fields. |
+| `.record()` | The `record<...>` link type for this table. |
+| `.encode` / `.decode` / `.encodePartial` | Codec methods — see [type utilities](/docs/reference/type-utilities). |
+
+## defineRelation
+
+<CodeBlock lang="ts">
+
+```ts
+defineRelation(name: string, fields?: Shape): RelationDef
+```
+
+</CodeBlock>
+
+Creates an edge (relation) table. It has every `TableDef` method plus the endpoint setters; `in` and `out` are implicit.
+
+| Method | Description |
+|--------|-------------|
+| `.from(table)` | Set the `FROM` endpoint. |
+| `.to(table)` | Set the `TO` endpoint. |
+
+`.from(User).to(Post)` emits `TYPE RELATION FROM user TO post`. Omit both to leave the relation unrestricted.
+
+## defineFunction
+
+<CodeBlock lang="ts">
+
+```ts
+defineFunction(name: string, args?: Shape): FunctionDef
+```
+
+</CodeBlock>
+
+Declares a custom function. `args` is an object of named `s.*` schemas; they infer to SurrealQL types like fields do.
+
+| Method | Description |
+|--------|-------------|
+| `.returns(type)` | Declare the return type (an `s` schema). |
+| `.body(expr)` | The function body — a `surql` block or raw string. Required to emit. |
+| `.permissions(p)` | `FULL` (`true`, default), `NONE` (`false`), or a `surql` condition. |
+| `.comment(text)` | Attach a `COMMENT`. |
+
+Emits `DEFINE FUNCTION fn::<name>(<args>) -> <returns> { <body> }`.
+
+## defineAccess
+
+<CodeBlock lang="ts">
+
+```ts
+defineAccess(name: string): AccessDef
+```
+
+</CodeBlock>
+
+Declares an access method. Pick the kind with one of:
+
+| Method | Description |
+|--------|-------------|
+| `.record()` | A `RECORD` access (SIGNUP/SIGNIN bodies). The default kind. |
+| `.jwt({ alg?, key?, url? })` | Validate external JWTs, by key or by JWKS `url`. |
+| `.bearer({ for })` | Bearer API-key grants; `for` is `"record"` or `"user"`. |
+
+## defineEvent
+
+<CodeBlock lang="ts">
+
+```ts
+defineEvent(table: TableDef | string, name: string, { when?, then }): EventDef
+```
+
+</CodeBlock>
+
+Declares an event as a standalone object. Equivalent to the table's `.event(name, spec)` method; use this form when you keep events in their own file. The body sees `$before`, `$after`, `$event`, and `$value`.
+
+## Where to go next
+
+- [Define a table](/docs/guides/define-a-table) — the how-to.
+- [Model relationships](/docs/guides/relationships) — `defineRelation` in practice.
+- [Type utilities](/docs/reference/type-utilities) — `App`, `Wire`, `Create`, `Update`, and the codec methods.

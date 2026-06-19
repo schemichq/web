@@ -1,0 +1,66 @@
+---
+title: The migration model
+description: How Schemic evolves your database — declarative diffing against a snapshot, a normalized intermediate representation that avoids phantom migrations, idempotent DDL, and when to choose migrate, push, or pull.
+---
+
+Schemic's CLI is **declarative and diff-based**. You never write a migration by hand describing *how* to get from one schema to another. You edit your schema to describe the state you want, and the CLI computes the difference and writes the migration for you.
+
+This page explains the model behind that: what the diff compares against, why it does not produce spurious migrations, and how the same model supports three different ways of applying changes.
+
+## You describe the destination, not the steps
+
+A traditional migration tool asks you to write the steps: "add this column, drop that one." Schemic inverts it. Your TypeScript schema *is* the desired state. To change the database, you change the schema and run `schemic gen`; the CLI diffs the new schema against a recorded **snapshot** of the last known state and writes a migration for exactly the delta.
+
+The snapshot lives in `database/migrations/meta/_snapshot.json`. `schemic gen` and `schemic diff` compare against it; applying a migration advances it. This is what lets `gen` write *only* the new `post` table when you add one — it already knows `user` is in the snapshot.
+
+## Why you don't get phantom migrations
+
+Comparing two schemas by their DDL text is fragile: reordering the members of a union or an enum changes the string without changing the meaning, and a naive tool would generate a migration for it.
+
+Schemic avoids this by normalizing both sides — your schema and the database — into one intermediate representation (a **Struct**) before diffing. The comparison happens on the normalized structure, not on SurrealQL strings, so cosmetic-only changes produce no migration. The same Struct representation backs both offline diffs (schema vs snapshot) and live diffs (schema vs a running database), so the two always agree.
+
+## Migrations are idempotent and reversible
+
+Each generated migration is written so it can run forward or backward, and so it survives being replayed over a database that already has some of the changes:
+
+<CodeBlock lang="surql">
+
+```surql
+IF $direction = "up" {
+    -- forward changes
+} ELSE {
+    -- rollback changes
+};
+```
+
+</CodeBlock>
+
+The forward DDL is idempotent by construction:
+
+- **Additions** use `DEFINE ... OVERWRITE`, so re-running them is harmless.
+- **Removals** use `REMOVE ... IF EXISTS`, so dropping something already gone is not an error.
+- **Changes** use `ALTER` (falling back to `OVERWRITE`).
+
+Because of this, `schemic migrate` replays cleanly even over a database that was modified out-of-band — for example one you brought up to date with `push` or `pull`.
+
+## Three ways to apply a change
+
+The same diff drives three workflows. Choose by whether you want a versioned history.
+
+| Command | What it does | Writes migration files? | Use when |
+|---------|--------------|-------------------------|----------|
+| `schemic gen` + `schemic migrate` | Generate a migration from the diff, then apply pending migrations in order | Yes | You want a reviewable, version-controlled history — the default for shared and production databases. |
+| `schemic push` (alias `sync`) | Apply the schema directly to the database | No | Fast iteration on a local or scratch database, where history does not matter. |
+| `schemic pull` | Introspect a database and update your TypeScript to match it | No (edits your schema files) | Adopting an existing database, or reconciling drift back into code. |
+
+`migrate` gives you an auditable trail and reversibility. `push` trades that for speed. `pull` runs the diff in the opposite direction, writing the database's shape back into your source. The [migrations guide](/docs/guides/migrations) walks through the `gen`/`migrate` loop, and [adopting an existing database](/docs/guides/adopt-existing-database) covers `pull`.
+
+## Verifying migrations reproduce the schema
+
+`schemic check` replays your migrations in a throwaway engine and confirms the result matches your schema. It is the safety net that catches a migration history that has drifted from your source of truth — useful in CI. See [detecting and reviewing drift](/docs/guides/review-drift).
+
+## Where to go next
+
+- [Generate & run migrations](/docs/guides/migrations) — the everyday workflow.
+- [Sync without migrations](/docs/guides/sync-without-migrations) — when to use `push`.
+- [CLI commands](/docs/reference/cli) — every subcommand and flag.

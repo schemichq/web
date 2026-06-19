@@ -1,0 +1,85 @@
+---
+title: From schema to DDL
+description: How a Schemic definition becomes SurrealQL DDL — the DEFINE TABLE head, one DEFINE FIELD per field, and how Zod combinators and field clauses map to TYPE, ASSERT, DEFAULT, and PERMISSIONS.
+---
+
+Schemic turns a table definition into SurrealQL **DDL** — the `DEFINE TABLE` and `DEFINE FIELD` statements that tell SurrealDB the shape of your data. This page explains how each part of a definition maps to DDL. It is the conceptual companion to the [type mapping reference](/docs/reference/type-mapping), which lists every type exactly.
+
+DDL (Data Definition Language) is the subset of SurrealQL that defines schema. A `DEFINE TABLE` statement declares a table; a `DEFINE FIELD` statement declares one field on it.
+
+## A table becomes a DEFINE TABLE head plus one field each
+
+A `defineTable` produces a `DEFINE TABLE` statement followed by one `DEFINE FIELD` per field:
+
+<CodeBlock title="schema.ts" lang="ts">
+
+```ts
+export const User = defineTable("user", {
+  id: s.string(),
+  name: s.string(),
+  email: s.email(),
+});
+```
+
+</CodeBlock>
+
+produces:
+
+<CodeBlock title="Generated DDL" lang="surql">
+
+```surql
+DEFINE TABLE user TYPE NORMAL SCHEMAFULL;
+DEFINE FIELD name ON TABLE user TYPE string;
+DEFINE FIELD email ON TABLE user TYPE string ASSERT string::is_email($value);
+```
+
+</CodeBlock>
+
+Two defaults are visible here:
+
+- Tables are **`SCHEMAFULL`** by default — SurrealDB rejects fields you did not define. Call `.schemaless()` to allow arbitrary fields, or `.typeAny()` for a `TYPE ANY` table.
+- The **`id` field is implicit**. SurrealDB manages record ids itself, so Schemic never emits a `DEFINE FIELD id`. The `id` in your schema controls the *id type* (`s.string()` → `record<user, string>`), not a column. For relations, `in` and `out` are implicit in the same way.
+
+## How a field's type is computed
+
+The `TYPE` clause comes from the Zod schema. Combinators compose into SurrealQL types:
+
+| You write | DDL `TYPE` |
+|-----------|-----------|
+| `s.string()` | `string` |
+| `s.string().optional()` | `option<string>` |
+| `s.string().array()` | `array<string>` |
+| `s.int()` | `int` |
+| `User.record()` | `record<user>` |
+| `s.object({ ... })` | `object` (with a `DEFINE FIELD` per nested key) |
+
+`.optional()` wraps the type in `option<...>`; `.array()` wraps it in `array<...>`. Nested objects expand into dotted field paths (`address.city`), so a whole object tree becomes a flat list of `DEFINE FIELD` statements.
+
+## How clauses become DDL
+
+The `$`-prefixed [field methods](/docs/reference/field-methods) and Zod's string formats add clauses to the `DEFINE FIELD`, in this order: `TYPE`, `DEFAULT`, `ASSERT`, `READONLY`, `PERMISSIONS`.
+
+| You write | DDL clause |
+|-----------|-----------|
+| `s.email()` | `ASSERT string::is_email($value)` |
+| `.$assert(surql\`...\`)` | `ASSERT ...` |
+| `.$default(surql\`time::now()\`)` | `DEFAULT time::now()` |
+| `.$readonly()` | `READONLY` |
+| `.$value(expr)` | `VALUE expr` |
+| `.$permissions({ ... })` | `PERMISSIONS FOR ... WHERE ...` |
+
+String formats like `s.email()` are the convenient case: they emit the matching `string::is_*` assertion for you. The `surql` tag drops to raw SurrealQL for anything a built-in does not cover.
+
+<Callout variant="note" title="Why ASSERT, not only Zod validation">
+Zod refinements validate in your app. An `ASSERT` clause makes *SurrealDB* enforce the rule on every write, including writes that do not go through your code. Schemic emits both where it can, so the constraint holds at both layers.
+</Callout>
+
+## The DDL is what migrations diff
+
+You rarely call the DDL emitters by hand. The [CLI](/docs/reference/cli) generates this DDL, diffs it against the database, and writes the difference into a migration. Understanding the mapping is what lets you predict what a schema change will do before you run `schemic gen`.
+
+## Where to go next
+
+- [Define a table](/docs/guides/define-a-table) — the how-to for everyday schema work.
+- [The migration model](/docs/concepts/migrations-model) — how this DDL turns into a reviewable migration history.
+- [Type mapping](/docs/reference/type-mapping) — the exhaustive type-by-type reference.

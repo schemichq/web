@@ -1,0 +1,89 @@
+---
+title: Introduction
+description: Schemic lets you describe a SurrealDB table once, in Zod, and get SurrealQL DDL, runtime validation, and a fully-typed JS to database mapping from that single definition.
+---
+
+Schemic lets you describe a SurrealDB table once, in Zod, and derive three things from that single definition: the SurrealQL schema (**DDL**), runtime **validation**, and a fully-typed **JS-to-database mapping**. There is no code generation step and no separate schema language. Your Zod schema *is* the schema.
+
+You write this:
+
+<CodeBlock title="schema.ts" lang="ts">
+
+```ts
+import { s, defineTable, surql } from "@schemic/surrealdb";
+
+export const User = defineTable("user", {
+  id: s.string(),
+  name: s.string(),
+  email: s.email(),
+  createdAt: s.datetime().$default(surql`time::now()`).$readonly(),
+});
+```
+
+</CodeBlock>
+
+…and the same definition gives you the DDL below, a validator, and an `App` type whose `createdAt` is a JavaScript `Date` even though SurrealDB stores it as a `datetime`.
+
+<CodeBlock title="Generated DDL" lang="surql">
+
+```surql
+DEFINE TABLE user TYPE NORMAL SCHEMAFULL;
+DEFINE FIELD name ON TABLE user TYPE string;
+DEFINE FIELD email ON TABLE user TYPE string ASSERT string::is_email($value);
+DEFINE FIELD createdAt ON TABLE user TYPE datetime DEFAULT time::now() READONLY;
+```
+
+</CodeBlock>
+
+## What you get from one definition
+
+<PillarGrid>
+  <PillarCard icon="database" title="SurrealQL DDL">
+    Emit `DEFINE TABLE`, `DEFINE FIELD`, indexes, events, functions, and access definitions straight from your schema. No DDL to hand-write or keep in sync.
+  </PillarCard>
+  <PillarCard icon="shield-check" title="Runtime validation">
+    Every field is a real Zod schema, so parsing, refinements, and error messages work exactly as you already know them.
+  </PillarCard>
+  <PillarCard icon="layers" title="Typed JS-to-DB mapping">
+    Read and write rows through codecs that convert between your app values and the database wire format, with static types for both sides.
+  </PillarCard>
+</PillarGrid>
+
+A fourth thing falls out of the same source of truth: a declarative, reviewable [migration history](/docs/concepts/migrations-model) the CLI generates by diffing your schema against the database.
+
+## The mental model
+
+A field is an ordinary Zod schema plus a little SurrealQL metadata. The mapping between your code and the database rides Zod's two native channels:
+
+- The **app side** (`z.output`) is the value you work with in TypeScript: a `Date`, a `string`, a `Uint8Array`.
+- The **wire side** (`z.input`) is what SurrealDB stores and returns: a `DateTime`, a `Uuid`, raw bytes.
+
+A codec moves a value between the two: `decode` reads a row from the database into app values, and `encode` writes app values back to the wire format. That is why a `datetime` field is a `Date` in your code and a `DateTime` on the wire, for free. Keeping these two sides distinct is the core idea of the library; the [encoded and decoded sides](/docs/concepts/app-and-wire) guide covers it in full.
+
+## Prerequisites
+
+Schemic targets these versions. SurrealQL differs across SurrealDB majors, so the version matters.
+
+<CompatBadges items={["SurrealDB server 3.x", "surrealdb JS SDK 2.x", "Zod 4", "TypeScript 5.x", "Node 18+ or Bun"]} />
+
+<Callout variant="note" title="Alpha software">
+Schemic is `0.1.0-alpha`. The API still changes between releases. Pin a version and read the [changelog](/docs/resources/changelog) before upgrading.
+</Callout>
+
+## Start here
+
+<StartCard title="Quickstart: your first schema and migration" href="/docs/quickstart" variant="primary" />
+<StartCard title="Concept: the encoded and decoded sides" href="/docs/concepts/app-and-wire" variant="secondary" />
+
+## How these docs are organized
+
+- **[Quickstart](/docs/quickstart)** walks you from an empty directory to a running migration. Start here if you have never used the library.
+- **Concepts** explain *why* the library works the way it does: the two channels, codecs, how a schema becomes DDL, and the migration model.
+- **Guides** are task-focused: define a table, model relationships, run migrations, adopt an existing database.
+- **Reference** is the exhaustive lookup: every `s` builder, field method, definer, type, and CLI command.
+
+<NextSteps items={[
+  { title: "Quickstart", description: "Define a schema and run your first migration.", href: "/docs/quickstart" },
+  { title: "The encoded and decoded sides", description: "Understand App vs Wire and encode vs decode.", href: "/docs/concepts/app-and-wire" },
+  { title: "Define a table", description: "The how-to for everyday schema work.", href: "/docs/guides/define-a-table" }
+]} />

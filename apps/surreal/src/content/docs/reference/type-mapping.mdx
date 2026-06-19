@@ -1,0 +1,74 @@
+---
+title: Type mapping
+description: The complete mapping from the s schema builders to SurrealQL types, with support status — what is fully supported, what is lossy, and which schema features are not yet covered.
+---
+
+This is the exhaustive matrix from each `s` builder to its SurrealQL `TYPE`, with a support status. For builder signatures see [Schema builders](/docs/reference/builders); for how types compose into DDL see [from schema to DDL](/docs/concepts/schema-to-ddl).
+
+## Field types
+
+<MappingTable rows={[
+  { sz: "s.string()", type: "string", status: "ok" },
+  { sz: "s.boolean()", type: "bool", status: "ok" },
+  { sz: "s.number()", type: "number", status: "ok" },
+  { sz: "s.int() / int32() / uint32()", type: "int", status: "ok" },
+  { sz: "s.float()", type: "float", status: "ok" },
+  { sz: "s.bigint()", type: "int", status: "ok", notes: "Stored as a SurrealDB int." },
+  { sz: "s.decimal()", type: "decimal", status: "ok" },
+  { sz: "s.datetime()", type: "datetime", status: "ok", notes: "Codec: Date <-> DateTime." },
+  { sz: "s.duration()", type: "duration", status: "ok", notes: "Native Duration, no conversion." },
+  { sz: "s.uuid()", type: "uuid", status: "ok", notes: "Codec: string <-> Uuid." },
+  { sz: "s.bytes()", type: "bytes", status: "ok", notes: "Uint8Array; normalizes ArrayBuffer on decode." },
+  { sz: "s.file()", type: "file", status: "ok", notes: "Native FileRef." },
+  { sz: "s.geometry(kind)", type: "geometry<kind>", status: "ok" },
+  { sz: "User.record()", type: "record<user>", status: "ok", notes: "Codec: record link, built from the imported table def." }
+]} />
+
+## String formats
+
+Each is a `string` carrying an `ASSERT`. The full list is in [Schema builders](/docs/reference/builders#string-formats).
+
+<MappingTable rows={[
+  { sz: "s.email()", type: "string", status: "ok", notes: "ASSERT string::is_email($value)." },
+  { sz: "s.url() / ipv4() / ipv6() / semver() / …", type: "string", status: "ok", notes: "ASSERT the matching string::is_* check." }
+]} />
+
+## Structural types
+
+<MappingTable rows={[
+  { sz: "s.object({ ... })", type: "object", status: "ok", notes: "Each key becomes a DEFINE FIELD." },
+  { sz: "s.array(el, { max })", type: "array<el>", status: "ok" },
+  { sz: "s.set(el)", type: "set<el>", status: "ok" },
+  { sz: "s.record(k, v) / s.map(...)", type: "object", status: "ok", notes: "A keyed map." },
+  { sz: "s.tuple([...])", type: "array", status: "partial", notes: "Stored as an array; per-position types validate in app." },
+  { sz: "s.union([...]) / discriminatedUnion(...)", type: "<a> | <b>", status: "ok" },
+  { sz: "s.literal(v) / enum([...])", type: "<value> | union", status: "ok" },
+  { sz: "s.intersection(a, b)", type: "object", status: "ok", notes: "Merged object types." },
+  { sz: "s.lazy(() => ...)", type: "(recursive)", status: "ok" },
+  { sz: "s.any() / unknown()", type: "any", status: "ok" }
+]} />
+
+## Modifiers
+
+<MappingTable rows={[
+  { sz: ".optional()", type: "option<T>", status: "ok" },
+  { sz: ".nullable()", type: "T | null", status: "ok" },
+  { sz: ".array()", type: "array<T>", status: "ok" },
+  { sz: ".loose()", type: "FLEXIBLE object", status: "ok" }
+]} />
+
+## Not yet covered
+
+These SurrealQL features are on the roadmap but not expressible in the schema today. Do not rely on them yet:
+
+- **Record references with cascade**: `record<...> REFERENCE ... ON DELETE`.
+- **Full-text and vector indexes**: only standard and unique indexes are emitted.
+- **`DEFINE PARAM` and `DEFINE SEQUENCE`**.
+
+One round-trip caveat: [`schemic pull`](/docs/guides/adopt-existing-database) reconstructs `s.email()` and `s.uuid()` fields from the database as a plain `string` with the matching `ASSERT`, not as the original codec field, because introspection sees only the DDL.
+
+## Where to go next
+
+- [Schema builders](/docs/reference/builders) — the builder signatures.
+- [From schema to DDL](/docs/concepts/schema-to-ddl) — how these compose.
+- [Codecs](/docs/concepts/codecs) — the conversions behind the codec types.

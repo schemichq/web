@@ -1,0 +1,68 @@
+---
+title: Sync without migrations
+description: Apply a Schemic schema directly to a database with schemic push — fast iteration without migration files, a dry-run preview, and controlling whether stale objects are pruned.
+---
+
+`schemic push` (alias `sync`) applies your schema straight to the database, no migration files involved. It is the fast-iteration counterpart to [`gen` + `migrate`](/docs/guides/migrations): you get the schema in place immediately, at the cost of a versioned history.
+
+Use it for local development and scratch databases. For shared or production databases, where you want a reviewable, reversible trail, use migrations instead.
+
+## Push the current schema
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic push
+```
+
+</CodeBlock>
+
+`push` diffs your schema against the live database and applies the difference declaratively. There is no migration file and no snapshot to advance — the database ends up matching your schema directly.
+
+## Preview first with a dry run
+
+`--dry-run` shows what `push` would change without touching the database:
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic push --dry-run
+```
+
+</CodeBlock>
+
+Run this before pushing to an unfamiliar database, so a destructive change does not surprise you.
+
+## Control pruning
+
+By default `push` makes the database match your schema exactly, which means **removing** objects that exist in the database but not in your schema. To apply only additions and changes, keep stale objects with `--no-prune`:
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic push --no-prune
+```
+
+</CodeBlock>
+
+<Callout variant="caution" title="push prunes by default">
+A plain `push` drops tables, fields, and indexes that are not in your schema. On a database you do not own end-to-end, run `--dry-run` first, or use `--no-prune`.
+</Callout>
+
+## Watch and re-push
+
+`--watch` re-pushes whenever your schema files change — a tight loop while designing a schema locally:
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic push --watch
+```
+
+</CodeBlock>
+
+## Where to go next
+
+- [Generate & run migrations](/docs/guides/migrations) — the versioned alternative.
+- [The migration model](/docs/concepts/migrations-model) — push vs migrate vs pull.
+- [Adopt an existing database](/docs/guides/adopt-existing-database) — the reverse direction, `pull`.

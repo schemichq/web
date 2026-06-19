@@ -1,0 +1,118 @@
+---
+title: Model relationships
+description: Connect records in Schemic — direct record links with s.recordId, and graph edges with defineRelation, RELATE, from, and to.
+---
+
+SurrealDB offers two ways to relate records, and Schemic models both. Use a **record link** when one record points at another; use a **graph edge** when the connection itself is a record that can carry its own data. This guide covers each.
+
+## Link to another record
+
+A record link is a field whose value is the id of another record. Import the target table and call its `.record()` method, so the table name lives only in that table's definition:
+
+<CodeBlock title="schema.ts" lang="ts">
+
+```ts
+import { s, defineTable } from "@schemic/surrealdb";
+import { User } from "./user";
+
+export const Post = defineTable("post", {
+  id: s.string(),
+  title: s.string(),
+  author: User.record(),
+});
+```
+
+</CodeBlock>
+
+produces:
+
+<CodeBlock title="Generated DDL" lang="surql">
+
+```surql
+DEFINE TABLE post TYPE NORMAL SCHEMAFULL;
+DEFINE FIELD title ON TABLE post TYPE string;
+DEFINE FIELD author ON TABLE post TYPE record<user>;
+```
+
+</CodeBlock>
+
+`author` is a `record<user>` on the wire: a `RecordId` pointing at a `user`. In app code it is the link itself; resolve it with a SurrealQL `FETCH` or a `SELECT` when you need the linked record.
+
+To store a list of links, add `.array()` — `User.record().array()`. To link to several tables, you have two equivalent spellings: `s.recordId([User, Service])` for a merged `record<user | service>`, or `User.record().or(Service.record())` for a distinct `record<user> | record<service>`. Both round-trip; the merged form reads cleaner.
+
+<Callout variant="caution" title="Reading a RecordId's table">
+A `RecordId`'s `table` is a `Table` object, not a string. Read the table name as `id.table.name` — `String(id.table)` does not give you what you expect.
+</Callout>
+
+## Create a graph edge
+
+When the relationship has its own identity or data — a `purchased` edge with a quantity, a `follows` edge with a timestamp — model it as an edge table with `defineRelation`. Chain `.from(...)` and `.to(...)` to set its endpoints:
+
+<CodeBlock title="schema.ts" lang="ts">
+
+```ts
+import { s, defineRelation, surql } from "@schemic/surrealdb";
+import { User } from "./user";
+import { Post } from "./post";
+
+export const Authored = defineRelation("authored", {
+  id: s.string(),
+  at: s.datetime().$default(surql`time::now()`),
+})
+  .from(User)
+  .to(Post);
+```
+
+</CodeBlock>
+
+produces:
+
+<CodeBlock title="Generated DDL" lang="surql">
+
+```surql
+DEFINE TABLE authored TYPE RELATION FROM user TO post SCHEMAFULL;
+DEFINE FIELD at ON TABLE authored TYPE datetime DEFAULT time::now();
+```
+
+</CodeBlock>
+
+`.from(User).to(Post)` produces `TYPE RELATION FROM user TO post`. The edge's `in` and `out` endpoints are implicit, like `id` — Schemic does not emit `DEFINE FIELD` for them, and `RelationDef` exposes them as typed `in` and `out`. Omit `.from`/`.to` to leave the relation unrestricted (`TYPE RELATION`).
+
+## Write and read an edge
+
+Create an edge with SurrealQL `RELATE`, and read it back with `decode` like any table:
+
+<CodeBlock lang="ts">
+
+```ts
+import { Surreal, RecordId } from "surrealdb";
+import { Authored } from "./schema/authored";
+
+const db = new Surreal();
+// ...connect...
+
+// in -> out, plus any edge fields ("at" is filled by its default here)
+await db.query("RELATE $author->authored->$post", {
+  author: new RecordId("user", "ada"),
+  post: new RecordId("post", "hello"),
+});
+
+// read edges back and decode them to app values
+const rows = await db.select("authored");
+const edges = rows.map((r) => Authored.decode(r));
+```
+
+</CodeBlock>
+
+## Which one to use
+
+| Use | When |
+|-----|------|
+| `User.record()` | A simple "belongs to" / "points at" link with no data of its own. |
+| `defineRelation(...)` | The connection is itself a record — it has fields, or many-to-many semantics you query as a graph. |
+
+## Where to go next
+
+- [Definers reference](/docs/reference/definers) — `defineRelation`, `.from`, `.to`, and endpoints.
+- [Encode & decode rows](/docs/guides/encode-decode-rows) — reading linked and edge records.
+- [Schema builders](/docs/reference/builders) — `s.recordId` and the structural types.

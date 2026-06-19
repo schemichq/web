@@ -1,0 +1,140 @@
+---
+title: Encode & decode rows
+description: Read and write SurrealDB rows as typed values using Schemic codecs with the surrealdb SDK — create, read, update, and handle invalid data safely.
+---
+
+Your table definition gives you `encode` and `decode`, the bridge between [app values and wire values](/docs/concepts/app-and-wire). This guide shows the four everyday operations against a live database with the `surrealdb` SDK. The rule throughout: **encode to write, decode to read.**
+
+The examples assume a connected client:
+
+<CodeBlock lang="ts">
+
+```ts
+import { Surreal } from "surrealdb";
+import { User } from "./schema/user";
+
+const db = new Surreal();
+await db.connect("ws://localhost:8000", {
+  namespace: "app",
+  database: "app",
+  auth: { username: "root", password: "root" },
+});
+```
+
+</CodeBlock>
+
+<Callout variant="caution" title="Write with db.query across the SDK/server skew">
+The `surrealdb` SDK is a 2.x major paired with a 3.x server. Its typed write helpers are version-sensitive: `db.create` with a *table-name string* fails, and `db.merge` does not exist. The form that always works is `db.query` with SurrealQL plus `encode`/`encodePartial` for the payload — this guide leads with it, and notes the typed-method alternatives that do work.
+</Callout>
+
+## Create a row
+
+`encode` produces the wire payload for a full insert. Fields with a database default are optional, so you omit them. Write it with a `CREATE ... CONTENT` query:
+
+<CodeBlock lang="ts">
+
+```ts
+const [[created]] = await db.query("CREATE user CONTENT $data", {
+  data: User.encode({ name: "Ada Lovelace", email: "ada@example.com" }),
+});
+```
+
+</CodeBlock>
+
+`db.query` returns one result set per statement, each an array of records — hence the double-destructure. `User.encode(...)` accepts the `Create` shape and returns a wire object: a `Date` you passed becomes a `DateTime`, a uuid string becomes a `Uuid`, and so on.
+
+For a record whose id you choose, the typed `db.create` also works when you pass a `RecordId` (not a string):
+
+<CodeBlock lang="ts">
+
+```ts
+import { RecordId } from "surrealdb";
+
+const created = await db.create(
+  new RecordId("user", "ada"),
+  User.encode({ name: "Ada Lovelace", email: "ada@example.com" }),
+); // returns the created record object
+```
+
+</CodeBlock>
+
+## Read a row
+
+`decode` validates a returned row and converts it to app values:
+
+<CodeBlock lang="ts">
+
+```ts
+import type { App } from "@schemic/surrealdb";
+
+const rows = await db.select("user");
+const users: App<typeof User>[] = rows.map((row) => User.decode(row));
+
+users[0].createdAt instanceof Date; // true
+```
+
+</CodeBlock>
+
+Always `decode` what you read. A raw row holds wire values (`DateTime`, `Uuid`); decoding turns them into the `Date`s and `string`s your code expects, and validates the row against your schema in the process.
+
+## Update a row
+
+For a partial update, `encodePartial` produces a wire payload where every field is optional — built for `MERGE`, `UPDATE`, and `PATCH`. Apply it with an `UPDATE ... MERGE` query:
+
+<CodeBlock lang="ts">
+
+```ts
+await db.query("UPDATE $id MERGE $patch", {
+  id: new RecordId("user", "ada"),
+  patch: User.encodePartial({ name: "Augusta Ada King" }),
+});
+```
+
+</CodeBlock>
+
+The typed builder form works too: `db.update(id).merge(User.encodePartial({ ... }))`.
+
+Send only the fields that changed. `encodePartial` runs the same codecs as `encode`, so a partial `{ lastSeenAt: new Date() }` still encodes the `Date` to a `DateTime`.
+
+<Callout variant="note" title="encode vs encodePartial">
+`encode` is for a whole new record (the `Create` shape — default fields optional). `encodePartial` is for changing part of an existing one (the `Update` shape — everything optional). Using `encode` for a partial update would demand fields you are not changing.
+</Callout>
+
+## Handle invalid data safely
+
+The throwing methods raise a `ZodError` on invalid input. The `safe*` variants return a result object instead, mirroring Zod's `safeParse`:
+
+<CodeBlock lang="ts">
+
+```ts
+const result = User.safeDecode(unknownRow);
+if (result.success) {
+  use(result.data);
+} else {
+  console.error(result.error.issues);
+}
+```
+
+</CodeBlock>
+
+`safeDecode`, `safeEncode`, and `safeEncodePartial` cover the three operations. For schemas with async refinements, use `decodeAsync` / `encodeAsync` / `encodePartialAsync`.
+
+## Convert a single value
+
+When you have one value rather than a whole row, the field schema itself exposes `.encode(value)` and `.decode(value)`:
+
+<CodeBlock lang="ts">
+
+```ts
+const createdAt = s.datetime();
+const wire = createdAt.encode(new Date()); // Date -> DateTime
+const app = createdAt.decode(wire);        // DateTime -> Date
+```
+
+</CodeBlock>
+
+## Where to go next
+
+- [The encoded and decoded sides](/docs/concepts/app-and-wire) — the model behind these methods.
+- [Codecs](/docs/concepts/codecs) — what each field converts, and writing custom codecs.
+- [Type utilities](/docs/reference/type-utilities) — `App`, `Wire`, `Create`, `Update`.

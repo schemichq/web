@@ -1,0 +1,34 @@
+---
+title: Changelog
+description: Notable changes to Schemic, newest first. The library is alpha, so breaking changes are expected and called out explicitly.
+---
+
+Notable changes to Schemic, newest first. Each entry is written from your side — what changes for code that uses the library.
+
+<Callout variant="caution" title="Alpha: expect breaking changes">
+Schemic is `0.1.0-alpha`. The API still changes between releases. Pin an exact version and read this page before upgrading. Breaking changes are marked **Breaking**.
+</Callout>
+
+## Unreleased
+
+### Changed
+
+- **`schemic pull` is now non-destructive.** It previews by default and only writes with `--write`, making surgical edits to your `.ts` files that preserve comments, imports, and untouched fields. A git-like guard refuses to clobber local-only definitions; use `--merge` to keep them or `--discard` to mirror the database exactly. **Breaking** for scripts that relied on `pull` writing immediately.
+- **`schemic push` replaces the old apply command** as the name for applying a schema directly to the database (alias `sync`). It prunes stale objects by default; pass `--no-prune` to apply additions and changes only.
+- **Migrations are idempotent.** Generated DDL uses `DEFINE ... OVERWRITE`, `REMOVE ... IF EXISTS`, and `ALTER`, so `schemic migrate` replays cleanly over a database changed out-of-band (for example by `push` or `pull`).
+
+### Added
+
+- **`schemic diff --ts`** renders a pending change as TypeScript, laid out the way `pull` edits your files, instead of SurrealQL.
+- **`schemic check`** replays your migrations in a throwaway engine and confirms they reproduce your schema — a CI guard against drift. It defaults to an ephemeral in-memory SurrealDB from your local `surreal` CLI.
+- **Baseline squashing** via `schemic gen --baseline --force`, collapsing existing migrations into one fresh baseline.
+
+### Fixed
+
+- **No more phantom migrations from cosmetic changes.** Diffing now normalizes both your schema and the database into one intermediate representation before comparing, so reordering the members of an enum or union no longer generates a migration.
+
+## Where to go next
+
+- [Quickstart](/docs/quickstart) — the current workflow end to end.
+- [The migration model](/docs/concepts/migrations-model) — the model behind these changes.
+- [CLI commands](/docs/reference/cli) — every command and flag at the current version.

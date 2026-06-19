@@ -1,0 +1,60 @@
+---
+title: Codecs
+description: Codecs convert field values between your app type and the SurrealDB wire type. Learn the built-in conversions, which types pass through unchanged, and how to define your own.
+---
+
+A codec is the rule that converts a single field between its [app value and its wire value](/docs/concepts/app-and-wire). When you call `decode` on a row, each field's codec runs in the wire-to-app direction; when you call `encode`, each runs app-to-wire. Most of Schemic's native types carry a codec so you never write the conversion by hand.
+
+## Codecs that transform the value
+
+For these four types the app value and the wire value are genuinely different objects, so the codec does real work:
+
+| Field | App value (`z.output`) | Wire value (`z.input`) | Notes |
+|-------|------------------------|------------------------|-------|
+| `s.datetime()` | `Date` | `DateTime` | The everyday case: work with native `Date`, store a SurrealDB `datetime`. |
+| `s.uuid()` | `string` | `Uuid` | A plain string in your code, a `Uuid` instance on the wire. |
+| `s.bytes()` | `Uint8Array` | bytes | Normalizes a database `ArrayBuffer` to a `Uint8Array` on decode. |
+| `User.record()` | record link | `RecordId` | A typed `record<...>` link. See [record links](/docs/guides/relationships). |
+
+These are where `encode` and `decode` earn their keep. Read a `datetime` field and you get a `Date`; write a `Date` and Schemic hands SurrealDB a `DateTime`.
+
+<Callout variant="caution" title="RecordId.table is an object">
+In the SurrealDB SDK a `RecordId`'s table is a `Table` object, not a string. Read it as `id.table.name`; calling `String(id.table)` does not give you the table name.
+</Callout>
+
+## Native types that pass through unchanged
+
+SurrealDB's other native types already arrive as their SDK class, so there is nothing to convert. For these the app value and the wire value are the same object — you store and read the SDK type directly:
+
+| Field | App value = Wire value |
+|-------|------------------------|
+| `s.duration()` | `Duration` |
+| `s.decimal()` | `Decimal` |
+| `s.file()` | `FileRef` |
+| `s.geometry(kind)` | `Geometry` |
+
+Treat these as "native types you hold as-is." `encode` and `decode` leave them untouched; they exist in the table so the DDL and validation are correct, not to reshape the value.
+
+## Writing a custom codec
+
+When you store a value in a shape SurrealDB understands but your app wants as something else, teach the field a codec with `.$surreal(type, codec)`. You give the wire type and a pair of functions:
+
+<CodeBlock lang="ts">
+
+```ts
+// Store money as a SurrealDB decimal, work with it as cents (a number) in app code.
+const amount = s.decimal().$surreal("decimal", {
+  decode: (wire) => Math.round(Number(wire) * 100), // wire -> app
+  encode: (cents) => new Decimal(cents / 100),       // app -> wire
+});
+```
+
+</CodeBlock>
+
+`decode` runs when you read, `encode` runs when you write — the same contract as the built-in codecs. This is the escape hatch for any mapping the native types don't cover.
+
+## Where to go next
+
+- [The encoded and decoded sides](/docs/concepts/app-and-wire) — the model these codecs implement.
+- [Encode & decode rows](/docs/guides/encode-decode-rows) — using codecs against a live database.
+- [Type mapping](/docs/reference/type-mapping) — every `s` type and its SurrealQL counterpart.

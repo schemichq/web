@@ -1,0 +1,78 @@
+---
+title: Detect & review drift
+description: See how your Schemic schema differs from a database before you change anything — preview migrations with schemic diff, render the delta as TypeScript or SurrealQL, and verify migrations in CI with schemic check.
+---
+
+Drift is any difference between your schema, your migrations, and the live database. Schemic gives you two commands to surface it before it bites: `schemic diff` previews the delta, and `schemic check` proves your migrations still reproduce your schema.
+
+## Preview the pending change
+
+`schemic diff` shows what a migration *would* contain, without writing one. By default it diffs your schema against the recorded snapshot:
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic diff
+```
+
+</CodeBlock>
+
+To diff against a running database instead — the real test of drift — add `--live`:
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic diff --live
+```
+
+</CodeBlock>
+
+This is the command to run before `gen` or `push`: it tells you exactly what will change.
+
+## See the delta as TypeScript
+
+By default `diff` renders the change as SurrealQL. Add `--ts` to render it as TypeScript instead, laid out the same way `pull` edits your files — useful when you think in `s.*`, not DDL:
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic diff --ts
+```
+
+</CodeBlock>
+
+<Callout variant="note" title="--ts needs a snapshot">
+An offline `diff --ts` compares against the recorded Struct snapshot. If there isn't one yet, record it with `schemic gen` (or `schemic pull --write`), or pass `--live` to diff against the database directly.
+</Callout>
+
+## Useful diff options
+
+| Flag | Effect |
+|------|--------|
+| `--live` | Diff against the running database instead of the snapshot. |
+| `--ts` | Render the delta as TypeScript rather than SurrealQL. |
+| `--down` | Show the rollback (reverse) direction. |
+| `--full` | Show the complete definitions, not only the delta. |
+| `--json` | Machine-readable output. |
+| `--watch` | Re-run the diff as your schema changes. |
+| `--pager` | Page long output. |
+
+## Verify migrations in CI
+
+`schemic check` replays your migrations in a throwaway engine and confirms the result matches your schema. It catches the dangerous kind of drift — a migration history that no longer reproduces your source of truth:
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic check
+```
+
+</CodeBlock>
+
+It exits non-zero on a mismatch, so it works directly as a CI gate. By default it runs against an ephemeral in-memory SurrealDB started from your local `surreal` CLI, leaving your real database untouched.
+
+## Where to go next
+
+- [Generate & run migrations](/docs/guides/migrations) — act on what `diff` shows you.
+- [Adopt an existing database](/docs/guides/adopt-existing-database) — pull drift back into code.
+- [CLI commands](/docs/reference/cli) — every flag for `diff` and `check`.

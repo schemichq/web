@@ -1,0 +1,127 @@
+---
+title: Constraints, defaults & permissions
+description: Add database-enforced rules to a Schemic field — assertions and string formats, defaults and computed values, read-only fields, and per-operation permissions.
+---
+
+A field carries more than a type. Schemic's `$`-prefixed methods attach SurrealQL clauses that SurrealDB enforces on every write, regardless of whether the write came through your app. This guide covers the four you reach for most: assertions, defaults, read-only, and permissions.
+
+All of these are clauses on a `DEFINE FIELD`; see [from schema to DDL](/docs/concepts/schema-to-ddl) for how they compose.
+
+## Assert a constraint
+
+Use `.$assert(expr)` to emit an `ASSERT` clause. The expression is raw SurrealQL written with the `surql` tag, and `$value` refers to the field's value:
+
+<CodeBlock title="schema.ts" lang="ts">
+
+```ts
+export const Product = defineTable("product", {
+  id: s.string(),
+  price: s.decimal().$assert(surql`$value > 0`),
+  sku: s.string().$assert(surql`string::len($value) = 12`),
+});
+```
+
+</CodeBlock>
+
+produces:
+
+<CodeBlock title="Generated DDL" lang="surql">
+
+```surql
+DEFINE TABLE product TYPE NORMAL SCHEMAFULL;
+DEFINE FIELD price ON TABLE product TYPE decimal ASSERT $value > 0;
+DEFINE FIELD sku ON TABLE product TYPE string ASSERT string::len($value) = 12;
+```
+
+</CodeBlock>
+
+For common rules, the [string formats](/docs/reference/builders) write the assertion for you — `s.email()` emits `ASSERT string::is_email($value)`, `s.url()` emits `ASSERT string::is_url($value)`, and so on. Reach for `.$assert` when no format fits.
+
+Zod's own constraint helpers are also available as `$`-methods that translate to SurrealQL: `.$min`, `.$max`, `.$length`, `.$regex`, `.$gt`, `.$gte`, `.$lt`, `.$lte`.
+
+## Set a default
+
+`.$default(expr)` emits a `DEFAULT` clause: a value SurrealDB applies when the field is absent on insert. It is usually a `surql` expression:
+
+<CodeBlock lang="ts">
+
+```ts
+createdAt: s.datetime().$default(surql`time::now()`),
+status: s.string().$default("draft"),
+```
+
+</CodeBlock>
+
+A field with a `$default` becomes **optional in the create shape**, because the database fills it — so you omit it when calling [`encode`](/docs/guides/encode-decode-rows).
+
+Two related clauses:
+
+- `.$defaultAlways()` emits `DEFAULT ALWAYS`, reapplying the default on update as well as insert.
+- `.$value(expr)` emits a `VALUE` clause that *always* computes the stored value from the expression, overriding any input.
+
+## Make a field read-only
+
+`.$readonly()` emits `READONLY`: SurrealDB allows the field on create but rejects any later change to it. Common for `createdAt`:
+
+<CodeBlock lang="ts">
+
+```ts
+createdAt: s.datetime().$default(surql`time::now()`).$readonly(),
+```
+
+</CodeBlock>
+
+## Restrict access with permissions
+
+`.$permissions(spec)` emits a field-level `PERMISSIONS` clause, controlling which record-level operations may touch the field. Pass an object keyed by operation, each value a `surql` condition:
+
+<CodeBlock title="schema.ts" lang="ts">
+
+```ts
+export const User = defineTable("user", {
+  id: s.string(),
+  email: s.email(),
+  ssn: s.string().$permissions({
+    select: surql`$auth.admin = true`,
+    update: false,
+  }),
+});
+```
+
+</CodeBlock>
+
+produces:
+
+<CodeBlock title="Generated DDL" lang="surql">
+
+```surql
+DEFINE TABLE user TYPE NORMAL SCHEMAFULL;
+DEFINE FIELD email ON TABLE user TYPE string ASSERT string::is_email($value);
+DEFINE FIELD ssn ON TABLE user TYPE string PERMISSIONS FOR select WHERE $auth.admin = true, FOR update NONE;
+```
+
+</CodeBlock>
+
+A `surql` condition becomes `FOR <op> WHERE <condition>`; `true` becomes full access for that operation, `false` becomes `NONE`. Table-level permissions work the same way via `.permissions(...)` on the table — see [the definers reference](/docs/reference/definers).
+
+<Callout variant="caution" title="Permissions are enforced by SurrealDB, not your app">
+Field and table permissions apply to record-authenticated sessions on the server. They are a real access-control boundary, so test them against the access level you actually use — not as a root connection, which bypasses them.
+</Callout>
+
+## Verify it
+
+Generate a migration and read the emitted clauses, or preview against a running database:
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic diff --live
+```
+
+</CodeBlock>
+
+## Where to go next
+
+- [Field methods reference](/docs/reference/field-methods) — every `$`-method and its clause.
+- [Indexes, events & functions](/docs/guides/indexes-events-functions) — table-level machinery.
+- [Define a table](/docs/guides/define-a-table) — the basics this builds on.

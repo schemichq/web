@@ -1,0 +1,106 @@
+---
+title: Schema builders
+description: Reference for the s schema builders — primitives, numbers, native SurrealDB types, string formats, record links, and structural types, each with its SurrealQL TYPE.
+---
+
+`s` is a drop-in for Zod's `z` that also records a SurrealQL type for each field. Use it anywhere you would use `z`. This page lists every builder and the `TYPE` it emits in DDL. For the conceptual side, see [from schema to DDL](/docs/concepts/schema-to-ddl); for the full type-by-type matrix with support status, see [type mapping](/docs/reference/type-mapping).
+
+## Primitives
+
+<SigTable id="primitives" title="Primitives" rows={[
+  { sig: "s.string()", type: "string", desc: "A UTF-8 string." },
+  { sig: "s.boolean()", type: "bool", desc: "A boolean." },
+  { sig: "s.number()", type: "number", desc: "Any numeric value; use int/float for a specific kind." },
+  { sig: "s.literal(v)", type: "<value>", desc: "An exact literal value." },
+  { sig: "s.enum([...])", type: "<a> | <b> | …", desc: "A union of string literals." }
+]} />
+
+## Numbers
+
+`s.int`, `s.float`, and friends share Zod's numeric base; the format decides the SurrealQL type.
+
+<SigTable id="numbers" title="Numbers" rows={[
+  { sig: "s.int()", type: "int", desc: "An integer." },
+  { sig: "s.float()", type: "float", desc: "A floating-point number." },
+  { sig: "s.int32()", type: "int", desc: "A 32-bit integer (validated in app)." },
+  { sig: "s.uint32()", type: "int", desc: "An unsigned 32-bit integer (validated in app)." },
+  { sig: "s.bigint()", type: "int", desc: "A bigint, stored as a SurrealDB int." },
+  { sig: "s.decimal()", type: "decimal", desc: "An arbitrary-precision Decimal (native, no conversion)." }
+]} />
+
+## Native SurrealDB types
+
+These map to SurrealDB's built-in types. `datetime`, `uuid`, and `bytes` convert between app and wire values (see [codecs](/docs/concepts/codecs)); the rest pass through as their SDK class.
+
+<SigTable id="native" title="Native types" rows={[
+  { sig: "s.datetime()", type: "datetime", desc: "Date (app) <-> DateTime (wire). Alias: s.date()." },
+  { sig: "s.duration()", type: "duration", desc: "A Duration (native, no conversion)." },
+  { sig: "s.uuid()", type: "uuid", desc: "string (app) <-> Uuid (wire)." },
+  { sig: "s.bytes()", type: "bytes", desc: "Uint8Array; normalizes a wire ArrayBuffer on decode." },
+  { sig: "s.file()", type: "file", desc: "A FileRef (native, no conversion)." },
+  { sig: "s.geometry(kind)", type: "geometry<kind>", desc: "A Geometry of the given kind (or geometry if omitted)." }
+]} />
+
+## String formats
+
+Each format is a `string` that emits the matching `ASSERT` in DDL, so SurrealDB enforces the rule on write. They fall in two groups.
+
+Backed by a Zod format:
+
+<SigTable id="formats-zod" title="Zod-backed formats" rows={[
+  { sig: "s.email()", type: "string", desc: "ASSERT string::is_email($value)." },
+  { sig: "s.url()", type: "string", desc: "ASSERT a valid URL." },
+  { sig: "s.uuid()", type: "uuid", desc: "See native types — uuid, not a plain string." },
+  { sig: "s.guid() / nanoid() / cuid() / cuid2() / ulid() / xid() / ksuid()", type: "string", desc: "ASSERT the matching id format." },
+  { sig: "s.ipv4() / ipv6() / cidrv4() / cidrv6()", type: "string", desc: "ASSERT the matching network format." },
+  { sig: "s.base64() / base64url() / e164() / jwt() / emoji()", type: "string", desc: "ASSERT the matching format." }
+]} />
+
+Plain string plus a `string::is_*` assertion:
+
+<SigTable id="formats-assert" title="Assertion-backed formats" rows={[
+  { sig: "s.alpha() / alphanum() / ascii() / numeric()", type: "string", desc: "ASSERT the matching string::is_* check." },
+  { sig: "s.semver() / hexadecimal()", type: "string", desc: "ASSERT the matching string::is_* check." },
+  { sig: "s.latitude() / longitude()", type: "string", desc: "ASSERT a valid coordinate." },
+  { sig: "s.ip() / domain()", type: "string", desc: "ASSERT a valid IP / domain." }
+]} />
+
+## Record links
+
+<SigTable id="records" title="Record links" rows={[
+  { sig: "User.record()", type: "record<user>", desc: "A link to a user record, from the imported table def (carries its id type)." },
+  { sig: "s.recordId([User, Service])", type: "record<user | service>", desc: "A link to one of several tables." },
+  { sig: "s.recordId()", type: "record", desc: "A link to any table." }
+]} />
+
+## Structural types
+
+<SigTable id="structural" title="Structural types" rows={[
+  { sig: "s.object({ ... })", type: "object", desc: "A nested object; each key becomes a DEFINE FIELD." },
+  { sig: "s.array(el, { max })", type: "array<el>", desc: "A list; optional max length." },
+  { sig: "s.set(el)", type: "set<el>", desc: "A set of unique elements." },
+  { sig: "s.record(k, v)", type: "object", desc: "A map keyed by k with values v." },
+  { sig: "s.tuple([...])", type: "array", desc: "A fixed-length, positionally-typed array." },
+  { sig: "s.union([...])", type: "<a> | <b>", desc: "A union of types." },
+  { sig: "s.discriminatedUnion(key, [...])", type: "<a> | <b>", desc: "A tagged union." },
+  { sig: "s.intersection(a, b)", type: "object", desc: "Merged object types." },
+  { sig: "s.lazy(() => ...)", type: "(recursive)", desc: "A self-referential schema." }
+]} />
+
+`s.union` / `s.intersection` also have chainable forms: `a.or(b)` builds a union (`a | b`) and `a.and(b)` an intersection. See [field methods](/docs/reference/field-methods#native-zod-methods).
+
+## Wrappers and escape hatches
+
+<SigTable id="wrappers" title="Wrappers & escape hatches" rows={[
+  { sig: ".optional()", type: "option<T>", desc: "The field may be absent." },
+  { sig: ".nullable()", type: "T | null", desc: "The field may be null." },
+  { sig: ".array()", type: "array<T>", desc: "A list of T." },
+  { sig: "s.any() / s.unknown()", type: "any", desc: "Any value; opts out of a specific type." },
+  { sig: "s.coerce.*", type: "(per base)", desc: "Coercing variant of a primitive." }
+]} />
+
+## Where to go next
+
+- [Field methods](/docs/reference/field-methods) — the `$`-clauses you chain onto these.
+- [Type mapping](/docs/reference/type-mapping) — every type with support status and notes.
+- [Definers](/docs/reference/definers) — `defineTable`, `defineRelation`, and the rest.

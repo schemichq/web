@@ -1,0 +1,120 @@
+---
+title: Define a table
+description: Define a SurrealDB table with Schemic — fields, the record id, schemafull vs schemaless, comments, and deriving new tables with pick, omit, partial, and extend.
+---
+
+`defineTable(name, fields)` creates a table definition: a Zod object whose fields carry SurrealQL metadata. This guide covers the everyday choices you make when defining one. For the conceptual background see [from schema to DDL](/docs/concepts/schema-to-ddl).
+
+## Define the fields
+
+Pass the table name and an object of fields built with [`s`](/docs/reference/builders), the drop-in for Zod's `z`:
+
+<CodeBlock lang="ts">
+
+```ts
+import { s, defineTable } from "@schemic/surrealdb";
+
+export const Post = defineTable("post", {
+  id: s.string(),
+  title: s.string(),
+  body: s.string(),
+  views: s.int(),
+  draft: s.boolean(),
+});
+```
+
+</CodeBlock>
+
+Each field is a real Zod schema, so `.optional()`, `.array()`, and refinements work as usual and carry through to the DDL — `.optional()` becomes `option<...>`, `.array()` becomes `array<...>`.
+
+## Choose the record id type
+
+The `id` field controls the type of the record id, not a normal column:
+
+- `id: s.string()` makes the id a `record<post, string>`.
+- Omit `id` entirely and SurrealDB assigns its own id; the type is `record<post>`.
+
+SurrealDB manages the id itself, so Schemic never emits a `DEFINE FIELD id`. Set `id` only to constrain the id type.
+
+## Schemafull or schemaless
+
+Tables are **schemafull** by default: SurrealDB rejects any field you did not define. Change that with a chained method:
+
+<CodeBlock lang="ts">
+
+```ts
+defineTable("event", { id: s.string(), name: s.string() })
+  .schemaless(); // accept arbitrary extra fields
+```
+
+</CodeBlock>
+
+| Method | DDL | Meaning |
+|--------|-----|---------|
+| `.schemafull()` | `SCHEMAFULL` | Only defined fields are allowed. The default. |
+| `.schemaless()` | `SCHEMALESS` | Any field is allowed; defined fields are still validated. |
+| `.typeAny()` | `TYPE ANY` | The table accepts records of any shape. |
+
+For a single object field that should accept arbitrary keys while staying on a schemafull table, use `.loose()` on that field instead (it emits `FLEXIBLE`).
+
+## Add a comment
+
+`.comment(text)` attaches a SurrealQL `COMMENT` to the table, which shows up in `INFO FOR DB`:
+
+<CodeBlock lang="ts">
+
+```ts
+defineTable("post", { id: s.string(), title: s.string() })
+  .comment("Blog posts authored by users.");
+```
+
+</CodeBlock>
+
+## Derive a table from another
+
+The Zod set operations return a *new* full table definition — with its own DDL and codecs — so you can build variants without repeating fields:
+
+<CodeBlock lang="ts">
+
+```ts
+const Post = defineTable("post", {
+  id: s.string(),
+  title: s.string(),
+  body: s.string(),
+  authorId: User.record(),
+});
+
+const PostSummary = Post.pick("id", "title");      // only id + title
+const PostDraft   = Post.omit("authorId");          // everything but authorId
+const PostPatch   = Post.partial();                 // every field optional
+const PostPlus    = Post.extend({ pinned: s.boolean() });
+```
+
+</CodeBlock>
+
+| Method | Result |
+|--------|--------|
+| `.pick(...keys)` | A table with only the named fields. |
+| `.omit(...keys)` | A table without the named fields. |
+| `.partial()` | A table with every field optional. |
+| `.extend({ ... })` | A table with extra fields added. |
+
+## Verify it
+
+Generate a migration to see the DDL your definition produces:
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic gen add_post
+```
+
+</CodeBlock>
+
+Then inspect the written `.surql` file, or use [`schemic diff`](/docs/guides/review-drift) to preview changes against a live database without writing anything.
+
+## Where to go next
+
+- [Constraints, defaults & permissions](/docs/guides/constraints-defaults-permissions) — `ASSERT`, `DEFAULT`, `PERMISSIONS`.
+- [Model relationships](/docs/guides/relationships) — record links and `RELATE` edges.
+- [Definers reference](/docs/reference/definers) — every option on `defineTable`.

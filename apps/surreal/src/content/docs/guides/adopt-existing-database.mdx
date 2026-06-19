@@ -1,0 +1,71 @@
+---
+title: Adopt an existing database
+description: Bring an existing SurrealDB database under Schemic with schemic pull — introspect the live schema into TypeScript, preview the changes, and merge them into your files without losing local work.
+---
+
+`schemic pull` runs the diff in reverse: it reads a live database's schema and writes matching `s.*` definitions into your TypeScript. Use it to adopt a database you did not define in Schemic, or to reconcile changes someone made directly on the server back into your code.
+
+## Preview the changes
+
+By default `pull` is non-destructive — it shows what it *would* write, without changing any file:
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic pull
+```
+
+</CodeBlock>
+
+It introspects the database and renders the difference against your current schema files, like a code-review diff. Nothing is written until you ask.
+
+## Write the changes
+
+Apply the preview with `--write`:
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic pull --write
+```
+
+</CodeBlock>
+
+`pull` makes surgical edits to your real `.ts` files: it adds and updates the definitions the database has, while preserving your comments, imports, and untouched fields. It does not rewrite a file from scratch.
+
+## Keep or discard local-only definitions
+
+When your files contain definitions the database does not have, `pull` follows a git-like "commit or stash" guard rather than silently clobbering your work. Two flags resolve it:
+
+| Flag | Effect |
+|------|--------|
+| `--merge` | Keep local-only entities (a table, function, or access definition that exists in your code but not the database), and apply the database's changes alongside them. |
+| `--discard` | Mirror the database exactly, dropping local-only definitions. |
+
+An *entity* here is one exported definition — a table, a function, an access rule. A single file can hold several, and `--merge` decides per entity.
+
+<Callout variant="note" title="Native codecs round-trip as strings on pull">
+Introspection sees the database's DDL, which does not record which fields you authored as `s.email()` or `s.uuid()`. Pulled string formats and uuids come back as a plain `string` with the matching `ASSERT`, not as the original codec field. Re-apply the codec by hand if you want the app-side conversion.
+</Callout>
+
+## A typical adoption flow
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic init            # scaffold config + database/ layout
+# edit schemic.config.ts to point at the existing database
+npx schemic pull            # preview the introspected schema
+npx schemic pull --write    # write it into database/schema/
+npx schemic gen baseline    # record a baseline migration for the current state
+```
+
+</CodeBlock>
+
+After this your existing database is fully described in TypeScript, and future changes flow through the normal [migration workflow](/docs/guides/migrations).
+
+## Where to go next
+
+- [The migration model](/docs/concepts/migrations-model) — how pull relates to migrate and push.
+- [Detect & review drift](/docs/guides/review-drift) — spot differences before pulling.
+- [CLI commands](/docs/reference/cli) — every flag for `pull`.

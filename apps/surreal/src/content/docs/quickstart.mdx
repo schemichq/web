@@ -1,0 +1,230 @@
+---
+title: Quickstart
+description: Go from an empty directory to a typed, migrated SurrealDB schema. Scaffold a project, generate and apply a migration, then read and write rows with full type safety.
+---
+
+By the end of this page you will have a SurrealDB schema written in TypeScript, a migration generated from it, that migration applied to a running database, and app code that reads and writes rows as typed values. It takes about ten minutes.
+
+This is a tutorial: follow every step in order and it works. The [guides](/docs/guides/define-a-table) cover variations once you are comfortable.
+
+## Prerequisites
+
+Install these first. SurrealQL differs across SurrealDB majors, so the versions matter.
+
+<CompatBadges items={["SurrealDB CLI 3.x", "Node 18+ or Bun", "A terminal"]} />
+
+- **SurrealDB 3.x** on your `PATH`. Check with `surreal version`.
+- **Node 18+** (or Bun). Check with `node --version`.
+
+<Step n={1} id="install" title="Create a project and install Schemic">
+
+<CommandTabs
+  npm={`mkdir blog && cd blog
+npm init -y
+npm install @schemic/cli @schemic/surrealdb zod`}
+  pnpm={`mkdir blog && cd blog
+pnpm init
+pnpm add @schemic/cli @schemic/surrealdb zod`}
+  yarn={`mkdir blog && cd blog
+yarn init -y
+yarn add @schemic/cli @schemic/surrealdb zod`}
+  bun={`mkdir blog && cd blog
+bun init -y
+bun add @schemic/cli @schemic/surrealdb zod`}
+/>
+
+`@schemic/cli` provides the `schemic` / `sc` CLI; `@schemic/surrealdb` is the SurrealDB driver (authoring + DDL); `zod` is a required peer. The `surrealdb` SDK ships with the driver — you import it directly only for app query code.
+
+<Callout variant="tip" title="Running the CLI">
+The examples below call the CLI with `npx schemic`. With Bun, use `bunx schemic`; with pnpm, `pnpm dlx schemic`.
+</Callout>
+
+</Step>
+
+<Step n={2} id="scaffold" title="Scaffold the project">
+
+<Terminal command="npx schemic init" output={`  + schemic.config.ts
+  + database/schema/tables/user.ts
+  + database/seed.ts
+  + database/migrations/meta/_snapshot.json
+  + .env.example
+
+✓ Initialized. Edit database/schema, then run \`schemic gen\`.`} />
+
+`init` writes a `schemic.config.ts` (where your database connection lives), a sample `user` schema, a seed file, and an empty migration snapshot. It never overwrites files that already exist.
+
+</Step>
+
+<Step n={3} id="start-db" title="Start a local SurrealDB">
+
+In a second terminal, start an in-memory database with root credentials that match the scaffolded config:
+
+<CodeBlock lang="bash">
+
+```bash
+surreal start --user root --pass root memory
+```
+
+</CodeBlock>
+
+Leave it running. The default `schemic.config.ts` connects to `ws://localhost:8000` with namespace `app` and database `app`, which is exactly what this command serves.
+
+</Step>
+
+<Step n={4} id="schema" title="Read the generated schema">
+
+Open `database/schema/tables/user.ts`. This is the single source of truth; the DDL below is derived from it.
+
+<CodeBlock title="database/schema/tables/user.ts" lang="ts">
+
+```ts
+import { s, defineTable, surql } from "@schemic/surrealdb";
+
+export const User = defineTable("user", {
+  id: s.string(),
+  name: s.string(),
+  email: s.email(),
+  createdAt: s.datetime().$default(surql`time::now()`).$readonly(),
+});
+```
+
+</CodeBlock>
+
+It generates this DDL:
+
+<CodeBlock title="Generated DDL" lang="surql">
+
+```surql
+DEFINE TABLE user TYPE NORMAL SCHEMAFULL;
+DEFINE FIELD name ON TABLE user TYPE string;
+DEFINE FIELD email ON TABLE user TYPE string ASSERT string::is_email($value);
+DEFINE FIELD createdAt ON TABLE user TYPE datetime DEFAULT time::now() READONLY;
+```
+
+</CodeBlock>
+
+Three things to notice, each of which you will use constantly:
+
+- `s.email()` is a string that emits an `ASSERT string::is_email($value)` constraint in the DDL. SurrealDB enforces it on write.
+- `s.datetime()` is a **codec field**: a `Date` in your TypeScript code, a `datetime` on the wire.
+- `.$default(...)` sets a database-side `DEFAULT` — here `time::now()`, written with the `surql` tag — and `.$readonly()` marks the field `READONLY`.
+
+</Step>
+
+<Step n={5} id="generate" title="Generate your first migration">
+
+`schemic gen` diffs your schema against the recorded snapshot and writes a migration for the difference.
+
+<Terminal command="npx schemic gen initial" output={`4 changes to migrate — 1 table, 3 fields.
+✓ database/migrations/20260613090000_initial.surql  (+4 up / 4 down)`} />
+
+The migration file contains the `DEFINE` statements above, wrapped so it can run forward (`migrate`) or backward (`rollback`). You commit these files to version control.
+
+</Step>
+
+<Step n={6} id="apply" title="Apply the migration">
+
+<Terminal command="npx schemic migrate" output={`  ↑ 20260613090000_initial
+
+✓ Applied 1 migration.`} />
+
+Confirm the state:
+
+<Terminal command="npx schemic status" output={`  ✓ applied  20260613090000_initial
+
+1 migration, 0 pending.`} />
+
+Your database now has the `user` table.
+
+</Step>
+
+<Step n={7} id="evolve" title="Evolve the schema">
+
+A schema change is an edit to your TypeScript. Add a `post` table next to `user`. Create `database/schema/tables/post.ts`:
+
+<CodeBlock title="database/schema/tables/post.ts" lang="ts">
+
+```ts
+import { s, defineTable, surql } from "@schemic/surrealdb";
+import { User } from "./user";
+
+export const Post = defineTable("post", {
+  id: s.string(),
+  title: s.string().$assert(surql`string::len($value) > 0`),
+  body: s.string(),
+  author: User.record(),
+  publishedAt: s.datetime().optional(),
+  createdAt: s.datetime().$default(surql`time::now()`).$readonly(),
+});
+```
+
+</CodeBlock>
+
+`User.record()` is a typed record link — a `record<user>` field on the wire — built from the imported `User` definition, so the table name lives only in `user.ts`. Generate and apply a migration for the change:
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic gen add_posts
+npx schemic migrate
+```
+
+</CodeBlock>
+
+`gen` writes a second migration containing only the new `post` table — it diffs against the snapshot, so it never re-defines `user`.
+
+</Step>
+
+<Step n={8} id="use" title="Read and write rows as typed values">
+
+Your schema also gives you codecs and types for app code. `encode` turns app values into a wire payload for a write; `decode` turns a database row back into app values.
+
+<CodeBlock title="app.ts" lang="ts">
+
+```ts
+import { Surreal } from "surrealdb";
+import { User } from "./database/schema/tables/user";
+import type { App } from "@schemic/surrealdb";
+
+const db = new Surreal();
+await db.connect("ws://localhost:8000", {
+  namespace: "app",
+  database: "app",
+  auth: { username: "root", password: "root" },
+});
+
+// encode() builds the wire payload — createdAt has a DB default, so you omit it.
+// db.query with CONTENT is the version-robust way to write; SurrealDB assigns the id.
+const [[created]] = await db.query("CREATE user CONTENT $data", {
+  data: User.encode({ name: "Ada Lovelace", email: "ada@example.com" }),
+});
+
+// decode() validates the returned row and converts wire values to app values.
+const ada: App<typeof User> = User.decode(created);
+
+console.log(ada.createdAt instanceof Date); // true — a Date, not a wire datetime
+```
+
+</CodeBlock>
+
+`User.encode(...)` is typed to the create shape (fields with a default are optional), and `App<typeof User>` is the decoded app type. The `createdAt` you read back is a JavaScript `Date`, decoded from the `datetime` SurrealDB stored.
+
+<Callout variant="note" title="Why db.query instead of db.create">
+The `surrealdb` SDK is a 2.x major paired with a 3.x server, so its typed write helpers (`db.create` with a table-name string, `db.merge`) don't line up with the server. `db.query` with SurrealQL plus `encode`/`encodePartial` for the payload is the form that always works. See [encode & decode rows](/docs/guides/encode-decode-rows) for the typed-method alternatives.
+</Callout>
+
+</Step>
+
+## What you built
+
+- A SurrealDB schema authored entirely in TypeScript.
+- Two migrations, generated by diffing that schema and committed to your repo.
+- App code that writes and reads rows as fully-typed values, with the wire/app conversion handled for you.
+
+## Next steps
+
+<NextSteps items={[
+  { title: "The encoded and decoded sides", description: "Understand App vs Wire and encode vs decode in depth.", href: "/docs/concepts/app-and-wire" },
+  { title: "Define a table", description: "Constraints, defaults, permissions, schemafull vs schemaless.", href: "/docs/guides/define-a-table" },
+  { title: "Generate & run migrations", description: "The full migration workflow: gen, migrate, rollback, status, check.", href: "/docs/guides/migrations" }
+]} />

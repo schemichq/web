@@ -1,0 +1,101 @@
+---
+title: Field methods
+description: Reference for the chainable field methods in Schemic — modifiers, the $-prefixed SurrealQL clauses (default, value, assert, readonly, permissions), constraint helpers, and escape hatches.
+---
+
+Every `s.*` field is chainable. This page is the complete list of methods. For how the `$`-clauses render, see [from schema to DDL](/docs/concepts/schema-to-ddl).
+
+## Two kinds of method: app-side and DDL
+
+The methods split by prefix, and the prefix tells you which side a method acts on:
+
+- **Non-`$` methods are native Zod.** `s.*` is a drop-in for `z.*`, so these behave exactly as in Zod — they shape the **app-side** value and its validation.
+- **`$`-prefixed methods are Schemic's.** They attach a SurrealQL clause to the **`DEFINE FIELD`** — the database side.
+
+The two do not bridge; each side is explicit. Where Zod and SurrealDB have a similar concept, there are two distinct methods:
+
+| App-side (native Zod, non-`$`) | Database-side (`$`-prefixed) |
+|--------------------------------|------------------------------|
+| `.readonly()` — TS-immutable output | `.$readonly()` — SurrealDB `READONLY` |
+| `.describe()` / `.meta()` — Zod metadata | `.$comment()` — DDL `COMMENT` |
+| `.refine()` / `.check()` — app-side validation | `.$assert()` — DDL `ASSERT` |
+
+<Callout variant="caution" title="App-side checks are not database constraints">
+A native check or transform runs only when you parse in TypeScript — it does not change the DDL type or add a database constraint. `s.email().refine(...)` still emits exactly `string ASSERT string::is_email($value)`; the `.refine` is app-side only. To enforce a rule in the database, use `.$assert(...)`.
+</Callout>
+
+## Native Zod methods
+
+These delegate to the underlying Zod schema and act on the app side. They are available on any `s.*` field:
+
+`refine`, `superRefine`, `check`, `overwrite`, `transform`, `pipe`, `brand`, `readonly`, `describe`, `meta`, plus `optional`, `nullable`, `nullish`, `array`, `default`, `prefault`, `catch`, `loose`, `strict`.
+
+Two combinators build composite types:
+
+| Method | Result | DDL `TYPE` |
+|--------|--------|-----------|
+| `.or(other)` | union | `a \| b` |
+| `.and(other)` | intersection | merged object |
+
+<Callout variant="note" title="transform is one-way; writing needs a codec">
+`transform` and `pipe` change only the decoded `App` value, not the stored wire type. A bare `transform` is one-directional, so to *write* a transformed field you need a bidirectional codec via `.$surreal(type, codec)`. A wire type SurrealDB cannot represent is rejected when the DDL is emitted; `.$surreal` is the escape hatch.
+</Callout>
+
+## Modifiers
+
+These shape the field's type. They carry through to both the TypeScript type and the DDL.
+
+| Method | DDL effect | Description |
+|--------|-----------|-------------|
+| `.optional()` | `option<T>` | The field may be absent. |
+| `.nullable()` | `T \| null` | The field may be `null`. |
+| `.array()` | `array<T>` | A list of the field's type. |
+| `.loose()` | `FLEXIBLE` | On an object field, allow arbitrary extra keys. |
+
+## SurrealQL clauses
+
+Each `$`-method adds one clause to the field's `DEFINE FIELD`. Expressions are written with the `surql` tag; `$value` refers to the field's value.
+
+| Method | DDL clause | Description |
+|--------|-----------|-------------|
+| `.$default(expr)` | `DEFAULT expr` | Value applied on insert when the field is absent. Makes the field optional in the create shape. |
+| `.$defaultAlways()` | `DEFAULT ALWAYS` | Reapply the default on update as well as insert. |
+| `.$value(expr)` | `VALUE expr` | Always compute the stored value from the expression, overriding input. |
+| `.$computed(expr)` | `COMPUTED expr` | A computed (read-only, derived) field. |
+| `.$assert(expr)` | `ASSERT expr` | A constraint SurrealDB enforces on write. |
+| `.$readonly()` | `READONLY` | Allowed on create, rejected on later change. |
+| `.$comment(text)` | `COMMENT "text"` | Attach a comment to the field. |
+| `.$permissions(spec)` | `PERMISSIONS FOR ... WHERE ...` | Per-operation access control (`select`, `create`, `update`). |
+
+## Constraint helpers
+
+These translate Zod-style constraints into SurrealQL `ASSERT` clauses.
+
+| Method | Applies to | Asserts |
+|--------|-----------|---------|
+| `.$min(n)` / `.$max(n)` | numbers | lower / upper bound |
+| `.$gt(n)` / `.$gte(n)` / `.$lt(n)` / `.$lte(n)` | numbers | strict / inclusive comparison |
+| `.$length(n)` | strings, arrays | exact length |
+| `.$regex(re)` | strings | pattern match |
+
+## Indexing
+
+| Method | DDL | Description |
+|--------|-----|-------------|
+| `.index()` | `DEFINE INDEX ... FIELDS <field>` | A single-field index. |
+| `.unique()` | `DEFINE INDEX ... UNIQUE` | A single-field unique index. |
+
+For composite indexes, use the table-level `.index(name, fields, opts)` — see [definers](/docs/reference/definers).
+
+## Escape hatches
+
+| Method | Description |
+|--------|-------------|
+| `.$surreal(type, codec)` | Set an explicit wire `type` and a custom `{ encode, decode }` codec. See [writing a custom codec](/docs/concepts/codecs#writing-a-custom-codec). |
+| `.$internal()` | Mark the field internal: it exists on the table (so schemafull writes succeed) but grants no record-user access (`PERMISSIONS NONE`). |
+
+## Where to go next
+
+- [Schema builders](/docs/reference/builders) — the field types these chain onto.
+- [Constraints, defaults & permissions](/docs/guides/constraints-defaults-permissions) — the how-to.
+- [Codecs](/docs/concepts/codecs) — custom codecs via `.$surreal`.

@@ -1,0 +1,75 @@
+---
+title: Type utilities
+description: Reference for Schemic's type helpers and codec methods — App, Wire, Create, and Update, and the encode, decode, and encodePartial methods with their safe and async variants.
+---
+
+A table definition gives you four static types and a set of codec methods. The types describe the same schema from different angles; the methods move values between the [encoded and decoded sides](/docs/concepts/app-and-wire).
+
+## Types
+
+Import these from `@schemic/surrealdb` and apply them to a table or relation definition with `typeof`.
+
+| Type | Side | Shape | Meaning |
+|------|------|-------|---------|
+| `App<typeof T>` | decoded (`z.output`) | full | The value you work with in TypeScript — `Date`, `string`, etc. |
+| `Wire<typeof T>` | encoded (`z.input`) | full | A full row as SurrealDB stores and returns it. |
+| `Create<typeof T>` | decoded input | default fields optional | The argument to `encode` — a new record. |
+| `Update<typeof T>` | decoded input | all fields optional | The argument to `encodePartial` — a partial change. |
+
+<CodeBlock lang="ts">
+
+```ts
+import type { App, Create } from "@schemic/surrealdb";
+import { User } from "./schema/user";
+
+function render(user: App<typeof User>) { /* ... */ }
+function makeUser(): Create<typeof User> {
+  return { name: "Ada", email: "ada@example.com" }; // createdAt has a default
+}
+```
+
+</CodeBlock>
+
+Also exported for advanced use: `Shape`, `StandaloneDef`, `TableConfig`, `TableEvent`, `TableIndex`, `SurrealMeta`, `Expr`.
+
+## Codec methods
+
+These live on a table or relation definition.
+
+| Method | Direction | Input | Returns |
+|--------|-----------|-------|---------|
+| `decode(row)` | wire → app | a full row | `App<typeof T>` |
+| `encode(input)` | app → wire | `Create<typeof T>` | a full wire row |
+| `encodePartial(input)` | app → wire | `Update<typeof T>` | a partial wire payload |
+
+`decode` validates and converts a row you read; `encode` builds the payload for a `CREATE`/`CONTENT`; `encodePartial` builds a partial payload for a `MERGE`/`UPDATE`/`PATCH`.
+
+## Safe and async variants
+
+Each method has a non-throwing `safe*` variant returning `{ success, data }` or `{ success, error }`, and an `*Async` variant for schemas with async refinements.
+
+| Throwing | Non-throwing | Async |
+|----------|--------------|-------|
+| `decode` | `safeDecode` | `decodeAsync` |
+| `encode` | `safeEncode` | `encodeAsync` |
+| `encodePartial` | `safeEncodePartial` | `encodePartialAsync` |
+
+## Field-level codecs
+
+Any `s.*` field exposes `.encode(value)` and `.decode(value)` to convert a single value:
+
+<CodeBlock lang="ts">
+
+```ts
+const createdAt = s.datetime();
+createdAt.encode(new Date()); // Date -> DateTime
+createdAt.decode(wireValue);  // DateTime -> Date
+```
+
+</CodeBlock>
+
+## Where to go next
+
+- [The encoded and decoded sides](/docs/concepts/app-and-wire) — the model behind these types.
+- [Encode & decode rows](/docs/guides/encode-decode-rows) — using the codec methods with the SDK.
+- [Codecs](/docs/concepts/codecs) — what each field converts.

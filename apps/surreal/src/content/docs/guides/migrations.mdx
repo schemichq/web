@@ -1,0 +1,92 @@
+---
+title: Generate & run migrations
+description: The everyday migration workflow in Schemic — generate a migration from schema changes, apply it, check status, roll back, and verify migrations reproduce your schema.
+---
+
+Schemic generates migrations by diffing your schema against a recorded snapshot. This guide is the loop you run as you evolve a schema: change code, generate, apply. For the model behind it, see [the migration model](/docs/concepts/migrations-model).
+
+## Generate a migration
+
+Edit your schema, then run `schemic gen` with a name describing the change. `gen` diffs the schema against the snapshot and, if anything changed, writes a `<timestamp>_add_user_role.surql` file with forward and rollback bodies. When nothing changed it tells you so and writes nothing:
+
+<Terminal command="npx schemic gen add_user_role" output={`✓ No schema changes — nothing to generate.`} />
+
+Commit the generated `.surql` files. They are the reviewable, version-controlled record of how your schema evolved.
+
+## Apply pending migrations
+
+`schemic migrate` (alias `up`) applies every pending migration in order:
+
+<Terminal command="npx schemic migrate" output={`  ↑ 20260613090000_add_user_role
+
+✓ Applied 1 migration.`} />
+
+To apply only some, pass a count or a target:
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic migrate 1            # apply the next one
+npx schemic migrate --to 20260613090000_add_user_role  # up to and including this tag
+```
+
+</CodeBlock>
+
+## Check status
+
+`schemic status` shows which migrations are applied and which are pending:
+
+<Terminal command="npx schemic status" output={`  ✓ applied  20260601000000_initial
+  · pending  20260613090000_add_user_role
+
+2 migrations, 1 pending.`} />
+
+Add `--json` for machine-readable output. `status` also flags two drift conditions: a migration whose file changed after it was applied, and a migration recorded as applied whose file is now missing.
+
+## Roll back
+
+`schemic rollback` (alias `down`) reverts applied migrations newest-first, running each migration's `ELSE` (rollback) branch:
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic rollback            # revert the most recent
+npx schemic rollback 2          # revert the last two
+npx schemic rollback --to 20260601000000_initial  # revert everything after this tag
+```
+
+</CodeBlock>
+
+## Verify migrations reproduce the schema
+
+`schemic check` replays your migrations in a throwaway engine and confirms the result matches your current schema. It is the guard for CI — it catches a migration history that has drifted from your source of truth:
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic check
+```
+
+</CodeBlock>
+
+By default it spins up an ephemeral in-memory SurrealDB from your local `surreal` CLI, so it never touches your real database. Add `--schema` to check the schema specifically. See [configuration](/docs/reference/configuration) for pointing the replay at a different engine.
+
+## Squash into a baseline
+
+As migrations accumulate, collapse them into one fresh baseline:
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic gen --baseline --force
+```
+
+</CodeBlock>
+
+This regenerates the whole schema from an empty snapshot as a single migration, replacing the existing files. Use it to tidy history before a release.
+
+## Where to go next
+
+- [Sync without migrations](/docs/guides/sync-without-migrations) — apply changes directly with `push`.
+- [Detect & review drift](/docs/guides/review-drift) — `diff` and `check` in depth.
+- [CLI commands](/docs/reference/cli) — every flag for `gen`, `migrate`, `rollback`, `status`, `check`.

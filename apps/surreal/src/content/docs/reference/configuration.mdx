@@ -1,0 +1,109 @@
+---
+title: Configuration
+description: Reference for schemic.config.ts — the connections map, the surrealConnection factory and its fields, environment handling, and schemic check replay options.
+---
+
+The CLI reads `schemic.config.ts` from your project root. Author it with `defineConfig` for full type-checking; `schemic init` scaffolds one for you.
+
+Config is **connections-only**: a map of named connections, each built by a driver's connection factory. There is no top-level `driver` string — the driver is the factory you call.
+
+<CodeBlock title="schemic.config.ts" lang="ts">
+
+```ts
+import { defineConfig } from "@schemic/core/config";
+import { surrealConnection } from "@schemic/surrealdb";
+
+export default defineConfig({
+  connections: {
+    default: surrealConnection({
+      schema: "./database/schema",
+      url: process.env.SURREAL_URL ?? "ws://127.0.0.1:8000/rpc",
+      namespace: process.env.SURREAL_NAMESPACE ?? "app",
+      database: process.env.SURREAL_DATABASE ?? "app",
+      username: process.env.SURREAL_USER,
+      password: process.env.SURREAL_PASS,
+      authLevel: "root", // "root" | "namespace" | "database"
+    }),
+  },
+});
+```
+
+</CodeBlock>
+
+## Top-level
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `connections` | record | A map of named connections. The CLI uses `default` unless told otherwise; add more for multi-tenant or multi-database setups. |
+
+Each entry comes from a driver factory — `surrealConnection(...)` from `@schemic/surrealdb` (other drivers export their own, e.g. `postgresConnection`).
+
+## `surrealConnection(...)`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `schema` | string | Directory of schema modules, loaded recursively. Usually `./database/schema`. |
+| `url` | string | Endpoint, e.g. `ws://127.0.0.1:8000/rpc`. |
+| `namespace` | string | Target namespace. |
+| `database` | string | Target database. |
+| `username` | string? | Auth username. |
+| `password` | string? | Auth password. |
+| `authLevel` | `"root" \| "namespace" \| "database"` | Level to sign in at. Default `root`. |
+| `migrations` | string? | Directory of `.surql` migrations and their `meta/` snapshot. Defaults relative to `schema`. |
+| `check` | object? | `schemic check` replay overrides — see below. |
+
+## Environment variables
+
+Values are **explicit** — read environment variables yourself in the config (`process.env.SURREAL_URL ?? "…"`), as the scaffold does. There is no implicit `SURREAL_*` magic; the names are a convention you choose. The companion `.env.example` documents them:
+
+<CodeBlock lang="bash">
+
+```bash
+SURREAL_URL=ws://127.0.0.1:8000/rpc
+SURREAL_NAMESPACE=app
+SURREAL_DATABASE=app
+SURREAL_USER=root
+SURREAL_PASS=root
+```
+
+</CodeBlock>
+
+CLI flags (`--url`, `--namespace`, …) override the resolved connection per command.
+
+## Check replay (`check`)
+
+`schemic check` replays your migrations in a throwaway engine and confirms they reproduce your schema. Set it per connection with `check.engine`:
+
+| `engine` | Behaviour |
+|----------|-----------|
+| `"auto"` (default) | Use the local `surreal` CLI for an ephemeral in-memory instance if present; otherwise fall back to a server. |
+| `"binary"` | Require the local `surreal` CLI; error if missing. |
+| `"remote"` | Always use a server, creating and dropping throwaway scratch databases. |
+| `{ backend, … }` | Run in-process via the optional `@surrealdb/node` package. |
+
+Alongside `engine`, `check` accepts `binary` (path to the `surreal` CLI, for the `auto`/`binary` engines) and `db` (a partial connection the `remote` engine uses for its throwaway scratch databases). The embedded object takes `backend` (`memory` — the default — `surrealkv`, `surrealkv+versioned`, or `rocksdb`), an optional `path` for the persistent backends, plus `capabilities`, `strict`, and query/transaction timeouts.
+
+<CodeBlock lang="ts">
+
+```ts
+default: surrealConnection({
+  schema: "./database/schema",
+  url: process.env.SURREAL_URL ?? "ws://127.0.0.1:8000/rpc",
+  namespace: "app",
+  database: "app",
+  // Always replay against a scratch server, never production:
+  check: { engine: "remote", db: { url: "ws://localhost:8000", namespace: "scratch" } },
+}),
+```
+
+</CodeBlock>
+
+<Callout variant="note" title="check never touches your real database">
+Even the `remote` engine spins up and drops scratch databases — it never reads or writes your configured connection. Point `check.db` at a local or scratch server to keep the replay off production.
+</Callout>
+
+## Where to go next
+
+- [CLI commands](/docs/reference/cli) — the flags that override these values.
+- [Generate & run migrations](/docs/guides/migrations) — `schemic check` in the workflow.
+- [Quickstart](/docs/quickstart) — the scaffolded config in context.

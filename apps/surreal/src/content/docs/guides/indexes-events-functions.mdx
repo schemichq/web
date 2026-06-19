@@ -1,0 +1,122 @@
+---
+title: Indexes, events & functions
+description: Add table-level machinery in Schemic — indexes for query performance and uniqueness, events that react to row changes, and reusable SurrealQL functions.
+---
+
+Beyond fields, a SurrealDB schema can carry indexes, events, and functions. Schemic defines all three from TypeScript so they live in the same source of truth and migrate alongside your tables.
+
+## Indexes
+
+An index speeds up lookups and can enforce uniqueness. Add one to a single field with `.index()` or `.unique()`:
+
+<CodeBlock title="schema.ts" lang="ts">
+
+```ts
+export const User = defineTable("user", {
+  id: s.string(),
+  email: s.email().unique(),
+  handle: s.string().index(),
+});
+```
+
+</CodeBlock>
+
+produces:
+
+<CodeBlock title="Generated DDL" lang="surql">
+
+```surql
+DEFINE TABLE user TYPE NORMAL SCHEMAFULL;
+DEFINE FIELD email ON TABLE user TYPE string ASSERT string::is_email($value);
+DEFINE INDEX user_email_idx ON TABLE user FIELDS email UNIQUE;
+DEFINE FIELD handle ON TABLE user TYPE string;
+DEFINE INDEX user_handle_idx ON TABLE user FIELDS handle;
+```
+
+</CodeBlock>
+
+For a composite index across several fields, declare it at the table level with `.index(name, fields, options)`:
+
+<CodeBlock lang="ts">
+
+```ts
+defineTable("event", {
+  id: s.string(),
+  calendarId: Calendar.record(),
+  startsAt: s.datetime(),
+})
+  .index("event_calendar_start", ["calendarId", "startsAt"], { unique: true });
+```
+
+</CodeBlock>
+
+`.index(name, fields, opts)` takes the index name, an array of field names, and options (`unique`, `count`). It emits `DEFINE INDEX <name> ON TABLE <table> FIELDS <fields>`.
+
+## Events
+
+An event runs SurrealQL when a row changes. Define one with `.event(name, { when?, then })`:
+
+<CodeBlock lang="ts">
+
+```ts
+defineTable("account", {
+  id: s.string(),
+  balance: s.decimal(),
+})
+  .event("log_overdraft", {
+    when: surql`$after.balance < 0`,
+    then: surql`CREATE overdraft SET account = $after.id, at = time::now()`,
+  });
+```
+
+</CodeBlock>
+
+This emits `DEFINE EVENT log_overdraft ON TABLE account WHEN $after.balance < 0 THEN ...`. The body can read `$before`, `$after`, `$event`, and `$value`. Omit `when` to fire on every change, and pass an array to `then` to run several statements.
+
+## Functions
+
+`defineFunction(name, args)` declares a reusable SurrealQL function. Args and the return type are `s` schemas, so they infer to SurrealQL types the same way fields do. Chain `.returns(...)` and `.body(...)`:
+
+<CodeBlock title="schema.ts" lang="ts">
+
+```ts
+import { s, defineFunction, surql } from "@schemic/surrealdb";
+
+export const greet = defineFunction("greet", { name: s.string() })
+  .returns(s.string())
+  .body(surql`RETURN "Hello, " + $name;`);
+```
+
+</CodeBlock>
+
+produces:
+
+<CodeBlock title="Generated DDL" lang="surql">
+
+```surql
+DEFINE FUNCTION fn::greet($name: string) -> string {
+    RETURN "Hello, " + $name;
+};
+```
+
+</CodeBlock>
+
+Call it from SurrealQL as `fn::greet("Ada")`. Add `.permissions(...)` to set who may run it and `.comment(...)` to document it.
+
+## Verify it
+
+Indexes, events, and functions show up in the generated migration. Preview them before writing:
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic diff --live
+```
+
+</CodeBlock>
+
+## Where to go next
+
+- [Definers reference](/docs/reference/definers) — `defineFunction`, table `.index`, and `.event`.
+- [The migration model](/docs/concepts/migrations-model) — how these changes are diffed and applied.
+- [Define a table](/docs/guides/define-a-table) — the table basics.

@@ -13,7 +13,13 @@ export default defineConfig({
   integrations: [mdx()],
   markdown: {
     // Brand syntax colors for plain ``` fences (CodeBlock shares this theme).
-    shikiConfig: { theme: brandShikiTheme },
+    // Alias postgresql/pgsql to Shiki's `sql` grammar so a `postgresql` fence
+    // highlights cleanly AND CodeBlock shows the branded "PostgreSQL" chip
+    // (mirrors surreal's surql -> sql).
+    shikiConfig: {
+      theme: brandShikiTheme,
+      langAlias: { postgresql: "sql", pgsql: "sql" },
+    },
   },
   vite: {
     plugins: [tailwindcss()],

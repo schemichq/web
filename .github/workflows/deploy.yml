@@ -66,12 +66,15 @@ jobs:
           bun-version: latest
       - run: bun install --frozen-lockfile
       - run: bun run --cwd apps/${{ matrix.app }} build
-      - uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: apps/${{ matrix.app }}
-          command: deploy
+      # Deploy with bun's wrangler (not cloudflare/wrangler-action, which shells
+      # out to npm and can't parse the apps' `workspace:*` deps). This only
+      # uploads the prebuilt ./dist per wrangler.jsonc — no app deps needed.
+      - name: Deploy ${{ matrix.app }}
+        working-directory: apps/${{ matrix.app }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: bunx wrangler@4 deploy
 
   deploy-worker:
     name: Deploy github-stars
@@ -80,10 +83,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # wrangler bundles the TypeScript worker; no separate build step needed.
-      - uses: cloudflare/wrangler-action@v3
+      - uses: oven-sh/setup-bun@v2
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: workers/github-stars
-          command: deploy
+          bun-version: latest
+      # wrangler bundles the TypeScript worker; no separate build step needed.
+      - name: Deploy github-stars
+        working-directory: workers/github-stars
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: bunx wrangler@4 deploy

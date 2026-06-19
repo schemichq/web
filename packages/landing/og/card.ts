@@ -37,6 +37,7 @@ interface Theme {
   ddl: string; // "native DDL" / "SurrealQL DDL"
   accent: string;
   accent2: string;
+  markDepth: string; // the block-S logo's depth/shadow stroke (dark accent)
   canvas: string;
   surface: string;
   codeBg: string;
@@ -55,6 +56,7 @@ const THEMES: Record<CardKey, Theme> = {
     // theme-tied brand mark), NOT amber.
     accent: "#d8d6da",
     accent2: "#98969a",
+    markDepth: "#46454b",
     canvas: "#0c0d10",
     surface: "#181a20",
     codeBg: "#0e0f13",
@@ -69,6 +71,7 @@ const THEMES: Record<CardKey, Theme> = {
     ddl: "SurrealQL DDL",
     accent: "#9600ff",
     accent2: "#ff85d6",
+    markDepth: "#45007a",
     canvas: "#0e0c14",
     surface: "#16131f",
     codeBg: "#100d18",
@@ -83,6 +86,7 @@ const THEMES: Record<CardKey, Theme> = {
     ddl: "native DDL",
     accent: "#4aa3df",
     accent2: "#5ec8e8",
+    markDepth: "#1a4a6b",
     canvas: "#0a0e14",
     surface: "#121823",
     codeBg: "#0b0f16",
@@ -107,29 +111,23 @@ const txt = (
 function tree(t: Theme): El {
   const gradient = `linear-gradient(120deg, ${t.accent}, ${t.accent2})`;
 
+  // The block-S brand mark, themed per card (gradient face over a depth shadow),
+  // as a data-URI SVG so satori rasterizes the real logo — matching the site nav.
+  const markSvg =
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 126 136" fill="none">` +
+    `<defs><linearGradient id="m" x1="0" y1="0" x2="126" y2="136" gradientUnits="userSpaceOnUse">` +
+    `<stop offset="0" stop-color="${t.accent}"/><stop offset="1" stop-color="${t.accent2}"/>` +
+    `</linearGradient></defs>` +
+    `<path d="M96 28l-62 0 0 38 52 0 0 38-62 0" transform="translate(6 8)" fill="none" stroke="${t.markDepth}" stroke-width="24" stroke-linecap="square"/>` +
+    `<path d="M96 28l-62 0 0 38 52 0 0 38-62 0" fill="none" stroke="url(#m)" stroke-width="24" stroke-linecap="square"/>` +
+    `</svg>`;
+  const markSrc = `data:image/svg+xml;base64,${Buffer.from(markSvg).toString("base64")}`;
+
   const brand = h(
     { display: "flex", alignItems: "center", gap: 16 },
     [
-      h(
-        {
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: 56,
-          height: 56,
-          borderRadius: 16,
-          backgroundImage: gradient,
-        },
-        [
-          txt("S", {
-            fontFamily: "Geist",
-            fontSize: 34,
-            fontWeight: 600,
-            color: "#ffffff",
-          }),
-        ],
-      ),
-      txt("Schemic", {
+      { type: "img", props: { src: markSrc, width: 54, height: 58 } },
+      txt("schemic", {
         fontFamily: "JetBrains Mono",
         fontSize: 30,
         fontWeight: 600,

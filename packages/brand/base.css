@@ -2,12 +2,12 @@
  * Schemic brand — BASE (Tailwind v4 @theme).
  *
  * Structural + SEMANTIC tokens, theme-neutral. An app imports this BASE plus
- * exactly ONE theme file (theme-schemic / theme-surrealdb / theme-postgres),
+ * exactly ONE theme file (theme-neutral / theme-surrealdb / theme-postgres),
  * which overrides the accent + canvas/surface/ink/border family so the same
  * markup re-themes per subdomain:
  *
  *   @import "@schemic/brand/base.css";
- *   @import "@schemic/brand/theme-schemic.css";
+ *   @import "@schemic/brand/theme-neutral.css";
  *
  * This file is ONLY an @theme block (no base/body rules) so it is safe to
  * import into multiple Tailwind roots. Values here are neutral defaults — a

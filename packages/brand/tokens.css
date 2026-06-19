@@ -8,7 +8,7 @@
  *
  * NEW WORK should use the theme system instead:
  *   @import "@schemic/brand/base.css";
- *   @import "@schemic/brand/theme-surrealdb.css";  // or theme-schemic / theme-postgres
+ *   @import "@schemic/brand/theme-surrealdb.css";  // or theme-neutral / theme-postgres
  *
  * Source of truth: design/website.pen (Pencil) variables, Concept 7.1 (dark).
  * This file is ONLY an @theme block (no base/body rules) so it is safe to

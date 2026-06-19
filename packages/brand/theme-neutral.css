@@ -1,14 +1,15 @@
 /*
  * Schemic theme — NEUTRAL (no flavor). The hub's (schemic.dev) own theme:
- * the warm graphite canvas from theme-schemic, but a MONOCHROME white→gray
- * accent (NO hue) so the hub reads as database-agnostic. Selecting a database
+ * a warm graphite canvas with a MONOCHROME white→gray accent (NO hue) so the
+ * hub reads as database-agnostic. This is the master/agnostic identity (there
+ * is no separate amber theme). Selecting a database
  * in the picker cross-fades from this neutral gray toward the driver's color
  * ("no flavor → flavored"). Pair with base.css:
  *   @import "@schemic/brand/base.css";
  *   @import "@schemic/brand/theme-neutral.css";
  */
 @theme {
-  /* Surfaces — warm graphite (unchanged from theme-schemic) */
+  /* Surfaces — warm graphite */
   --color-canvas: #0c0d10;
   --color-canvas-2: #14151a;
   --color-surface: #181a20;

@@ -21,7 +21,7 @@ interface Props {
 const {
   title = "Schemic — Schema as code, for any database",
   description =
-    "Define your database schema once in TypeScript with s.* — a drop-in for Zod. Schemic generates your database's native DDL, validates at runtime, and manages migrations. SurrealDB and Postgres today; MySQL & more on the way.",
+    "Define your database schema once in the Zod you already know — Schemic turns it into native DDL, types, and migrations for any database.",
   activeDriver = null,
 } = Astro.props;
 
@@ -65,6 +65,7 @@ const themeStyle = t
     <link rel="canonical" href={canonical} />
 
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Schemic" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />

@@ -10,7 +10,7 @@ interface Props {
 
 const {
   title = "Schemic — Your SurrealDB schema, in the Zod you already know",
-  description = "Author SurrealDB schemas in TypeScript with Zod. Schemic generates the SurrealQL DDL, infers end-to-end types, and runs safe migrations.",
+  description = "Define your SurrealDB schema once in the Zod you already know — Schemic generates native DDL, types, and migrations for SurrealDB.",
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site);
@@ -28,6 +28,7 @@ const ogImage = new URL("/og/surrealdb.png", Astro.site);
     <link rel="canonical" href={canonical} />
 
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Schemic" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />

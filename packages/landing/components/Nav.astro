@@ -12,8 +12,14 @@ import NavDbPicker from "./NavDbPicker.astro";
 interface Props {
   /** Slug of the driver this site represents; null = agnostic hub. */
   activeDriver?: string | null;
+  /**
+   * Render a MINIMAL bar — brand only, no database picker / links / Get-started.
+   * Used on the /drivers chooser page, where a nav picker would be redundant
+   * (the page itself IS the database picker).
+   */
+  minimal?: boolean;
 }
-const { activeDriver = null } = Astro.props;
+const { activeDriver = null, minimal = false } = Astro.props;
 
 // Progressive-disclosure nav (Manuel's spec). The database picker is the primary
 // control: on the agnostic hub (no driver) it sits CENTERED as a prominent
@@ -64,7 +70,12 @@ const linkStates = paneStates.map((s) => ({
     <!-- center: the Docs/Examples links (revealed once a database is selected)
          sit beside the centered picker slot. The links row is desktop-only and
          hidden until selected; the center slot holds the picker on the hub. -->
-    <div class="flex items-center justify-self-center">
+    <div
+      class:list={[
+        "flex items-center justify-self-center",
+        { hidden: minimal },
+      ]}
+    >
       <div data-nav-links class="items-center gap-8">
         {/* Docs — resolves to the ACTIVE driver's docs. */}
         {
@@ -115,7 +126,12 @@ const linkStates = paneStates.map((s) => ({
     </div>
 
     <!-- right: actions -->
-    <div class="flex items-center gap-3 justify-self-end sm:gap-5">
+    <div
+      class:list={[
+        "flex items-center gap-3 justify-self-end sm:gap-5",
+        { hidden: minimal },
+      ]}
+    >
       <!-- picker home once a database is selected (desktop only; the picker is
            reparented here by Nav's script). Stays empty on mobile, where the
            picker remains centered. -->

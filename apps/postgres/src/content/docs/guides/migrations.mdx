@@ -62,12 +62,14 @@ npx schemic rollback 2          # revert the last two
 
 ## Seed data
 
-`schemic seed` runs your project's seed script (`database/seed.ts`) with a connected client — handy for populating a fresh database after migrating:
+Seeds live in `database/seed/` — TypeScript files that each export a default `(db) => Promise<…>` taking the connected client. `schemic seed` runs `index.ts` (or every seed in filename order if there is none); `schemic seed <name>` runs one; `--all` runs them all. A leading `NN-` prefix orders a seed but is not part of its name (`01-users.ts` is the seed `users`). Raw SQL files load into a seed via an import attribute — `import sql from "./schema.sql" with { type: "text" }` (typed by the scaffolded `seeds.d.ts`):
 
 <CodeBlock lang="bash">
 
 ```bash
-npx schemic seed
+npx schemic seed            # index.ts, or every seed
+npx schemic seed users      # one named seed
+npx schemic seed --all      # every seed, in filename order
 ```
 
 </CodeBlock>

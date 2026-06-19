@@ -29,8 +29,8 @@ The Postgres workflow is **author → diff → gen → migrate**, with `status`,
 
 <CommandRef
   id="new"
-  name="schemic new table <name>"
-  desc="Scaffold a starter defineTable module. Postgres' only standalone definable is the table; indexes and foreign keys are authored inside a table."
+  name="schemic new <kind> <name>"
+  desc="Scaffold a starter schema file at <schema>/<kind-folder>/<name>.ts — a realistic starter, not a bare stub. Postgres' only standalone kind is table → tables/; index and constraint throw a helpful 'authored inside a table' message, since indexes and foreign keys live in defineTable. Requires a directory schema layout; never overwrites an existing file."
   synopsis="schemic new table invoice"
   flags={[]}
 />
@@ -89,10 +89,13 @@ The Postgres workflow is **author → diff → gen → migrate**, with `status`,
 
 <CommandRef
   id="seed"
-  name="schemic seed"
-  desc="Run the project's seed script (database/seed.ts) with a connected client."
-  synopsis="schemic seed"
-  flags={[]}
+  name="schemic seed [name]"
+  desc="Run the project's seeds against a connection. Seeds live in database/seed/: bare schemic seed runs database/seed/index.ts (or every seed in filename order if there is none), a name runs one seed, and --all runs them all. A flat database/seed.ts still works as a single seed."
+  synopsis="schemic seed [name] [--all]"
+  flags={[
+    { flag: "[name]", type: "string", desc: "Run the single named seed (its filename without the NN- ordering prefix)." },
+    { flag: "--all", type: "boolean", desc: "Run every seed in database/seed/ in filename order, even when an index.ts is present." }
+  ]}
 />
 
 <CommandRef

@@ -61,13 +61,14 @@ The examples below call the CLI with `npx schemic`. With Bun, use `bunx schemic`
 
 <Terminal command="npx schemic init" output={`  + schemic.config.ts
   + database/schema/tables/user.ts
-  + database/seed.ts
-  + database/migrations/meta/_snapshot.json
+  + database/seed/index.ts
+  + database/seed/seeds.d.ts
   + .env.example
+  + database/migrations/meta/_snapshot.json
 
 ✓ Initialized. Edit database/schema, then run \`schemic gen\`.`} />
 
-`init` writes a `schemic.config.ts` (where your database connection lives), a sample `user` schema, a seed file, and an empty migration snapshot. It never overwrites files that already exist.
+`init` writes a `schemic.config.ts` (where your database connection lives), a sample `user` schema, a `database/seed/` folder, and an empty migration snapshot. It never overwrites files that already exist.
 
 </Step>
 

@@ -85,6 +85,20 @@ npx schemic gen --baseline --force
 
 This regenerates the whole schema from an empty snapshot as a single migration, replacing the existing files. Use it to tidy history before a release.
 
+## Seed data
+
+Seeds live in `database/seed/` — TypeScript files that each export a default `(db) => Promise<…>` taking the connected client (annotate it with `Surreal`). `schemic seed` runs `index.ts` (or every seed in filename order if there is none); `schemic seed <name>` runs one; `--all` runs them all. A leading `NN-` prefix orders a seed but is not part of its name (`01-users.ts` is the seed `users`). Raw SurrealQL files load into a seed via an import attribute — `import surql from "./schema.surql" with { type: "text" }` (typed by the scaffolded `seeds.d.ts`):
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic seed            # index.ts, or every seed
+npx schemic seed users      # one named seed
+npx schemic seed --all      # every seed, in filename order
+```
+
+</CodeBlock>
+
 ## Where to go next
 
 - [Sync without migrations](/docs/guides/sync-without-migrations) — apply changes directly with `push`.

@@ -69,9 +69,9 @@ The CLI ships as `schemic`, with `sc` as a short alias. Run any command with `np
 
 <CommandRef
   id="new"
-  name="schemic new <name>"
-  desc="Scaffold a blank, hand-written .surql migration with up/down branches."
-  synopsis="schemic new backfill_handles"
+  name="schemic new <kind> <name>"
+  desc="Scaffold a starter schema file for an entity at <schema>/<kind-folder>/<name>.ts — a realistic starter, not a bare stub. Surreal kinds map to folders: table → tables/, relation → relations/, view → views/, function → functions/, access → access/, event → events/, analyzer → analyzers/. (index and field are authored inline on a table, not standalone.) Requires a directory schema layout; never overwrites an existing file."
+  synopsis="schemic new table user"
   flags={[]}
 />
 
@@ -147,10 +147,13 @@ The CLI ships as `schemic`, with `sc` as a short alias. Run any command with `np
 
 <CommandRef
   id="seed"
-  name="schemic seed"
-  desc="Run the project's seed script (database/seed.ts) with a connected client."
-  synopsis="schemic seed"
-  flags={[]}
+  name="schemic seed [name]"
+  desc="Run the project's seeds against a connection. Seeds live in database/seed/: bare schemic seed runs database/seed/index.ts (or every seed in filename order if there is none), a name runs one seed, and --all runs them all. A flat database/seed.ts still works as a single seed."
+  synopsis="schemic seed [name] [--all]"
+  flags={[
+    { flag: "[name]", type: "string", desc: "Run the single named seed (its filename without the NN- ordering prefix)." },
+    { flag: "--all", type: "boolean", desc: "Run every seed in database/seed/ in filename order, even when an index.ts is present." }
+  ]}
 />
 
 ## Global flags

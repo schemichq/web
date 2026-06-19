@@ -11,7 +11,7 @@ const { activeDriver = null } = Astro.props;
 // string (rendered as text + carried on data-prompt), so they never drift; the
 // Copy button writes the EXACT raw string — backticks and all — to the
 // clipboard. Kept verbatim from marketing copy.
-const PROMPT = `Set up Schemic for my SurrealDB project as code: read https://surrealdb.schemic.dev/llms-full.txt for the current API, install \`@schemic/cli @schemic/surrealdb zod\`, run \`npx schemic init\`, then ask me which tables I need and wire up migrations plus typed rows.`;
+const PROMPT = `Set up Schemic in my project to manage my database schema as code. Read https://schemic.dev/llms.txt first so you use the current API. Ask me which database I'm using, then install \`@schemic/cli\` and the matching driver (the reference lists each driver's exact packages) and run \`npx schemic init\`. Ask me which tables and fields I need, define them with the \`s.*\` builder, then generate and apply migrations (\`npx schemic gen <name>\` + \`npx schemic migrate\`) and use \`App<typeof Table>\` for fully-typed rows.`;
 
 // The flagship driver's docs quickstart (the hub has no driver of its own).
 const quickstartUrl = `${driverUrl(flagshipDriver.slug)}/docs/quickstart`;

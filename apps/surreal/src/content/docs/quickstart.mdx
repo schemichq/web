@@ -11,7 +11,15 @@ This is a tutorial: follow every step in order and it works. The [guides](/docs/
 
 Prefer to let your AI agent set it up? Paste this prompt into Claude Code, Cursor, or any coding agent and it will install Schemic, scaffold your schema, and wire up migrations — asking you about your tables as it goes.
 
-<AiPrompt prompt={`Set up Schemic in my project to manage my SurrealDB schema as code. Before changing anything, read the reference at https://surrealdb.schemic.dev/llms-full.txt so you use the current API. Then install the packages — \`@schemic/cli\`, \`@schemic/surrealdb\`, and \`zod\` — and run \`npx schemic init\` to scaffold the config and a sample schema. Ask me which tables and fields I need, and define them with the \`s.*\` builder (a superset of Zod, where \`$\`-prefixed methods like \`.$assert\` and \`.$default\` emit SurrealQL DDL). Generate a migration with \`npx schemic gen <name>\`, then apply it with \`npx schemic migrate\`. In my application code, use \`App<typeof Table>\` for fully-typed rows and \`encode\` / \`decode\` to write and read them. Walk me through each step as you go.`} />
+<AiPrompt prompt={`Set up Schemic in my project to manage my SurrealDB schema as code. Before changing anything, read the reference at https://surrealdb.schemic.dev/llms-full.txt so you use the current API. Then:
+1. Install \`@schemic/cli\`, \`@schemic/surrealdb\`, and \`zod\`, and run \`npx schemic init\` to scaffold the config, the \`database/\` layout, and a sample schema.
+2. Configure the connection in \`schemic.config.ts\` with \`surrealConnection({ url, namespace, database })\` read from environment variables. Reuse my app's existing connection or env vars if it already has them; otherwise ask me how I want the connection defined.
+3. Verify it works: run \`npx schemic doctor\` (it tests the connection) and \`npx schemic status\`, and confirm both succeed before continuing.
+4. Ask me whether I already have an existing database. If I do, run \`npx schemic pull\` to preview the introspected schema, then \`npx schemic pull --write\` to adopt it into my TypeScript files. If I don't, ask me which tables and fields I need and define them with the \`s.*\` builder (a superset of Zod, where \`$\`-prefixed methods like \`.$assert\` and \`.$default\` emit SurrealQL DDL).
+5. Generate a migration with \`npx schemic gen <name>\`, then apply it with \`npx schemic migrate\`.
+6. Show me how to read and write rows type-safely with \`App<typeof Table>\` and \`encode\` / \`decode\`.
+
+Walk me through each step as you go.`} />
 
 Prefer to do it by hand? The rest of this page is the hands-on walkthrough — about ten minutes from an empty directory to typed, migrated rows.
 

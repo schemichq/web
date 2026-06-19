@@ -11,7 +11,15 @@ const { activeDriver = null } = Astro.props;
 // string (rendered as text + carried on data-prompt), so they never drift; the
 // Copy button writes the EXACT raw string — backticks and all — to the
 // clipboard. Kept verbatim from marketing copy.
-const PROMPT = `Set up Schemic in my project to manage my database schema as code. Read https://schemic.dev/llms.txt first so you use the current API. Ask me which database I'm using, then install \`@schemic/cli\` and the matching driver (the reference lists each driver's exact packages) and run \`npx schemic init\`. Ask me which tables and fields I need, define them with the \`s.*\` builder, then generate and apply migrations (\`npx schemic gen <name>\` + \`npx schemic migrate\`) and use \`App<typeof Table>\` for fully-typed rows.`;
+const PROMPT = `Set up Schemic in my project to manage my database schema as code. Before changing anything, read the reference at https://schemic.dev/llms.txt so you use the current API. Then:
+1. Ask me which database I'm using, then install \`@schemic/cli\` and the matching driver (the reference lists each driver's exact packages) and run \`npx schemic init\` to scaffold the config, the \`database/\` layout, and a sample schema.
+2. Configure the connection in \`schemic.config.ts\` with the driver's connection factory (e.g. \`surrealConnection({ url, namespace, database })\`) read from environment variables. Reuse my app's existing connection or env vars if it already has them; otherwise ask me how I want the connection defined.
+3. Verify it works: run \`npx schemic doctor\` (it tests the connection) and \`npx schemic status\`, and confirm both succeed before continuing.
+4. Ask me whether I already have an existing database. If I do **and my driver supports introspection** (the reference notes which do — \`pull\` is SurrealDB today), run \`npx schemic pull\` to preview it, then \`npx schemic pull --write\` to adopt it into my TypeScript files; otherwise ask me which tables and fields I need and define them with the \`s.*\` builder (a superset of Zod, where \`$\`-prefixed methods emit DDL).
+5. Generate a migration with \`npx schemic gen <name>\`, then apply it with \`npx schemic migrate\`.
+6. Show me how to read and write rows type-safely with \`App<typeof Table>\` and \`encode\` / \`decode\`.
+
+Walk me through each step as you go.`;
 
 // The flagship driver's docs quickstart (the hub has no driver of its own).
 const quickstartUrl = `${driverUrl(flagshipDriver.slug)}/docs/quickstart`;

@@ -1,5 +1,12 @@
 ---
-import { ctaFor, paneKeyFor, paneStates } from "../config/drivers";
+import {
+  ctaFor,
+  drivers,
+  paneKeyFor,
+  paneStates,
+  SUGGEST_DRIVER_URL,
+} from "../config/drivers";
+import DbMenu from "./DbMenu.astro";
 
 interface Props {
   /** Slug of the driver this site represents; null = agnostic hub. */
@@ -51,13 +58,36 @@ const arrow = '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>';
           class="mt-8 flex flex-wrap items-center justify-center gap-3.5"
         >
           {st.cta.primary.openPicker ? (
-            <button
-              type="button"
-              data-open-picker
-              class="rounded-full bg-gradient-to-r from-accent to-accent-2 px-6 py-3.5 text-[15px] font-semibold text-on-accent shadow-[0_8px_30px_-6px_var(--color-accent)] transition-transform hover:scale-[1.03]"
-            >
-              {st.cta.primary.label}
-            </button>
+            <div data-db-picker="overlay" class="relative">
+              <button
+                type="button"
+                data-db-trigger
+                aria-haspopup="listbox"
+                aria-expanded="false"
+                aria-label="Choose your database"
+                class="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-accent to-accent-2 px-6 py-3.5 text-[15px] font-semibold text-on-accent shadow-[0_8px_30px_-6px_var(--color-accent)] transition-transform hover:scale-[1.03]"
+              >
+                {st.cta.primary.label}
+                <svg
+                  class="size-3.5 transition-transform group-aria-expanded:rotate-180"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </button>
+              <DbMenu
+                drivers={drivers}
+                selectedSlug={null}
+                suggestHref={SUGGEST_DRIVER_URL}
+                align="center"
+              />
+            </div>
           ) : (
             <a
               href={st.cta.primary.href}

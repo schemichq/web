@@ -6,7 +6,7 @@
 // Landing layout points og:image/twitter:image at the matching card.
 //
 // Themed per driver from the brand tokens (packages/brand/theme-*.css): the hub
-// card wears the amber Schemic master theme, surrealdb purple, postgres blue.
+// card wears the NEUTRAL gray hub theme, surrealdb purple, postgres blue.
 // The headline is two-tone — the database word in the accent gradient, "Zod" in
 // accent-2 — mirroring the hero.
 import { createRequire } from "node:module";
@@ -51,8 +51,10 @@ const THEMES: Record<CardKey, Theme> = {
     name: "database",
     eyebrow: "Schema as code, for any database",
     ddl: "native DDL",
-    accent: "#ffb454",
-    accent2: "#ff6a3d",
+    // Neutral hub theme — gray accent (matches the agnostic hub UI + the
+    // theme-tied brand mark), NOT amber.
+    accent: "#d8d6da",
+    accent2: "#98969a",
     canvas: "#0c0d10",
     surface: "#181a20",
     codeBg: "#0e0f13",

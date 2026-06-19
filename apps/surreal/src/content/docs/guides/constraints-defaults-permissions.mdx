@@ -14,6 +14,8 @@ Use `.$assert(expr)` to emit an `ASSERT` clause. The expression is raw SurrealQL
 <CodeBlock title="schema.ts" lang="ts">
 
 ```ts
+import { s, defineTable, surql } from "@schemic/surrealdb";
+
 export const Product = defineTable("product", {
   id: s.string(),
   price: s.decimal().$assert(surql`$value > 0`),
@@ -78,6 +80,8 @@ createdAt: s.datetime().$default(surql`time::now()`).$readonly(),
 <CodeBlock title="schema.ts" lang="ts">
 
 ```ts
+import { s, defineTable, surql } from "@schemic/surrealdb";
+
 export const User = defineTable("user", {
   id: s.string(),
   email: s.email(),
@@ -119,6 +123,8 @@ npx schemic diff --live
 ```
 
 </CodeBlock>
+
+`--live` compares against your configured database, so set up a connection first (see the [Quickstart](/docs/quickstart) and [Configuration](/docs/reference/configuration)). Plain `diff` (no flag) compares against the recorded snapshot and needs no database.
 
 ## Where to go next
 

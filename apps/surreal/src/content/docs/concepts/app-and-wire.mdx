@@ -37,7 +37,7 @@ const db = new Surreal();
 // ...connect...
 
 // app -> wire: build the payload and write it
-const [[row]] = await db.query("CREATE user CONTENT $data", {
+const [[row]] = await db.query<[unknown[]]>("CREATE user CONTENT $data", {
   data: User.encode({ name: "Ada", email: "ada@example.com" }),
 });
 

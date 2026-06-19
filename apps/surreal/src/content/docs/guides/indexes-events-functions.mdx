@@ -12,6 +12,8 @@ An index speeds up lookups and can enforce uniqueness. Add one to a single field
 <CodeBlock title="schema.ts" lang="ts">
 
 ```ts
+import { s, defineTable } from "@schemic/surrealdb";
+
 export const User = defineTable("user", {
   id: s.string(),
   email: s.email().unique(),
@@ -40,6 +42,9 @@ For a composite index across several fields, declare it at the table level with 
 <CodeBlock lang="ts">
 
 ```ts
+import { s, defineTable } from "@schemic/surrealdb";
+import { Calendar } from "./calendar";
+
 defineTable("event", {
   id: s.string(),
   calendarId: Calendar.record(),
@@ -59,6 +64,8 @@ An event runs SurrealQL when a row changes. Define one with `.event(name, { when
 <CodeBlock lang="ts">
 
 ```ts
+import { s, defineTable, surql } from "@schemic/surrealdb";
+
 defineTable("account", {
   id: s.string(),
   balance: s.decimal(),
@@ -114,6 +121,8 @@ npx schemic diff --live
 ```
 
 </CodeBlock>
+
+`--live` compares against your configured database, so set up a connection first (see the [Quickstart](/docs/quickstart) and [Configuration](/docs/reference/configuration)). Plain `diff` (no flag) compares against the recorded snapshot and needs no database.
 
 ## Where to go next
 

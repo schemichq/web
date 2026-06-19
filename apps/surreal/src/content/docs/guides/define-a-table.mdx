@@ -81,11 +81,11 @@ const Post = defineTable("post", {
   id: s.string(),
   title: s.string(),
   body: s.string(),
-  authorId: User.record(),
+  author: User.record(),
 });
 
 const PostSummary = Post.pick("id", "title");      // only id + title
-const PostDraft   = Post.omit("authorId");          // everything but authorId
+const PostDraft   = Post.omit("author");            // everything but author
 const PostPatch   = Post.partial();                 // every field optional
 const PostPlus    = Post.extend({ pinned: s.boolean() });
 ```

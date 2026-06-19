@@ -86,7 +86,7 @@ Create an edge with SurrealQL `RELATE`, and read it back with `decode` like any 
 
 ```ts
 import { Surreal, RecordId } from "surrealdb";
-import { Authored } from "./schema/authored";
+import { Authored } from "./authored";
 
 const db = new Surreal();
 // ...connect...
@@ -98,11 +98,13 @@ await db.query("RELATE $author->authored->$post", {
 });
 
 // read edges back and decode them to app values
-const rows = await db.select("authored");
+const [rows] = await db.query<[unknown[]]>("SELECT * FROM authored");
 const edges = rows.map((r) => Authored.decode(r));
 ```
 
 </CodeBlock>
+
+Confirm it worked with `schemic diff --live`, or query the edge directly (`SELECT * FROM authored`).
 
 ## Which one to use
 

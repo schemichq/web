@@ -11,13 +11,13 @@ The examples assume a connected client:
 
 ```ts
 import { Surreal } from "surrealdb";
-import { User } from "./schema/user";
+import { User } from "./user";
 
 const db = new Surreal();
-await db.connect("ws://localhost:8000", {
+await db.connect("ws://127.0.0.1:8000/rpc", {
   namespace: "app",
   database: "app",
-  auth: { username: "root", password: "root" },
+  authentication: { username: "root", password: "root" },
 });
 ```
 
@@ -34,26 +34,25 @@ The `surrealdb` SDK is a 2.x major paired with a 3.x server. Its typed write hel
 <CodeBlock lang="ts">
 
 ```ts
-const [[created]] = await db.query("CREATE user CONTENT $data", {
+const [[created]] = await db.query<[unknown[]]>("CREATE user CONTENT $data", {
   data: User.encode({ name: "Ada Lovelace", email: "ada@example.com" }),
 });
 ```
 
 </CodeBlock>
 
-`db.query` returns one result set per statement, each an array of records — hence the double-destructure. `User.encode(...)` accepts the `Create` shape and returns a wire object: a `Date` you passed becomes a `DateTime`, a uuid string becomes a `Uuid`, and so on.
+`db.query<[unknown[]]>` types the result as one set per statement, each an array of wire rows — hence the double-destructure. `User.encode(...)` accepts the `Create` shape and returns a wire object: a `Date` you passed becomes a `DateTime`, a uuid string becomes a `Uuid`, and so on.
 
-For a record whose id you choose, the typed `db.create` also works when you pass a `RecordId` (not a string):
+For a record whose id you choose, use `db.create` with a `RecordId` (not a string) and the `.content()` builder:
 
 <CodeBlock lang="ts">
 
 ```ts
 import { RecordId } from "surrealdb";
 
-const created = await db.create(
-  new RecordId("user", "ada"),
-  User.encode({ name: "Ada Lovelace", email: "ada@example.com" }),
-); // returns the created record object
+const created = await db
+  .create(new RecordId("user", "ada"))
+  .content(User.encode({ name: "Ada Lovelace", email: "ada@example.com" }));
 ```
 
 </CodeBlock>
@@ -67,7 +66,7 @@ const created = await db.create(
 ```ts
 import type { App } from "@schemic/surrealdb";
 
-const rows = await db.select("user");
+const [rows] = await db.query<[unknown[]]>("SELECT * FROM user");
 const users: App<typeof User>[] = rows.map((row) => User.decode(row));
 
 users[0].createdAt instanceof Date; // true
@@ -91,8 +90,6 @@ await db.query("UPDATE $id MERGE $patch", {
 ```
 
 </CodeBlock>
-
-The typed builder form works too: `db.update(id).merge(User.encodePartial({ ... }))`.
 
 Send only the fields that changed. `encodePartial` runs the same codecs as `encode`, so a partial `{ lastSeenAt: new Date() }` still encodes the `Date` to a `DateTime`.
 

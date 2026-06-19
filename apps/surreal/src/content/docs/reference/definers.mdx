@@ -1,6 +1,6 @@
 ---
 title: Definers
-description: Reference for the top-level definers in Schemic — defineTable, defineRelation, defineFunction, defineAccess, and defineEvent, with their chainable methods.
+description: Reference for the top-level definers in Schemic — defineTable, defineRelation, defineFunction, defineAccess, defineEvent, defineView, and defineAnalyzer, with their chainable methods.
 ---
 
 The definers are the entry points you import from `@schemic/surrealdb`. Each returns an immutable, chainable definition. This page lists their signatures and methods. For the codec methods (`encode`, `decode`, `encodePartial`) see [type utilities](/docs/reference/type-utilities) and the [encode/decode guide](/docs/guides/encode-decode-rows).
@@ -102,6 +102,56 @@ defineEvent(table: TableDef | string, name: string, { when?, then }): EventDef
 </CodeBlock>
 
 Declares an event as a standalone object. Equivalent to the table's `.event(name, spec)` method; use this form when you keep events in their own file. The body sees `$before`, `$after`, `$event`, and `$value`.
+
+## defineView
+
+<CodeBlock lang="ts">
+
+```ts
+defineView(name: string, query: Expr): TableDef
+```
+
+</CodeBlock>
+
+Defines a view — a read-only table computed from a query. Pass a `surql` `SELECT` expression; Schemic emits it as a SurrealDB view (`DEFINE TABLE <name> ... AS <query>`). It has no authored fields of its own, and you read it like any table.
+
+<CodeBlock lang="ts">
+
+```ts
+import { defineView, surql } from "@schemic/surrealdb";
+
+export const ActiveUser = defineView(
+  "active_user",
+  surql`SELECT id, name FROM user WHERE active = true`,
+);
+```
+
+</CodeBlock>
+
+## defineAnalyzer
+
+<CodeBlock lang="ts">
+
+```ts
+defineAnalyzer(name: string, config: AnalyzerConfig): AnalyzerDef
+```
+
+</CodeBlock>
+
+Declares a full-text search analyzer. `config` is `{ tokenizers: string[]; filters?: string[] }`, emitted as `DEFINE ANALYZER <name> TOKENIZERS <...> FILTERS <...>`. Reference the analyzer from a search index on a field.
+
+<CodeBlock lang="ts">
+
+```ts
+import { defineAnalyzer } from "@schemic/surrealdb";
+
+export const Standard = defineAnalyzer("standard", {
+  tokenizers: ["class"],
+  filters: ["lowercase", "ascii"],
+});
+```
+
+</CodeBlock>
 
 ## Where to go next
 

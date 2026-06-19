@@ -67,7 +67,17 @@ surreal start --user root --pass root memory
 
 </CodeBlock>
 
-Leave it running. The default `schemic.config.ts` connects to `ws://localhost:8000` with namespace `app` and database `app`, which is exactly what this command serves.
+Leave it running. The scaffolded `schemic.config.ts` connects to `ws://127.0.0.1:8000/rpc` with namespace `app` and database `app`, which is exactly what this command serves.
+
+The config reads its credentials from the environment, so copy the generated template to `.env` (it already has the matching `root` / `root` values):
+
+<CodeBlock lang="bash">
+
+```bash
+cp .env.example .env
+```
+
+</CodeBlock>
 
 </Step>
 
@@ -187,15 +197,15 @@ import { User } from "./database/schema/tables/user";
 import type { App } from "@schemic/surrealdb";
 
 const db = new Surreal();
-await db.connect("ws://localhost:8000", {
+await db.connect("ws://127.0.0.1:8000/rpc", {
   namespace: "app",
   database: "app",
-  auth: { username: "root", password: "root" },
+  authentication: { username: "root", password: "root" },
 });
 
 // encode() builds the wire payload — createdAt has a DB default, so you omit it.
-// db.query with CONTENT is the version-robust way to write; SurrealDB assigns the id.
-const [[created]] = await db.query("CREATE user CONTENT $data", {
+// db.query returns one result set per statement, each an array of wire rows.
+const [[created]] = await db.query<[unknown[]]>("CREATE user CONTENT $data", {
   data: User.encode({ name: "Ada Lovelace", email: "ada@example.com" }),
 });
 

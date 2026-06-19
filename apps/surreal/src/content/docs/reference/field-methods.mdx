@@ -30,6 +30,10 @@ These delegate to the underlying Zod schema and act on the app side. They are av
 
 `refine`, `superRefine`, `check`, `overwrite`, `transform`, `pipe`, `brand`, `readonly`, `describe`, `meta`, plus `optional`, `nullable`, `nullish`, `array`, `default`, `prefault`, `catch`, `loose`, `strict`.
 
+<Callout variant="note" title="default is not .$default">
+Native `default` is a Zod parse-time default applied in your app code; it emits no DDL. To set a database `DEFAULT` clause, use the `$`-prefixed [`.$default(expr)`](#surrealql-clauses) below. The `$` prefix is the rule: unprefixed methods act app-side, `$`-prefixed methods change the stored schema.
+</Callout>
+
 Two combinators build composite types:
 
 | Method | Result | DDL `TYPE` |

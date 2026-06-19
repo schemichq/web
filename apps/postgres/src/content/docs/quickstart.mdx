@@ -26,6 +26,10 @@ bun add @schemic/cli @schemic/postgres @electric-sql/pglite`}
 
 `@schemic/cli` provides the `schemic` / `sc` CLI; `@schemic/postgres` is the Postgres driver (authoring + DDL); `@electric-sql/pglite` is the embedded engine your migrations run against. `zod` ships with the driver.
 
+<Callout variant="note" title="Using pnpm?">
+The scaffolded config imports `@schemic/core/config`, and pnpm's strict `node_modules` doesn't expose that transitively — add it directly: `pnpm add @schemic/core`. Bun, npm, and yarn hoist it, so they don't need it.
+</Callout>
+
 <Callout variant="tip" title="Running the CLI">
 The examples below call the CLI with `npx schemic`. With Bun, use `bunx schemic`; with pnpm, `pnpm dlx schemic`.
 </Callout>

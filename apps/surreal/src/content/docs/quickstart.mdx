@@ -51,6 +51,10 @@ bun add @schemic/cli @schemic/surrealdb zod`}
 
 `@schemic/cli` provides the `schemic` / `sc` CLI; `@schemic/surrealdb` is the SurrealDB driver (authoring + DDL); `zod` is a required peer. The `surrealdb` SDK ships with the driver — you import it directly only for app query code.
 
+<Callout variant="note" title="Using pnpm?">
+The scaffolded config imports `@schemic/core/config`, and pnpm's strict `node_modules` doesn't expose that transitively — add it directly: `pnpm add @schemic/core`. Bun, npm, and yarn hoist it, so they don't need it.
+</Callout>
+
 <Callout variant="tip" title="Running the CLI">
 The examples below call the CLI with `npx schemic`. With Bun, use `bunx schemic`; with pnpm, `pnpm dlx schemic`.
 </Callout>

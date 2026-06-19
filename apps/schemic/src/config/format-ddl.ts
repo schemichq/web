@@ -173,7 +173,8 @@ export function formatDdl(ddl: string, lang: string): string {
   return splitStatements(ddl)
     .map((s) => {
       const oneLine = s.replace(/\s+/g, " ");
-      const body = oneLine.length <= SINGLE_LINE_MAX ? oneLine : formatStatement(s);
+      const body =
+        oneLine.length <= SINGLE_LINE_MAX ? oneLine : formatStatement(s);
       return `${body};`;
     })
     .join("\n");

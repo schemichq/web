@@ -1,4 +1,5 @@
 ---
+import { drivers, SUGGEST_DRIVER_URL } from "../config/drivers";
 // "Select a database" picker overlay — covers every driver-specific OUTPUT /
 // generated region on the agnostic hub (schemic.dev, activeDriver = null). It
 // reuses the Demo coming-soon overlay's blur/opacity treatment: an absolutely
@@ -17,7 +18,6 @@
 // Mount inside a `relative` container that wraps ONLY the output region (so any
 // agnostic prose / footer caption stays outside it, fully legible).
 import DbMenu from "./DbMenu.astro";
-import { drivers, SUGGEST_DRIVER_URL } from "../config/drivers";
 
 interface Props {
   /** Compact variant for the small Bento cards (button only, tighter). */

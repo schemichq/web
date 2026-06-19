@@ -29,13 +29,25 @@ export const sidebarNav: NavGroup[] = [
     label: "Guides",
     items: [
       { label: "Define a table", href: d("guides/define-a-table") },
-      { label: "Constraints, defaults & permissions", href: d("guides/constraints-defaults-permissions") },
+      {
+        label: "Constraints, defaults & permissions",
+        href: d("guides/constraints-defaults-permissions"),
+      },
       { label: "Model relationships", href: d("guides/relationships") },
-      { label: "Indexes, events & functions", href: d("guides/indexes-events-functions") },
+      {
+        label: "Indexes, events & functions",
+        href: d("guides/indexes-events-functions"),
+      },
       { label: "Encode & decode rows", href: d("guides/encode-decode-rows") },
       { label: "Generate & run migrations", href: d("guides/migrations") },
-      { label: "Sync without migrations", href: d("guides/sync-without-migrations") },
-      { label: "Adopt an existing database", href: d("guides/adopt-existing-database") },
+      {
+        label: "Sync without migrations",
+        href: d("guides/sync-without-migrations"),
+      },
+      {
+        label: "Adopt an existing database",
+        href: d("guides/adopt-existing-database"),
+      },
       { label: "Detect & review drift", href: d("guides/review-drift") },
     ],
   },

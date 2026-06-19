@@ -1,15 +1,5 @@
 ---
 import { getCollection, render } from "astro:content";
-import DocsLayout from "@schemic/ui/docs/DocsLayout.astro";
-import PrevNext from "@schemic/ui/docs/PrevNext.astro";
-import {
-  crumbFor,
-  prevNextFor,
-  sidebarNav,
-  topActiveFor,
-  topNav,
-} from "../../config/docs-nav";
-
 // Components registered for MDX so authors use them without importing.
 import Callout from "@schemic/ui/docs/Callout.astro";
 import CodeBlock from "@schemic/ui/docs/CodeBlock.astro";
@@ -17,16 +7,25 @@ import CommandRef from "@schemic/ui/docs/CommandRef.astro";
 import CommandTabs from "@schemic/ui/docs/CommandTabs.astro";
 import CompatBadges from "@schemic/ui/docs/CompatBadges.astro";
 import DocHero from "@schemic/ui/docs/DocHero.astro";
+import DocsLayout from "@schemic/ui/docs/DocsLayout.astro";
 import MappingTable from "@schemic/ui/docs/MappingTable.astro";
 import NextSteps from "@schemic/ui/docs/NextSteps.astro";
 import PageHeader from "@schemic/ui/docs/PageHeader.astro";
 import PillarCard from "@schemic/ui/docs/PillarCard.astro";
 import PillarGrid from "@schemic/ui/docs/PillarGrid.astro";
+import PrevNext from "@schemic/ui/docs/PrevNext.astro";
 import SigTable from "@schemic/ui/docs/SigTable.astro";
 import StartCard from "@schemic/ui/docs/StartCard.astro";
 import StartGrid from "@schemic/ui/docs/StartGrid.astro";
 import Step from "@schemic/ui/docs/Step.astro";
 import Terminal from "@schemic/ui/docs/Terminal.astro";
+import {
+  crumbFor,
+  prevNextFor,
+  sidebarNav,
+  topActiveFor,
+  topNav,
+} from "../../config/docs-nav";
 
 export async function getStaticPaths() {
   const entries = await getCollection("docs");

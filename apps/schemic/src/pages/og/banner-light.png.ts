@@ -1,8 +1,9 @@
 // Light-background variant of the GitHub README banner (1200×630, neutral gray
 // on warm off-white). Deliverable asset copied to design/deliverables/; pairs
 // with banner.png (dark) for a README <picture> light/dark swap.
-import type { APIRoute } from "astro";
+
 import { renderBanner } from "@schemic/landing/og/card";
+import type { APIRoute } from "astro";
 
 export const GET: APIRoute = async () => {
   const png = await renderBanner("light");

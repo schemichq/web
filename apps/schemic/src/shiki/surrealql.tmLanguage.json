@@ -32,13 +32,17 @@
           "name": "string.quoted.double.surql",
           "begin": "\"",
           "end": "\"",
-          "patterns": [{ "name": "constant.character.escape.surql", "match": "\\\\." }]
+          "patterns": [
+            { "name": "constant.character.escape.surql", "match": "\\\\." }
+          ]
         },
         {
           "name": "string.quoted.single.surql",
           "begin": "'",
           "end": "'",
-          "patterns": [{ "name": "constant.character.escape.surql", "match": "\\\\." }]
+          "patterns": [
+            { "name": "constant.character.escape.surql", "match": "\\\\." }
+          ]
         },
         {
           "name": "string.quoted.other.backtick.surql",
@@ -69,8 +73,14 @@
     },
     "constants": {
       "patterns": [
-        { "name": "constant.language.null.surql", "match": "\\b(NONE|NULL)\\b" },
-        { "name": "constant.language.boolean.surql", "match": "\\b(true|false)\\b" }
+        {
+          "name": "constant.language.null.surql",
+          "match": "\\b(NONE|NULL)\\b"
+        },
+        {
+          "name": "constant.language.boolean.surql",
+          "match": "\\b(true|false)\\b"
+        }
       ]
     },
     "types": {

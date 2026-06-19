@@ -9,8 +9,9 @@
 // card wears the NEUTRAL gray hub theme, surrealdb purple, postgres blue.
 // The headline is two-tone — the database word in the accent gradient, "Zod" in
 // accent-2 — mirroring the hero.
-import { createRequire } from "node:module";
+
 import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import satori from "satori";
 import sharp from "sharp";
 
@@ -18,7 +19,9 @@ const require = createRequire(import.meta.url);
 const font = (spec: string): Buffer => readFileSync(require.resolve(spec));
 
 // Static (non-variable) faces — satori cannot read variable woff2.
-const geist = font("@fontsource/geist-sans/files/geist-sans-latin-600-normal.woff");
+const geist = font(
+  "@fontsource/geist-sans/files/geist-sans-latin-600-normal.woff",
+);
 const geistRegular = font(
   "@fontsource/geist-sans/files/geist-sans-latin-400-normal.woff",
 );
@@ -108,10 +111,10 @@ const h = (
   style: Record<string, unknown>,
   children?: (El | string)[] | string,
 ): El => ({ type: "div", props: { style, children } });
-const txt = (
-  content: string,
-  style: Record<string, unknown>,
-): El => ({ type: "div", props: { style, children: content } });
+const txt = (content: string, style: Record<string, unknown>): El => ({
+  type: "div",
+  props: { style, children: content },
+});
 
 function tree(t: Theme): El {
   const gradient = `linear-gradient(120deg, ${t.accent}, ${t.accent2})`;
@@ -128,18 +131,15 @@ function tree(t: Theme): El {
     `</svg>`;
   const markSrc = `data:image/svg+xml;base64,${Buffer.from(markSvg).toString("base64")}`;
 
-  const brand = h(
-    { display: "flex", alignItems: "center", gap: 16 },
-    [
-      { type: "img", props: { src: markSrc, width: 54, height: 58 } },
-      txt("schemic", {
-        fontFamily: "JetBrains Mono",
-        fontSize: 30,
-        fontWeight: 600,
-        color: t.ink,
-      }),
-    ],
-  );
+  const brand = h({ display: "flex", alignItems: "center", gap: 16 }, [
+    { type: "img", props: { src: markSrc, width: 54, height: 58 } },
+    txt("schemic", {
+      fontFamily: "JetBrains Mono",
+      fontSize: 30,
+      fontWeight: 600,
+      color: t.ink,
+    }),
+  ]);
 
   const top = h(
     {
@@ -205,10 +205,10 @@ function tree(t: Theme): El {
     txt("Zod", { ...hStyle, color: t.accent2 }),
     txt(" you already know.", { ...hStyle, color: t.ink }),
   ]);
-  const headline = h(
-    { display: "flex", flexDirection: "column", gap: 2 },
-    [line1, line2],
-  );
+  const headline = h({ display: "flex", flexDirection: "column", gap: 2 }, [
+    line1,
+    line2,
+  ]);
 
   const sub = txt(
     `Generate the ${t.ddl}, run migrations, keep your types — from the schema you already wrote.`,
@@ -222,10 +222,11 @@ function tree(t: Theme): El {
     },
   );
 
-  const mid = h(
-    { display: "flex", flexDirection: "column", gap: 26 },
-    [eyebrow, headline, sub],
-  );
+  const mid = h({ display: "flex", flexDirection: "column", gap: 26 }, [
+    eyebrow,
+    headline,
+    sub,
+  ]);
 
   const install = h(
     {
@@ -403,7 +404,11 @@ function bannerTree(t: Theme): El {
       border: `1px solid ${t.border}`,
     },
     [
-      txt("$", { fontFamily: "JetBrains Mono", fontSize: 18, color: t.accent2 }),
+      txt("$", {
+        fontFamily: "JetBrains Mono",
+        fontSize: 18,
+        color: t.accent2,
+      }),
       txt(`npm i ${t.install}`, {
         fontFamily: "JetBrains Mono",
         fontSize: 18,
@@ -440,7 +445,12 @@ function bannerTree(t: Theme): El {
 }
 
 const FONTS = [
-  { name: "Geist", data: geist, weight: 600 as const, style: "normal" as const },
+  {
+    name: "Geist",
+    data: geist,
+    weight: 600 as const,
+    style: "normal" as const,
+  },
   {
     name: "Geist",
     data: geistRegular,

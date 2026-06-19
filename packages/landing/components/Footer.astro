@@ -16,34 +16,35 @@ const repo = "https://github.com/schemichq/schemic";
 // at the shipped flagship driver for now.
 const surreal = driverUrl(flagshipDriver.slug);
 
-const columns: { heading: string; links: { label: string; href: string }[] }[] = [
-  {
-    heading: "Product",
-    links: [
-      { label: "Docs", href: `${surreal}/docs/introduction` },
-      { label: "Changelog", href: `${surreal}/docs/resources/changelog` },
-      { label: "GitHub", href: repo },
-    ],
-  },
-  {
-    heading: "Databases",
-    // Derived from the shared roster so the footer stays in lockstep with the
-    // picker; a driver links to its subdomain once it ships a site.
-    links: drivers.map((d) => ({
-      label: d.name,
-      href: d.site ? driverUrl(d.slug) : "#",
-    })),
-  },
-  {
-    heading: "Community",
-    links: [
-      { label: "GitHub", href: repo },
-      { label: "Discord", href: "https://surrealdb.com/discord" },
-      { label: "Issues", href: `${repo}/issues` },
-      { label: "Sponsor", href: `${repo}?sponsor=1` },
-    ],
-  },
-];
+const columns: { heading: string; links: { label: string; href: string }[] }[] =
+  [
+    {
+      heading: "Product",
+      links: [
+        { label: "Docs", href: `${surreal}/docs/introduction` },
+        { label: "Changelog", href: `${surreal}/docs/resources/changelog` },
+        { label: "GitHub", href: repo },
+      ],
+    },
+    {
+      heading: "Databases",
+      // Derived from the shared roster so the footer stays in lockstep with the
+      // picker; a driver links to its subdomain once it ships a site.
+      links: drivers.map((d) => ({
+        label: d.name,
+        href: d.site ? driverUrl(d.slug) : "#",
+      })),
+    },
+    {
+      heading: "Community",
+      links: [
+        { label: "GitHub", href: repo },
+        { label: "Discord", href: "https://surrealdb.com/discord" },
+        { label: "Issues", href: `${repo}/issues` },
+        { label: "Sponsor", href: `${repo}?sponsor=1` },
+      ],
+    },
+  ];
 
 const award =
   '<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/>';

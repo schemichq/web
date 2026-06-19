@@ -1,11 +1,11 @@
 ---
+import type { Driver } from "../config/drivers";
 // Shared database-roster dropdown — the listbox both the hero headline picker
 // and the sticky nav picker render. Each option carries the driver's slug, brand
 // color + target theme palette as data-* attributes; config/picker.ts reads them
 // off the DOM to drive the select/theme/redirect behavior. Kept as a single
 // component so the roster markup + data hooks live in ONE place.
 import { driverUrl, isAvailable } from "../config/drivers";
-import type { Driver } from "../config/drivers";
 
 interface Props {
   /** The roster to render (the shared `drivers` list). */

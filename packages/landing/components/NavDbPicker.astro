@@ -1,4 +1,6 @@
 ---
+import type { Driver } from "../config/drivers";
+import { drivers as driverList, SUGGEST_DRIVER_URL } from "../config/drivers";
 // The sticky nav's compact database picker — extracted so Nav.astro can render
 // the SAME single picker into EITHER the centered slot (agnostic hub: a
 // prominent "Select database" prompt) or the right-hand actions slot (a driver
@@ -8,11 +10,6 @@
 // solid pill) is driven by the header's [data-db-selected] in Nav.astro's style,
 // so it updates on the client-side switch too. Wiring is config/picker.ts.
 import DbMenu from "./DbMenu.astro";
-import {
-  drivers as driverList,
-  SUGGEST_DRIVER_URL,
-} from "../config/drivers";
-import type { Driver } from "../config/drivers";
 
 interface Props {
   /** The active driver (for the SSR label + brand dot), or null on the hub. */

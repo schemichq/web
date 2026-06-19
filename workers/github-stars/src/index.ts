@@ -59,7 +59,9 @@ async function fetchStars(
   if (token) headers.authorization = `Bearer ${token}`;
 
   try {
-    const res = await fetch(`https://api.github.com/repos/${repo}`, { headers });
+    const res = await fetch(`https://api.github.com/repos/${repo}`, {
+      headers,
+    });
     // 404 (private/missing), 403 (rate limit), etc. -> null, never throw.
     if (!res.ok) return null;
     const data = (await res.json()) as { stargazers_count?: unknown };
@@ -81,7 +83,9 @@ export default {
       return new Response(null, { status: 204, headers: CORS_HEADERS });
     }
     if (request.method !== "GET" && request.method !== "HEAD") {
-      return jsonResponse({ stars: null }, 405, { allow: "GET, HEAD, OPTIONS" });
+      return jsonResponse({ stars: null }, 405, {
+        allow: "GET, HEAD, OPTIONS",
+      });
     }
 
     // Cache keyed by the request URL. A hit avoids hammering the GitHub API.

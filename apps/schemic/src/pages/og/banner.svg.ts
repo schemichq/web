@@ -1,6 +1,7 @@
 // Vector (SVG) version of the README banner, for crisp scaling / light-dark.
-import type { APIRoute } from "astro";
+
 import { renderBannerSvg } from "@schemic/landing/og/card";
+import type { APIRoute } from "astro";
 
 export const GET: APIRoute = async () => {
   const svg = await renderBannerSvg();

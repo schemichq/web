@@ -1,4 +1,6 @@
 ---
+import { drivers } from "@schemic/landing/config/drivers";
+import ExamplesGallery from "../../components/ExamplesGallery.astro";
 // schemic.dev/examples/<driver> — the per-driver cookbook gallery (SSG). Mirrors
 // the landing's [driver].astro: getStaticPaths emits one page per driver in the
 // roster (/examples/surrealdb, /examples/postgres), each rendering the SAME shared
@@ -7,8 +9,6 @@
 // flash). Selecting another driver in the nav picker switches CLIENT-SIDE within
 // the Examples section (no reload). See components/ExamplesGallery.astro.
 import Landing from "../../layouts/Landing.astro";
-import ExamplesGallery from "../../components/ExamplesGallery.astro";
-import { drivers } from "@schemic/landing/config/drivers";
 
 export function getStaticPaths() {
   return drivers.map((d) => ({ params: { driver: d.slug } }));

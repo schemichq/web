@@ -4,7 +4,10 @@
   "private": true,
   "version": "0.0.0",
   "description": "Schemic public web properties: schemic.dev hub + per-driver subdomain sites (surreal., postgres., ...).",
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "build": "bun run --cwd apps/surreal build",
     "dev:surreal": "bun run --cwd apps/surreal dev",

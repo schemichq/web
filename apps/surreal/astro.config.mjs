@@ -1,8 +1,8 @@
 // @ts-check
 import mdx from "@astrojs/mdx";
+import { brandShikiTheme } from "@schemic/content/code-theme";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
-import { brandShikiTheme } from "@schemic/content/code-theme";
 
 // The marketing landing lives at "/" (src/pages/index.astro). The docs are a
 // bespoke shell (src/layouts/DocsLayout.astro + src/components/docs/**), hand-

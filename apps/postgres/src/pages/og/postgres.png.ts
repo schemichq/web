@@ -1,6 +1,7 @@
 // Build-time OG card for postgres.schemic.dev. Same shared renderer as the hub.
-import type { APIRoute } from "astro";
+
 import { renderCard } from "@schemic/landing/og/card";
+import type { APIRoute } from "astro";
 
 export const GET: APIRoute = async () => {
   const png = await renderCard("postgres");

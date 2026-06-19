@@ -9,5 +9,9 @@
     "./docs-schema": "./docs-schema.mjs",
     "./nav": "./nav.ts"
   },
-  "files": ["code-theme.mjs", "docs-schema.mjs", "nav.ts"]
+  "files": [
+    "code-theme.mjs",
+    "docs-schema.mjs",
+    "nav.ts"
+  ]
 }

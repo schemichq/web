@@ -22,16 +22,16 @@
 // shape-stable across syncs.
 import { Code } from "astro:components";
 import { brandShikiTheme } from "@schemic/content/code-theme";
-import Nav from "@schemic/landing/components/Nav.astro";
 import Footer from "@schemic/landing/components/Footer.astro";
+import Nav from "@schemic/landing/components/Nav.astro";
 import {
   drivers,
   flagshipDriver,
   paneKeyFor,
 } from "@schemic/landing/config/drivers";
 import {
-  examplesCatalog,
   type CatalogExample,
+  examplesCatalog,
 } from "../config/examples-catalog";
 // Display-time DDL pretty-printer (whitespace-only) — reflows long single-line
 // SurrealQL goldens across indented clause lines so the code column never scrolls

@@ -266,8 +266,13 @@ export interface DriverCTA {
   driver: Driver;
   /** Primary action. */
   primary: CTALink;
-  /** Secondary "Read the docs" action. */
-  secondary: CTALink;
+  /**
+   * Secondary "Read the docs" action, or `null` to render no secondary button.
+   * The agnostic hub omits it (its docs would point at the flagship driver,
+   * which is wrong on a database-agnostic page); driver variants supply one
+   * pointing at that driver's own docs.
+   */
+  secondary: CTALink | null;
   /** Demo coming-soon overlay copy + action (only surfaced for coming-soon drivers). */
   overlay: { text: string; action: CTALink };
 }
@@ -286,12 +291,14 @@ export function ctaFor(activeDriver?: string | null): DriverCTA {
 
   // Hub (no active driver): the page is database-agnostic, so the primary CTA
   // invites a choice — it OPENS the picker rather than pushing the flagship
-  // driver. Secondary ("Read the docs") + overlay stay as-is (flagship-backed).
+  // driver. NO secondary "Read the docs" — those docs are the flagship driver's,
+  // which would be wrong to surface on an agnostic page (the overlay stays
+  // flagship-backed only for the coming-soon copy fallback).
   if (activeDriver == null) {
     return {
       driver,
       primary: { label: "Choose your database", href: "", openPicker: true },
-      secondary: { label: "Read the docs", href: docs },
+      secondary: null,
       overlay: {
         text: `This driver is coming soon — start with ${driver.name} today.`,
         action: { label: `Start with ${driver.name}`, href: url },

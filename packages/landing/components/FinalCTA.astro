@@ -66,22 +66,24 @@ const arrow = '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>';
               {st.cta.primary.label}
             </a>
           )}
-          <a
-            href={st.cta.secondary.href}
-            class="inline-flex items-center gap-2 rounded-full border border-border bg-code-bg px-5 py-3 text-sm font-medium text-ink transition-colors hover:border-ink-3"
-          >
-            {st.cta.secondary.label}
-            <svg
-              class="size-3.5 text-ink-2"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              set:html={arrow}
-            />
-          </a>
+          {st.cta.secondary && (
+            <a
+              href={st.cta.secondary.href}
+              class="inline-flex items-center gap-2 rounded-full border border-border bg-code-bg px-5 py-3 text-sm font-medium text-ink transition-colors hover:border-ink-3"
+            >
+              {st.cta.secondary.label}
+              <svg
+                class="size-3.5 text-ink-2"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                set:html={arrow}
+              />
+            </a>
+          )}
         </div>
       ))
     }

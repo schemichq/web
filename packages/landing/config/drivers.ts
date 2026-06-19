@@ -330,10 +330,11 @@ export function ctaFor(activeDriver?: string | null): DriverCTA {
 }
 
 /**
- * "Vote or request a database" destination — the GitHub Discussions
- * driver-requests category, so demand is deduplicated: people upvote an existing
- * thread instead of filing duplicate issues. Swap this single constant to change
- * where requests land.
+ * "Vote or request a database" destination — the GitHub Discussions `drivers`
+ * category (browse + upvote existing requests), so demand is deduplicated:
+ * people upvote an existing thread instead of filing duplicate issues. Seeded
+ * with MySQL/SQLite/Turso/MongoDB/CockroachDB/Cloudflare D1/MSSQL + a request
+ * guide. Swap this single constant to change where requests land.
  */
 export const SUGGEST_DRIVER_URL =
-  "https://github.com/schemichq/schemic/discussions/categories/driver-requests";
+  "https://github.com/schemichq/schemic/discussions/categories/drivers";

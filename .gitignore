@@ -45,3 +45,8 @@ dist/
 history.txt
 # private client example — never committed
 packages/example-credilisto/
+
+# agent session data + design scratch (never commit)
+.claude/
+*.pen.bak
+design/deliverables/*.tmp

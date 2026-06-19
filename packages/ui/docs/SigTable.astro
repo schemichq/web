@@ -9,8 +9,10 @@ interface Props {
   id: string;
   title: string;
   rows: Row[];
+  /** Dialect column header, e.g. "SurrealQL" (default) or "Postgres". */
+  targetLabel?: string;
 }
-const { id, title, rows } = Astro.props;
+const { id, title, rows, targetLabel = "SurrealQL" } = Astro.props;
 ---
 
 <section class="sig">
@@ -18,7 +20,7 @@ const { id, title, rows } = Astro.props;
   <div class="table">
     <div class="row is-head">
       <span class="c1">s.*</span>
-      <span class="c2">SurrealQL TYPE</span>
+      <span class="c2">{targetLabel} TYPE</span>
       <span class="c3">DESCRIPTION</span>
     </div>
     {

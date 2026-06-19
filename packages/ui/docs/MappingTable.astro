@@ -1,5 +1,7 @@
 ---
-/** MappingTable - s.* to SurrealQL TYPE with a support status dot + notes. */
+/** MappingTable - s.* to the target dialect's TYPE with a support status dot +
+ * notes. `targetLabel` names the dialect column (default "SurrealQL"; the
+ * Postgres docs pass "Postgres"). */
 type Status = "ok" | "partial" | "gap";
 interface Row {
   sz: string;
@@ -9,8 +11,10 @@ interface Row {
 }
 interface Props {
   rows: Row[];
+  /** Dialect column header, e.g. "SurrealQL" (default) or "Postgres". */
+  targetLabel?: string;
 }
-const { rows } = Astro.props;
+const { rows, targetLabel = "SurrealQL" } = Astro.props;
 const label: Record<Status, string> = {
   ok: "OK",
   partial: "Partial",
@@ -27,7 +31,7 @@ const label: Record<Status, string> = {
 <div class="table">
   <div class="row is-head">
     <span class="c1">s.*</span>
-    <span class="c2">SurrealQL TYPE</span>
+    <span class="c2">{targetLabel} TYPE</span>
     <span class="c3">STATUS</span>
     <span class="c4">NOTES</span>
   </div>

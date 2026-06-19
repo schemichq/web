@@ -38,6 +38,7 @@ interface Theme {
   accent: string;
   accent2: string;
   markDepth: string; // the block-S logo's depth/shadow stroke (dark accent)
+  glow?: string; // top radial-glow color (banner only; defaults to accent)
   canvas: string;
   surface: string;
   codeBg: string;
@@ -271,23 +272,25 @@ function tree(t: Theme): El {
       height: 630,
       padding: 72,
       backgroundColor: t.canvas,
-      backgroundImage: `radial-gradient(110% 80% at 50% -10%, ${t.accent}33, ${t.canvas} 62%)`,
+      backgroundImage: `radial-gradient(110% 80% at 50% -10%, ${t.glow ?? t.accent}33, ${t.canvas} 62%)`,
       fontFamily: "Geist",
     },
     [top, mid, bottom],
   );
 }
 
-// Amber Schemic MASTER brand — used by the GitHub README banner (a distinct
-// deliverable from the per-driver OG cards; the README represents the agnostic
-// core, in the amber identity rather than a driver hue or the gray hub).
+// NEUTRAL GRAY Schemic brand — used by the GitHub README banner (a distinct
+// deliverable from the per-driver OG cards). The README represents the agnostic
+// core, so it wears the neutral gray identity (matching the hub), NOT amber and
+// not a driver hue. `dark` = on graphite; `light` = on warm off-white.
 const BANNER_THEME: Theme = {
   name: "database",
   eyebrow: "",
   ddl: "native DDL",
-  accent: "#ffb454",
-  accent2: "#ff6a3d",
-  markDepth: "#9c3414",
+  accent: "#d8d6da",
+  accent2: "#98969a",
+  markDepth: "#46454b",
+  glow: "#d8d6da",
   canvas: "#0c0d10",
   surface: "#181a20",
   codeBg: "#0e0f13",
@@ -295,6 +298,26 @@ const BANNER_THEME: Theme = {
   ink: "#f5f4f1",
   ink2: "#aea79c",
   ink3: "#74706a",
+};
+
+// Light-background variant of the gray banner (for a README <picture> light/dark
+// swap). Neutral grays on warm off-white; the mark + gradient word go DARK so
+// they read on the light canvas, and the top glow is a faint white highlight.
+const BANNER_THEME_LIGHT: Theme = {
+  name: "database",
+  eyebrow: "",
+  ddl: "native DDL",
+  accent: "#5a5860",
+  accent2: "#2c2b30",
+  markDepth: "#a9a7af",
+  glow: "#ffffff",
+  canvas: "#f7f6f3",
+  surface: "#ffffff",
+  codeBg: "#efeeea",
+  border: "#dcdad4",
+  ink: "#17181c",
+  ink2: "#5c5a54",
+  ink3: "#8a857c",
 };
 
 // The README banner tree: same brand lockup + install/repo row as the cards, but
@@ -403,7 +426,7 @@ function bannerTree(t: Theme): El {
       height: 630,
       padding: 72,
       backgroundColor: t.canvas,
-      backgroundImage: `radial-gradient(110% 80% at 50% -10%, ${t.accent}33, ${t.canvas} 62%)`,
+      backgroundImage: `radial-gradient(110% 80% at 50% -10%, ${t.glow ?? t.accent}33, ${t.canvas} 62%)`,
       fontFamily: "Geist",
     },
     [top, mid, bottom],
@@ -445,9 +468,17 @@ export async function renderCard(key: CardKey): Promise<Buffer> {
 
 export const CARD_KEYS: CardKey[] = ["hub", "surrealdb", "postgres"];
 
-/** The GitHub README banner as a satori SVG string (1200×630, amber master). */
-export async function renderBannerSvg(): Promise<string> {
-  return satori(bannerTree(BANNER_THEME) as never, {
+export type BannerVariant = "dark" | "light";
+const BANNER_THEMES: Record<BannerVariant, Theme> = {
+  dark: BANNER_THEME,
+  light: BANNER_THEME_LIGHT,
+};
+
+/** The GitHub README banner as a satori SVG string (1200×630, neutral gray). */
+export async function renderBannerSvg(
+  variant: BannerVariant = "dark",
+): Promise<string> {
+  return satori(bannerTree(BANNER_THEMES[variant]) as never, {
     width: 1200,
     height: 630,
     fonts: FONTS,
@@ -455,7 +486,9 @@ export async function renderBannerSvg(): Promise<string> {
 }
 
 /** The GitHub README banner rasterized to PNG bytes (1200×630). */
-export async function renderBanner(): Promise<Buffer> {
-  const svg = await renderBannerSvg();
+export async function renderBanner(
+  variant: BannerVariant = "dark",
+): Promise<Buffer> {
+  const svg = await renderBannerSvg(variant);
   return sharp(Buffer.from(svg)).png().toBuffer();
 }

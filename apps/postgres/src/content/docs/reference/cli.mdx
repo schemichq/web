@@ -1,0 +1,132 @@
+---
+title: CLI commands
+description: Reference for the Schemic CLI on the Postgres driver — the supported subcommands for setup, migrations, and validation, plus the commands not yet available on Postgres.
+---
+
+The CLI ships as `schemic`, with `sc` as a short alias. Run any command with `npx schemic <command>` (`bunx schemic` with Bun, `pnpm dlx schemic` with pnpm). Commands read defaults from `schemic.config.ts`.
+
+The Postgres workflow is **author → diff → gen → migrate**, with `status`, `rollback`, and `seed` rounding it out.
+
+## Setup
+
+<CommandRef
+  id="init"
+  name="schemic init --driver postgres"
+  desc="Scaffold the database/ layout, a config file, a sample schema, a seed file, and an empty migration snapshot. Never overwrites existing files."
+  synopsis="schemic init --driver postgres"
+  flags={[
+    { flag: "--driver postgres", type: "string", desc: "Scaffold a Postgres project." }
+  ]}
+/>
+
+<CommandRef
+  id="doctor"
+  name="schemic doctor"
+  desc="Print the resolved configuration and test the database connection."
+  synopsis="schemic doctor"
+  flags={[]}
+/>
+
+<CommandRef
+  id="new"
+  name="schemic new table <name>"
+  desc="Scaffold a starter defineTable module. Postgres' only standalone definable is the table; indexes and foreign keys are authored inside a table."
+  synopsis="schemic new table invoice"
+  flags={[]}
+/>
+
+## Migrations
+
+<CommandRef
+  id="diff"
+  name="schemic diff"
+  desc="Preview the pending structural change by introspecting the live database, without writing a migration. Structural only; --live, --ts, and --watch are SurrealDB-only flags."
+  synopsis="schemic diff"
+  flags={[]}
+/>
+
+<CommandRef
+  id="gen"
+  name="schemic gen [name]"
+  desc="Diff the schema against the snapshot and write a migration for the difference. Writes nothing when there are no changes. Alias: generate."
+  synopsis="schemic gen add_invoice"
+  flags={[]}
+/>
+
+<CommandRef
+  id="migrate"
+  name="schemic migrate [count]"
+  desc="Apply pending migrations in order against the embedded PGlite database. Alias: up."
+  synopsis="schemic migrate"
+  flags={[]}
+/>
+
+<CommandRef
+  id="rollback"
+  name="schemic rollback [count]"
+  desc="Revert applied migrations newest-first, running each migration's down section. Alias: down."
+  synopsis="schemic rollback 2"
+  flags={[]}
+/>
+
+<CommandRef
+  id="status"
+  name="schemic status"
+  desc="Show applied vs pending migrations."
+  synopsis="schemic status"
+  flags={[]}
+/>
+
+<CommandRef
+  id="unlock"
+  name="schemic unlock"
+  desc="Release a stale migration lock left by an interrupted run."
+  synopsis="schemic unlock"
+  flags={[]}
+/>
+
+## Data & validation
+
+<CommandRef
+  id="seed"
+  name="schemic seed"
+  desc="Run the project's seed script (database/seed.ts) with a connected client."
+  synopsis="schemic seed"
+  flags={[]}
+/>
+
+<CommandRef
+  id="check"
+  name="schemic check --schema"
+  desc="Validate your schema definitions. On Postgres, check supports schema validation only — full migration replay is not yet available."
+  synopsis="schemic check --schema"
+  flags={[
+    { flag: "--schema", type: "boolean", desc: "Validate the schema. Required on the Postgres driver." }
+  ]}
+/>
+
+## Not yet supported on Postgres
+
+These commands exist on other drivers but are not available on Postgres yet — they error with *"the postgres driver does not support …"*:
+
+| Command | Status |
+|---------|--------|
+| `schemic pull` | No introspection-into-code yet. |
+| `schemic push` (`sync`) | No apply-without-migration yet. |
+| `schemic diff --live` | The live diff against a running database is not available. |
+| `schemic diff --ts` | TypeScript-rendered diffs are not available. |
+| `schemic diff --watch` | Watch mode is not available. |
+| `schemic check` (full replay) | `check` validates the schema only — use `--schema`. |
+
+## Global flags
+
+| Flag | Description |
+|------|-------------|
+| `--url <url>` | Override the connection's PGlite location for this command (a `file:` data dir or empty for in-memory). |
+| `-c, --config <path>` | Path to the config file. |
+
+## Where to go next
+
+- [Generate & run migrations](/docs/guides/migrations) — the workflow these commands support.
+- [Configuration](/docs/reference/configuration) — the config file in full.
+- [The migration model](/docs/concepts/migrations-model) — why Postgres is migration-first.

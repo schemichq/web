@@ -1,0 +1,104 @@
+---
+title: The encoded and decoded sides
+description: Schemic maps between your app and Postgres using Zod's two native channels. Understand App vs Wire, encode vs decode, and when a field's two sides diverge.
+---
+
+Schemic gives every field two type views: the **app** value you hold in TypeScript, and the **wire** value the database client exchanges. For most columns these are the *same* type — a `timestamptz` is a JavaScript `Date` on both sides, a `text` is a `string` — because the PGlite client already converts at the SQL boundary. They diverge only when a field carries a **codec**: an app-side value with no native Postgres representation, stored as some other wire type. Schemic keeps both types straight and converts between them, per field.
+
+It does this with machinery Zod already has — its two channels — so there is nothing new to learn about how parsing works.
+
+## Two sides of every field
+
+Every Zod schema has two types, an input and an output. Schemic assigns each a meaning:
+
+- The **decoded side** is `z.output`. This is the **app value** — what you work with in TypeScript. Schemic exposes it as `App<typeof Table>`.
+- The **encoded side** is `z.input`. This is the **wire value** — what you pass to and read from the database client. Schemic exposes it as `Wire<typeof Table>`.
+
+For a built-in scalar the two sides are the **same type**: `s.text()` is `string` both ways, `s.timestamptz()` is `Date` both ways, `s.bytea()` is `Uint8Array` both ways. They differ only when a field has a codec — most often the escape hatch `.$postgres(wire, codec)`, where an app value of one type is stored as another:
+
+<CodeBlock lang="ts">
+
+```ts
+import { defineTable, PgField, s } from "@schemic/postgres";
+import * as z from "zod";
+
+class Money {
+  constructor(public cents: number) {}
+}
+
+export const account = defineTable("account", {
+  email: s.text(), // App === Wire === string
+  balance: new PgField(z.instanceof(Money), {}).$postgres(s.varchar(32), {
+    encode: (m: Money) => String(m.cents),         // app Money -> wire string
+    decode: (v) => new Money(Number(v as string)), // wire string -> app Money
+  }),
+});
+```
+
+</CodeBlock>
+
+Here `balance` has `App` = `Money` and `Wire` = `string`; `email` is the same type on both sides.
+
+<Callout variant="caution" title="Don't blur the two sides">
+"Encoded / wire / database" always means `z.input`; "decoded / app" always means `z.output`. Mixing them up — encoding when you meant to decode, typing a function with `Wire` when you meant `App` — is a correctness bug, not a style choice.
+</Callout>
+
+## Two operations move values across
+
+You cross between the sides with `encode` and `decode`. In the Postgres driver these live **on each field**, not on the whole table: a row is built and read column by column.
+
+- **`field.decode(value)`** reads a database value into its app value: wire → app. Use it on anything you read back from Postgres.
+- **`field.encode(value)`** turns an app value into its wire value: app → wire. Use it on anything you write.
+
+<CodeBlock lang="ts">
+
+```ts
+import { account } from "./schema/tables";
+
+const wire = account.fields.balance.encode(new Money(1299)); // app -> wire: "1299"
+const app = account.fields.balance.decode("1299");           // wire -> app: a Money
+```
+
+</CodeBlock>
+
+For a field with no codec, `encode` and `decode` simply pass the value through — `account.fields.email.decode(v)` returns the `string` unchanged. The direction is the thing to remember: **encode to write, decode to read.**
+
+<Callout variant="note" title="Codecs are per-field today">
+The Postgres driver does not yet expose a whole-row `Table.encode` / `Table.decode` helper the way the SurrealDB driver does. You encode and decode one column at a time through `table.fields.<column>`. This is a known gap, tracked for a future release — see [Encode & decode rows](/docs/guides/encode-decode-rows) for the full read/write pattern against the PGlite client.
+</Callout>
+
+## App and Wire types
+
+The two sides are also two TypeScript types, inferred from the same definition:
+
+| Type | Side | Use it for |
+|------|------|-----------|
+| `App<typeof T>` | decoded (`z.output`) | the row as you work with it in TypeScript |
+| `Wire<typeof T>` | encoded (`z.input`) | a row as the database client exchanges it |
+
+<CodeBlock lang="ts">
+
+```ts
+import type { App, Wire } from "@schemic/postgres";
+import { account } from "./schema/tables";
+
+type AccountApp = App<typeof account>;   // { email: string; balance: Money; ... }
+type AccountWire = Wire<typeof account>; // { email: string; balance: string; ... }
+```
+
+</CodeBlock>
+
+## The wire side is what becomes the column type
+
+A field's Postgres column type is its **wire** (encoded) type. This is the rule that explains how Zod's own methods interact with the database:
+
+- **App-side methods leave the DDL unchanged.** `refine`, `transform`, `brand`, `describe` are native Zod methods that act on the decoded app value or its validation. They run in TypeScript and do not alter the stored column type or add a database constraint.
+- **`$`-prefixed methods emit DDL.** `$default`, `$check`, `$unique`, and the rest attach clauses to the column itself.
+
+This is the dividing line behind Schemic's method naming: non-`$` methods are native Zod and act app-side; `$`-prefixed methods change the stored schema. An app value Postgres cannot represent is handled with the escape hatch, `.$postgres(wire, codec)`. See [field methods](/docs/reference/field-methods) for the full split.
+
+## Where to go next
+
+- [Encode & decode rows](/docs/guides/encode-decode-rows) — the task-focused how-to against PGlite.
+- [From schema to DDL](/docs/concepts/schema-to-ddl) — how a definition becomes `CREATE TABLE`.
+- [Type mapping](/docs/reference/type-mapping) — every `s.*` type and the column it emits.

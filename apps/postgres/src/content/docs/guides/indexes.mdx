@@ -1,0 +1,98 @@
+---
+title: Indexes
+description: Add unique and secondary btree indexes to Postgres tables with Schemic — column-level $unique, table-level .index([...]), and composite unique indexes.
+---
+
+Schemic emits plain btree indexes — unique and non-unique — as `CREATE INDEX` statements alongside the table. This guide covers the three forms you reach for most.
+
+## A unique column index
+
+`$unique()` on a column emits a `CREATE UNIQUE INDEX`. The index is named `<table>_<column>_key`:
+
+<CodeBlock lang="ts">
+
+```ts
+import { defineTable, s } from "@schemic/postgres";
+
+export const user = defineTable("user", {
+  email: s.text().$unique(),
+});
+```
+
+</CodeBlock>
+
+<CodeBlock title="Generated DDL" lang="postgresql">
+
+```sql
+CREATE TABLE "user" (
+  "id" text PRIMARY KEY,
+  "email" text NOT NULL
+);
+CREATE UNIQUE INDEX "user_email_key" ON "user" ("email");
+```
+
+</CodeBlock>
+
+## A secondary index
+
+For a non-unique index, use the table-level `.index([...])`. It is named `<table>_<columns>_idx`:
+
+<CodeBlock lang="ts">
+
+```ts
+export const post = defineTable("post", {
+  title: s.text(),
+}).index(["title"]);
+```
+
+</CodeBlock>
+
+<CodeBlock title="Generated DDL" lang="postgresql">
+
+```sql
+CREATE TABLE "post" (
+  "id" text PRIMARY KEY,
+  "title" text NOT NULL
+);
+CREATE INDEX "post_title_idx" ON "post" ("title");
+```
+
+</CodeBlock>
+
+## A composite index
+
+Pass several columns, and `{ unique: true }` for a multi-column unique constraint:
+
+<CodeBlock lang="ts">
+
+```ts
+export const membership = defineTable("membership", {
+  org: s.text(),
+  user: s.text(),
+}).index(["org", "user"], { unique: true });
+```
+
+</CodeBlock>
+
+<CodeBlock title="Generated DDL" lang="postgresql">
+
+```sql
+CREATE TABLE "membership" (
+  "id" text PRIMARY KEY,
+  "org" text NOT NULL,
+  "user" text NOT NULL
+);
+CREATE UNIQUE INDEX "membership_org_user_idx" ON "membership" ("org", "user");
+```
+
+</CodeBlock>
+
+<Callout variant="note" title="Plain btree indexes only">
+Unique and non-unique btree indexes over real columns are supported and round-trip through `schemic diff`. Index methods (gin, gist, brin, hash) and partial or expression indexes are not yet supported.
+</Callout>
+
+## Where to go next
+
+- [Foreign keys](/docs/guides/foreign-keys) — referential constraints.
+- [Define a table](/docs/guides/define-a-table) — columns and primary keys.
+- [Definers reference](/docs/reference/definers) — the `.index()` signature in full.

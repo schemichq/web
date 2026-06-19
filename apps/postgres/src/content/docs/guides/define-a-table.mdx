@@ -1,0 +1,135 @@
+---
+title: Define a table
+description: Define a Postgres table with Schemic — columns, the implicit id primary key, custom and composite primary keys, and table-level CHECK constraints.
+---
+
+`defineTable(name, fields)` creates a table definition: a set of columns whose types and clauses lower to Postgres DDL. This guide covers the everyday choices you make when defining one. For the conceptual background see [from schema to DDL](/docs/concepts/schema-to-ddl).
+
+## Define the columns
+
+Pass the table name and an object of columns built with `s`, the Postgres-native schema vocabulary:
+
+<CodeBlock lang="ts">
+
+```ts
+import { defineTable, s } from "@schemic/postgres";
+
+export const user = defineTable("user", {
+  name: s.text(),
+  count: s.integer(),
+  ratio: s.doublePrecision(),
+  active: s.boolean(),
+  created: s.timestamptz(),
+  token: s.uuid(),
+});
+```
+
+</CodeBlock>
+
+Each column carries a Postgres type and is `NOT NULL` by default:
+
+<CodeBlock title="Generated DDL" lang="postgresql">
+
+```sql
+CREATE TABLE "user" (
+  "id" text PRIMARY KEY,
+  "active" boolean NOT NULL,
+  "count" integer NOT NULL,
+  "created" timestamp with time zone NOT NULL,
+  "name" text NOT NULL,
+  "ratio" double precision NOT NULL,
+  "token" uuid NOT NULL
+);
+```
+
+</CodeBlock>
+
+Use `.optional()` (or `.nullable()`) to make a column nullable. See the [type mapping](/docs/reference/type-mapping) for every `s.*` type and the column it emits.
+
+## The implicit id
+
+You did not declare `id` above — Schemic adds an implicit `"id" text PRIMARY KEY` to every table that has no primary key of its own. It mirrors SurrealDB's record id and gives you a stable key without ceremony.
+
+To use your own key, declare it. A `text` column literally named `id` is treated as the implicit one, so name a custom text id otherwise.
+
+## Custom and composite primary keys
+
+Declare a primary key at the column level with `.$primaryKey()`, or at the table level with `.primaryKey(...)`. Either replaces the implicit `id`.
+
+A composite key uses the table-level form:
+
+<CodeBlock lang="ts">
+
+```ts
+export const member = defineTable("member", {
+  org: s.text(),
+  person: s.text(),
+}).primaryKey("org", "person");
+```
+
+</CodeBlock>
+
+<CodeBlock title="Generated DDL" lang="postgresql">
+
+```sql
+CREATE TABLE "member" (
+  "org" text NOT NULL,
+  "person" text NOT NULL,
+  PRIMARY KEY ("org", "person")
+);
+```
+
+</CodeBlock>
+
+For an auto-incrementing key use `s.serial().$primaryKey()` (an `integer` identity) or `s.bigserial().$primaryKey()`; for a uuid key use `s.uuid().$primaryKey()`. The `.$primaryKey()` is required — it makes the column the primary key and replaces the implicit `id`. Without it you keep the implicit `"id"` column *and* get the new one.
+
+## Table-level CHECK
+
+`.check(expr)` attaches a table-level `CHECK` constraint — useful when a rule spans more than one column:
+
+<CodeBlock lang="ts">
+
+```ts
+export const account = defineTable("account", {
+  balance: s.numeric(12, 2),
+}).check("balance >= 0");
+```
+
+</CodeBlock>
+
+<CodeBlock title="Generated DDL" lang="postgresql">
+
+```sql
+CREATE TABLE "account" (
+  "id" text PRIMARY KEY,
+  "balance" numeric(12, 2) NOT NULL,
+  CHECK (balance >= 0)
+);
+```
+
+</CodeBlock>
+
+<Callout variant="note" title="CHECK emits but is excluded from drift detection">
+The constraint is emitted into the `CREATE TABLE`, but Postgres rewrites check expressions on read, so Schemic excludes them from change detection. Adding or changing only a `CHECK` will not generate a migration — set it when you first author the table. The same applies to `DEFAULT`, `GENERATED`, and `COMMENT`; see [constraints & defaults](/docs/guides/constraints-and-defaults).
+</Callout>
+
+## Verify it
+
+Preview the structural change, then generate the migration to see the DDL your definition produces:
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic diff
+npx schemic gen add_user
+```
+
+</CodeBlock>
+
+Open the written `.sql` file before applying anything.
+
+## Where to go next
+
+- [Constraints & defaults](/docs/guides/constraints-and-defaults) — `$default`, `$check`, `$generated`, `$identity`, `$comment`.
+- [Foreign keys](/docs/guides/foreign-keys) — `s.references` and referential actions.
+- [Definers reference](/docs/reference/definers) — every method on `defineTable`.

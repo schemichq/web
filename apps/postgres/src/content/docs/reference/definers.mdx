@@ -1,0 +1,73 @@
+---
+title: Definers
+description: Reference for the top-level definers in the Schemic Postgres driver — defineTable with its primaryKey, check, index, and record methods, and the s.$postgres escape-hatch factory.
+---
+
+The Postgres driver's only standalone definer is `defineTable` — indexes and foreign keys are authored *inside* a table. This page lists `defineTable`'s signature and methods, plus the escape-hatch factory.
+
+## defineTable
+
+<CodeBlock lang="ts">
+
+```ts
+defineTable(name: string, fields: Shape, config?): PgTableDef
+```
+
+</CodeBlock>
+
+Creates a table definition. `fields` is an object of `s.*` columns. When no primary key is declared, Schemic adds an implicit `"id" text PRIMARY KEY`.
+
+| Method | Description |
+|--------|-------------|
+| `.primaryKey(...cols)` | Composite / custom `PRIMARY KEY`, replacing the implicit `id`. |
+| `.check(expr)` | A table-level `CHECK (expr)`. Emitted but excluded from drift detection. |
+| `.index(cols, opts?)` | A secondary index over `cols`. `opts`: `{ name?, unique? }`. |
+| `.record(opts?)` | The `s.references` foreign-key field for *this* table, for use in another table's shape. `opts`: `{ onDelete?, onUpdate? }`. |
+
+<CodeBlock lang="ts">
+
+```ts
+import { defineTable, s } from "@schemic/postgres";
+
+export const member = defineTable("member", {
+  org: s.text(),
+  person: s.text(),
+})
+  .primaryKey("org", "person")
+  .index(["person"]);
+```
+
+</CodeBlock>
+
+### Columns and per-field codecs
+
+Each entry in `fields` is a `PgField`, which carries the codec for that column. Read and write through `table.fields.<column>.encode(value)` / `.decode(value)` — see [encode & decode rows](/docs/guides/encode-decode-rows). The decoded and encoded row shapes are the `App<typeof Table>` and `Wire<typeof Table>` types.
+
+<Callout variant="note" title="s.enum projects to text">
+`s.enum([...])` validates the value app-side as a Zod enum but emits a plain `text` column — there is no native Postgres `ENUM` (`CREATE TYPE`) yet.
+</Callout>
+
+## The escape hatch
+
+For a value with no built-in mapping, `s.$postgres(pgType, codec)` builds a field from scratch: the column emits as `pgType`, and the Zod `codec` maps between app and wire.
+
+<CodeBlock lang="ts">
+
+```ts
+import { defineTable, s } from "@schemic/postgres";
+import * as z from "zod";
+
+export const blob = defineTable("blob", {
+  raw: s.$postgres("text", z.string()),
+});
+```
+
+</CodeBlock>
+
+The chainable form, `.$postgres(wire, codec?)`, attaches a storage type and codec to an existing field — see [field methods](/docs/reference/field-methods#escape-hatch).
+
+## Where to go next
+
+- [Define a table](/docs/guides/define-a-table) — the how-to.
+- [Field methods](/docs/reference/field-methods) — the chainable column methods.
+- [Type mapping](/docs/reference/type-mapping) — every `s.*` type.

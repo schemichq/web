@@ -1,0 +1,93 @@
+---
+title: Introduction
+description: Schemic lets you describe a PostgreSQL table once, in Zod, and get SQL DDL, runtime validation, and a fully-typed JS-to-database mapping from that single definition.
+---
+
+Schemic lets you describe a PostgreSQL table once, in Zod, and derive three things from that single definition: the SQL schema (**DDL**), runtime **validation**, and a fully-typed **JS-to-database mapping**. There is no code generation step and no separate schema language. Your Zod schema *is* the schema.
+
+You write this:
+
+<CodeBlock title="database/schema/tables.ts" lang="ts">
+
+```ts
+import { defineTable, s, sqlExpr } from "@schemic/postgres";
+
+export const user = defineTable("user", {
+  email: s.varchar(255).$unique(),
+  name: s.text(),
+  age: s.smallint().optional(),
+  createdAt: s.timestamptz().$default(sqlExpr("now()")),
+});
+```
+
+</CodeBlock>
+
+…and the same definition gives you the DDL below, a validator, and an `App` type whose `createdAt` is a JavaScript `Date` even though Postgres stores it as `timestamptz`.
+
+<CodeBlock title="Generated DDL" lang="postgresql">
+
+```sql
+CREATE TABLE "user" (
+  "id" text PRIMARY KEY,
+  "age" smallint,
+  "createdAt" timestamp with time zone NOT NULL DEFAULT now(),
+  "email" varchar(255) NOT NULL,
+  "name" text NOT NULL
+);
+CREATE UNIQUE INDEX "user_email_key" ON "user" ("email");
+```
+
+</CodeBlock>
+
+You never wrote the `id` primary key — Schemic adds an implicit `"id" text PRIMARY KEY` unless you declare your own.
+
+## What you get from one definition
+
+<PillarGrid>
+  <PillarCard icon="database" title="Postgres DDL">
+    Emit `CREATE TABLE`, columns, primary and foreign keys, unique and secondary indexes, defaults, and checks straight from your schema. No DDL to hand-write or keep in sync.
+  </PillarCard>
+  <PillarCard icon="shield-check" title="Runtime validation">
+    Every field is a real Zod schema, so parsing, refinements, and error messages work exactly as you already know them.
+  </PillarCard>
+  <PillarCard icon="layers" title="Typed JS-to-DB mapping">
+    Read and write rows through codecs that convert between your app values and the Postgres wire format, with static types for both sides.
+  </PillarCard>
+</PillarGrid>
+
+A fourth thing falls out of the same source of truth: a declarative, reviewable [migration history](/docs/concepts/migrations-model) the CLI generates by diffing your schema against the database.
+
+## The mental model
+
+A field is an ordinary Zod schema plus a little Postgres metadata. The mapping between your code and the database rides Zod's two native channels:
+
+- The **app side** (`z.output`) is the value you work with in TypeScript: a `Date`, a `string`, a `Uint8Array`.
+- The **wire side** (`z.input`) is what Postgres stores and returns.
+
+A codec moves a value between the two: `decode` reads a row into app values, and `encode` writes app values back. That is why a `timestamptz` column is a `Date` in your code, for free. Keeping these two sides distinct is the core idea; the [encoded and decoded sides](/docs/concepts/app-and-wire) guide covers it in full.
+
+## Prerequisites
+
+<CompatBadges items={["PostgreSQL via PGlite (embedded)", "Zod 4", "TypeScript 5.x", "Node 18+ or Bun"]} />
+
+<Callout variant="note" title="Alpha — PGlite today">
+The Postgres driver is `0.1.0-alpha`. Today it runs on embedded [PGlite](https://pglite.dev): authoring, DDL emit, introspection, and migrations all round-trip against it, with **no database server to install**. A client for hosted Postgres servers is planned. Tables, columns, primary/foreign keys, unique and secondary indexes, defaults, checks, and identity columns are supported; views, functions, triggers, native enums, and extensions are not yet. See the [coverage map](https://github.com/schemichq/schemic/blob/main/packages/postgres/docs/COVERAGE.md) for the feature-by-feature status, and pin a version.
+</Callout>
+
+## Start here
+
+<StartCard title="Quickstart: your first schema and migration" href="/docs/quickstart" variant="primary" />
+<StartCard title="Concept: the encoded and decoded sides" href="/docs/concepts/app-and-wire" variant="secondary" />
+
+## How these docs are organized
+
+- **[Quickstart](/docs/quickstart)** walks you from an empty directory to a running migration — no Postgres server required.
+- **Concepts** explain *why* the driver works the way it does: the two channels, how a schema becomes DDL, and the migration model.
+- **Guides** are task-focused: define a table, add constraints and defaults, model foreign keys, index, and run migrations.
+- **Reference** is the exhaustive lookup: the type mapping, every field method, the definers, the config, and the CLI.
+
+<NextSteps items={[
+  { title: "Quickstart", description: "Define a schema and run your first migration.", href: "/docs/quickstart" },
+  { title: "The encoded and decoded sides", description: "Understand App vs Wire and encode vs decode.", href: "/docs/concepts/app-and-wire" },
+  { title: "Define a table", description: "The how-to for everyday schema work.", href: "/docs/guides/define-a-table" }
+]} />

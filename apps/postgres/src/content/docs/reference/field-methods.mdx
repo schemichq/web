@@ -1,0 +1,92 @@
+---
+title: Field methods
+description: Reference for the chainable field methods in the Schemic Postgres driver — native Zod methods, the $-prefixed DDL clauses, the $-vs-unprefixed rule, and the escape hatch.
+---
+
+Every `s.*` field is chainable. This page is the complete list of methods. For how the clauses render, see [from schema to DDL](/docs/concepts/schema-to-ddl).
+
+## Two kinds of method: app-side and DDL
+
+The methods split by prefix, and the prefix tells you which side a method acts on:
+
+- **Non-`$` methods are native Zod.** `s.*` is a drop-in for `z.*`, so these behave exactly as in Zod — they shape the **app-side** value and its validation.
+- **`$`-prefixed methods are Schemic's.** They attach a clause to the **Postgres column** — the database side.
+
+The two do not bridge; each side is explicit.
+
+<Callout variant="caution" title="App-side checks are not database constraints">
+A native `.refine(...)` or `.transform(...)` runs only when you parse in TypeScript — it does not change the column type or add a database constraint. To enforce a rule in the database, use `.$check(...)`.
+</Callout>
+
+## Native Zod methods
+
+These delegate to the underlying Zod schema and act on the app side. They are available on any `s.*` field:
+
+`optional`, `nullable`, `nullish`, `array`, `refine`, `superRefine`, `transform`, `pipe`, `brand`, `default`, `catch`, `describe`, `meta`.
+
+<Callout variant="note" title="default is not .$default">
+Native `default` is a Zod parse-time default applied in your app code; it emits no DDL. To set a database `DEFAULT` clause, use the `$`-prefixed `.$default(expr)` below. The `$` prefix is the rule: unprefixed methods act app-side, `$`-prefixed methods change the stored schema.
+</Callout>
+
+## Modifiers
+
+These shape the column's type. They carry through to both the TypeScript type and the DDL.
+
+| Method | DDL effect | Description |
+|--------|-----------|-------------|
+| `.optional()` | nullable column | The column may be `NULL`. |
+| `.nullable()` | nullable column | Same column — `option` and `null` both collapse to nullable. |
+| `.array()` | `T[]` | A Postgres array of the field's type. |
+
+## DDL clauses
+
+Each `$`-method adds a clause to the column (or emits a companion statement).
+
+| Method | DDL | Description |
+|--------|-----|-------------|
+| `.$default(value \| sqlExpr(expr))` | `DEFAULT ...` | A JS literal is rendered as a SQL literal; `sqlExpr(...)` is spliced as a raw SQL expression. |
+| `.$check(expr)` | `CHECK (expr)` | A column-level check. Accepts a string or `sqlExpr(...)`. |
+| `.$generated(expr)` | `GENERATED ALWAYS AS (expr) STORED` | A computed column; reference other columns by quoted name. |
+| `.$identity(mode?)` | `GENERATED {ALWAYS \| BY DEFAULT} AS IDENTITY` | Auto-increment. Default mode `"by-default"`. |
+| `.$unique()` | `CREATE UNIQUE INDEX` | A unique index on the column, named `<table>_<col>_key`. |
+| `.$primaryKey()` | `PRIMARY KEY` | Make this column the primary key, replacing the implicit `id`. |
+| `.$references(table, opts?)` | `FOREIGN KEY ... REFERENCES table(id)` | A foreign key; `opts` is `{ onDelete?, onUpdate? }`. |
+| `.$comment(text)` | `COMMENT ON COLUMN` | Attach a comment to the column. |
+
+<Callout variant="caution" title="DEFAULT, CHECK, GENERATED, and COMMENT are excluded from drift detection">
+These four clauses emit faithfully, but Postgres rewrites their expressions on read, so Schemic excludes them from change detection. Changing *only* one of them will not generate a migration — set it when you first author the column. Type, nullability, foreign keys, and indexes are detected normally. See [constraints & defaults](/docs/guides/constraints-and-defaults).
+</Callout>
+
+## Escape hatch
+
+When a value has no built-in mapping, teach the driver how to store it with a Postgres type plus a Zod codec.
+
+| Method | Description |
+|--------|-------------|
+| `.$postgres(wire, codec?)` | Chainable: store this field's app value as the given wire type (an `s.*` field). `codec` is `{ encode, decode }`; omit it for an identity mapping. |
+
+There is also a factory form for building such a field from scratch — `s.$postgres(pgType, codec)`. See [definers](/docs/reference/definers#the-escape-hatch).
+
+<CodeBlock lang="ts">
+
+```ts
+import { defineTable, s, PgField } from "@schemic/postgres";
+import * as z from "zod";
+
+defineTable("tx", {
+  amount: new PgField(z.instanceof(Money), {}).$postgres(s.varchar(32), {
+    encode: (m) => String(m.cents),
+    decode: (v) => new Money(Number(v)),
+  }),
+});
+```
+
+</CodeBlock>
+
+The column emits as the wire type (`varchar(32)`); the codec maps between the app value and the wire value.
+
+## Where to go next
+
+- [Type mapping](/docs/reference/type-mapping) — the field types these chain onto.
+- [Constraints & defaults](/docs/guides/constraints-and-defaults) — the how-to for the clauses.
+- [Definers](/docs/reference/definers) — `defineTable` and the escape-hatch factory.

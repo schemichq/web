@@ -59,7 +59,6 @@ export const topNav: NavItem[] = [
   { label: "Docs", href: d("introduction") },
   { label: "Guides", href: d("guides/define-a-table") },
   { label: "Reference", href: d("reference/type-mapping") },
-  { label: "Blog", href: "/blog" },
 ];
 
 // Flattened, ordered list (sidebar order) for prev/next + lookups.

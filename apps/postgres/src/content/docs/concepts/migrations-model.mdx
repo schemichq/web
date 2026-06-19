@@ -1,0 +1,63 @@
+---
+title: The migration model
+description: How Schemic evolves your Postgres database — declarative diffing against a snapshot, the author → diff → gen → migrate loop, reversible up/down migrations, and what the structural diff covers.
+---
+
+Schemic's CLI is **declarative and diff-based**. You never write a migration by hand describing *how* to get from one schema to another. You edit your schema to describe the state you want, and the CLI computes the difference and writes the migration for you.
+
+This page explains the model behind that: what the diff compares against, what it covers, and the loop you run to evolve a database.
+
+## You describe the destination, not the steps
+
+A traditional migration tool asks you to write the steps: "add this column, drop that one." Schemic inverts it. Your TypeScript schema *is* the desired state. To change the database, you change the schema and run `schemic gen`; the CLI diffs the new schema against a recorded **snapshot** of the last known state and writes a migration for exactly the delta.
+
+The snapshot lives in `database/migrations/meta/_snapshot.json`. `schemic gen` compares your schema against it, and applying a migration advances it — this is what lets `gen` write *only* the new `post` table when you add one, since it already knows `user` is in the snapshot. `schemic diff` is different: on Postgres it introspects the live database and compares your schema against *that*, so you can preview drift between your code and the real database.
+
+## The everyday loop: author → diff → gen → migrate
+
+The Postgres workflow is a short cycle:
+
+1. **Author** — edit a `defineTable` in `database/schema`.
+2. **Diff** — run `schemic diff` to preview the structural change without writing anything.
+3. **Gen** — run `schemic gen <name>` to write a reviewable `.sql` migration for the delta.
+4. **Migrate** — run `schemic migrate` to apply pending migrations to the database.
+
+`status`, `rollback`, and `seed` round out the loop. The [migrations guide](/docs/guides/migrations) walks through it command by command.
+
+<Callout variant="note" title="The Postgres driver is migration-first">
+There is no `push` (apply-without-migration) or `pull` (introspect-into-code) on the Postgres driver yet, and `diff` is **structural only** — it has no `--live`, `--ts`, or `--watch` mode. The path through migrations is the supported way to change the database. See the [CLI reference](/docs/reference/cli) for exactly which commands ship.
+</Callout>
+
+## Migrations are reversible
+
+Each generated migration carries both directions in one file, delimited by markers — a forward (`up`) section and a rollback (`down`) section:
+
+<CodeBlock title="…_initial.sql" lang="postgresql">
+
+```sql
+-- schemic:up
+CREATE TABLE "user" ( ... );
+
+-- schemic:down
+DROP TABLE "user";
+```
+
+</CodeBlock>
+
+`schemic migrate` runs the `up` section; `schemic rollback` runs the `down` section newest-first. Commit the generated `.sql` files — they are the reviewable, version-controlled record of how your schema evolved.
+
+## What the structural diff covers
+
+The diff today is **structural**: it detects table create/drop, `ADD COLUMN` / `DROP COLUMN`, column type changes (best-effort cast), nullability changes, and index and foreign-key add/drop. Plain and unique btree indexes and foreign keys round-trip cleanly, so adding or dropping one produces a real, accurate migration.
+
+Expression-level clauses — `DEFAULT`, `CHECK`, `GENERATED`, and `COMMENT` — are **emitted faithfully but excluded from the diff**, because Postgres rewrites those expressions on read and an exact comparison would produce phantom migrations. The practical consequence: changing *only* a default or a check does not generate a migration. Set those when you first author a column, or recreate the column when you need to change one. See [from schema to DDL](/docs/concepts/schema-to-ddl) for the full list.
+
+## The engine is embedded PGlite
+
+Migrations apply against the [PGlite](https://pglite.dev) engine pointed at by your config — an embedded Postgres with no server to install or start. A `file:<dir>` URL persists to a data directory; an empty URL is in-memory. Hosted-server support over `postgres://` is reserved for a future client. See [configuration](/docs/reference/configuration).
+
+## Where to go next
+
+- [Generate & run migrations](/docs/guides/migrations) — the everyday workflow.
+- [CLI commands](/docs/reference/cli) — every supported subcommand.
+- [From schema to DDL](/docs/concepts/schema-to-ddl) — how a definition becomes the DDL that gets diffed.

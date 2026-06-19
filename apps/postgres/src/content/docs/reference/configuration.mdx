@@ -1,0 +1,79 @@
+---
+title: Configuration
+description: Reference for schemic.config.ts with the Postgres driver — the connections map, the postgresConnection factory and its fields, PGlite url forms, and environment handling.
+---
+
+The CLI reads `schemic.config.ts` from your project root. Author it with `defineConfig` for full type-checking; `schemic init --driver postgres` scaffolds one for you.
+
+Config is **connections-only**: a map of named connections, each built by a driver's connection factory. There is no top-level `driver` string — the driver is the factory you call.
+
+<CodeBlock title="schemic.config.ts" lang="ts">
+
+```ts
+import { defineConfig } from "@schemic/core/config";
+import { postgresConnection } from "@schemic/postgres";
+
+export default defineConfig({
+  connections: {
+    default: postgresConnection({
+      schema: "./database/schema",
+      // PGlite (embedded): `file:<dir>` is a persistent data dir; "" is in-memory.
+      url: process.env.DATABASE_URL ?? "file:./.pgdata",
+    }),
+  },
+});
+```
+
+</CodeBlock>
+
+## Top-level
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `connections` | record | A map of named connections. The CLI uses `default` unless told otherwise; add more for multi-database setups. |
+
+Each entry comes from a driver factory — `postgresConnection(...)` from `@schemic/postgres`. `defineConfig` is imported from `@schemic/core/config`.
+
+## `postgresConnection(...)`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `schema` | string | Directory of schema modules, loaded recursively. Usually `./database/schema`. |
+| `url` | string? | Where to connect — a PGlite data directory or in-memory (see below). Omitted means in-memory. |
+| `migrations` | string? | Directory of `.sql` migrations and their `meta/` snapshot. Defaults relative to `schema`. |
+| `key` | string? | An identifier for this connection, when resolving a keyed collection. |
+
+You can also pass a resolver function that yields a config (or a keyed collection of configs) instead of a static object.
+
+## The `url`: PGlite data directories
+
+The driver runs on embedded PGlite, and `url` selects where its data lives:
+
+| `url` | Behaviour |
+|-------|-----------|
+| `"file:./.pgdata"` (or a bare path) | A **persistent** PGlite data directory on disk. |
+| `""` (or omitted) | An **in-memory** PGlite database — fresh each run. |
+| `"postgres://…"` | **Reserved** for a future node-postgres client. Not supported yet. |
+
+<Callout variant="note" title="PGlite only today">
+Hosted Postgres servers over `postgres://` are planned but not shipped. Point `url` at a `file:` data directory (or leave it in-memory). The scaffold reads `process.env.DATABASE_URL` so you can swap the location per environment, but for now its value should be a `file:` path or empty.
+</Callout>
+
+## Environment variables
+
+Values are **explicit** — read environment variables yourself in the config (`process.env.DATABASE_URL ?? "…"`), as the scaffold does. There is no implicit magic. The companion `.env.example` documents the convention:
+
+<CodeBlock lang="bash">
+
+```bash
+# A real Postgres server (reserved — uncomment once the node-postgres client lands):
+# DATABASE_URL=postgres://user:pass@localhost:5432/app
+```
+
+</CodeBlock>
+
+## Where to go next
+
+- [CLI commands](/docs/reference/cli) — the commands that read this config.
+- [Generate & run migrations](/docs/guides/migrations) — the config in the workflow.
+- [Quickstart](/docs/quickstart) — the scaffolded config in context.

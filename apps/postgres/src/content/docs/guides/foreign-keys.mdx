@@ -1,0 +1,145 @@
+---
+title: Foreign keys
+description: Model relationships between Postgres tables with Schemic — single-column foreign keys with s.references, ON DELETE and ON UPDATE referential actions, and the table.record() helper.
+---
+
+A foreign key links a column to another table's `id`. In Schemic you author it with `s.references(table)`, which emits a `text` column plus a `FOREIGN KEY` constraint. This guide covers the everyday cases.
+
+## A single foreign key
+
+`s.references(table)` declares a column that references another table's primary key:
+
+<CodeBlock lang="ts">
+
+```ts
+import { defineTable, s } from "@schemic/postgres";
+
+export const usr = defineTable("usr", { name: s.text() });
+
+export const post = defineTable("post", {
+  author: s.references("usr"),
+});
+```
+
+</CodeBlock>
+
+<CodeBlock title="Generated DDL" lang="postgresql">
+
+```sql
+CREATE TABLE "post" (
+  "id" text PRIMARY KEY,
+  "author" text NOT NULL
+);
+CREATE TABLE "usr" (
+  "id" text PRIMARY KEY,
+  "name" text NOT NULL
+);
+ALTER TABLE "post" ADD CONSTRAINT "post_author_fkey" FOREIGN KEY ("author") REFERENCES "usr" ("id");
+```
+
+</CodeBlock>
+
+The foreign key is emitted as its own `ALTER TABLE ... ADD CONSTRAINT` after both tables, so the order of references between tables never matters — even a mutual reference resolves.
+
+## Referential actions
+
+Pass `onDelete` and `onUpdate` to control what happens when the referenced row changes. Actions are emitted uppercased; the default `NO ACTION` is omitted:
+
+<CodeBlock lang="ts">
+
+```ts
+export const post = defineTable("post", {
+  author: s.references("usr", { onDelete: "cascade", onUpdate: "restrict" }),
+});
+```
+
+</CodeBlock>
+
+<CodeBlock title="Generated DDL" lang="postgresql">
+
+```sql
+ALTER TABLE "post" ADD CONSTRAINT "post_author_fkey" FOREIGN KEY ("author") REFERENCES "usr" ("id") ON DELETE CASCADE ON UPDATE RESTRICT;
+```
+
+</CodeBlock>
+
+## Referencing a table object
+
+When you already have the target table in scope, `table.record(opts?)` is a typed alternative to passing the name as a string — it returns the same `s.references` field:
+
+<CodeBlock lang="ts">
+
+```ts
+const usr = defineTable("usr", { name: s.text() });
+
+const post = defineTable("post", {
+  author: usr.record({ onDelete: "cascade" }),
+});
+```
+
+</CodeBlock>
+
+<CodeBlock title="Generated DDL" lang="postgresql">
+
+```sql
+ALTER TABLE "post" ADD CONSTRAINT "post_author_fkey" FOREIGN KEY ("author") REFERENCES "usr" ("id") ON DELETE CASCADE;
+```
+
+</CodeBlock>
+
+## Putting it together
+
+Foreign keys compose with checks, defaults, generated columns, and indexes in one domain:
+
+<CodeBlock lang="ts">
+
+```ts
+import { defineTable, s, sqlExpr } from "@schemic/postgres";
+
+const customer = defineTable("customer", {
+  email: s.text().$unique().$check(sqlExpr("email ~* '^[^@]+@[^@]+$'")),
+  name: s.text(),
+});
+
+const order = defineTable("order", {
+  customer: customer.record({ onDelete: "cascade" }),
+  quantity: s.integer().$check(sqlExpr("quantity > 0")),
+  unitPrice: s.numeric(10, 2),
+  total: s.numeric(12, 2).$generated('quantity * "unitPrice"'),
+  createdAt: s.timestamptz().$default(sqlExpr("now()")),
+});
+```
+
+</CodeBlock>
+
+<CodeBlock title="Generated DDL" lang="postgresql">
+
+```sql
+CREATE TABLE "customer" (
+  "id" text PRIMARY KEY,
+  "email" text NOT NULL CHECK (email ~* '^[^@]+@[^@]+$'),
+  "name" text NOT NULL
+);
+CREATE TABLE "order" (
+  "id" text PRIMARY KEY,
+  "createdAt" timestamp with time zone NOT NULL DEFAULT now(),
+  "customer" text NOT NULL,
+  "quantity" integer NOT NULL CHECK (quantity > 0),
+  "total" numeric(12, 2) NOT NULL GENERATED ALWAYS AS (quantity * "unitPrice") STORED,
+  "unitPrice" numeric(10, 2) NOT NULL
+);
+CREATE UNIQUE INDEX "customer_email_key" ON "customer" ("email");
+ALTER TABLE "order" ADD CONSTRAINT "order_customer_fkey" FOREIGN KEY ("customer") REFERENCES "customer" ("id") ON DELETE CASCADE;
+```
+
+</CodeBlock>
+
+<Callout variant="note" title="Single-column keys to id only">
+A foreign key always targets the referenced table's `id` and is a single column. Composite or multi-column foreign keys, and keys to a non-`id` column, are not yet supported.
+</Callout>
+
+## Where to go next
+
+- [Indexes](/docs/guides/indexes) — `$unique` and secondary indexes.
+- [Constraints & defaults](/docs/guides/constraints-and-defaults) — the clauses used above.
+- [Generate & run migrations](/docs/guides/migrations) — apply the schema to the database.

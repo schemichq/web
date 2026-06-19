@@ -1,0 +1,106 @@
+---
+title: Encode & decode rows
+description: Read and write Postgres rows as typed values with Schemic — per-field encode and decode against the embedded PGlite client, using positional bind params and the pgSql tagged template.
+---
+
+Your table definition carries codecs that bridge [app values and the Postgres wire format](/docs/concepts/app-and-wire). The rule throughout: **encode to write, decode to read.**
+
+In the Postgres driver, codecs are **per-field**: you encode and decode one column at a time through `table.fields.<column>`. There is no whole-row `Table.encode` / `Table.decode` helper yet — that is a known gap, tracked for a future release.
+
+The examples use this `account` table. `email` is a plain `text` column (the same type app- and wire-side); `balance` attaches a codec with the [`.$postgres`](/docs/reference/field-methods) escape hatch so an app-side `Money` is stored as `varchar`. Built-in scalars need no codec — a `timestamptz` is already a `Date` on both sides; the escape hatch is for app types Postgres has no native column for.
+
+<CodeBlock title="database/schema/tables.ts" lang="ts">
+
+```ts
+import { defineTable, PgField, s } from "@schemic/postgres";
+import * as z from "zod";
+
+class Money {
+  constructor(public cents: number) {}
+}
+
+export const account = defineTable("account", {
+  email: s.text(),
+  balance: new PgField(z.instanceof(Money), {}).$postgres(s.varchar(32), {
+    encode: (m: Money) => String(m.cents),
+    decode: (v) => new Money(Number(v as string)),
+  }),
+});
+```
+
+</CodeBlock>
+
+The examples assume a connected PGlite client, pointed at the same data directory as your config:
+
+<CodeBlock lang="ts">
+
+```ts
+import { PGlite } from "@electric-sql/pglite";
+
+const db = new PGlite("file:./.pgdata"); // or "" for in-memory
+```
+
+</CodeBlock>
+
+## Write a row
+
+Build the insert with positional bind params (`$1..$n`) and encode each app value through its field. The implicit `id` has no default, so supply one:
+
+<CodeBlock lang="ts">
+
+```ts
+const money = new Money(1299);
+
+await db.query(
+  `INSERT INTO "account" ("id", "email", "balance") VALUES ($1, $2, $3)`,
+  [
+    "acct_1",
+    account.fields.email.encode("ada@example.com"),
+    account.fields.balance.encode(money), // Money -> "1299"
+  ],
+);
+```
+
+</CodeBlock>
+
+Each column you write goes through its own field's `encode`, converting the app value to what Postgres stores.
+
+## Read a row
+
+Build the query with the `pgSql` tagged template — interpolated values become bind params automatically, and `identifier(...)` safely quotes table and column names. Then decode each column through its field:
+
+<CodeBlock lang="ts">
+
+```ts
+import { identifier, pgSql } from "@schemic/postgres";
+
+const email = "ada@example.com";
+const q = pgSql`
+  SELECT * FROM ${identifier("account")}
+  WHERE ${identifier("email")} = ${email}
+`;
+// q === { query: 'SELECT * FROM "account" WHERE "email" = $1', params: ["ada@example.com"] }
+
+const { rows } = await db.query<{ id: string; email: string; balance: string }>(
+  q.query,
+  q.params,
+);
+
+const accounts = rows.map((r) => ({
+  id: r.id,
+  email: account.fields.email.decode(r.email),
+  balance: account.fields.balance.decode(r.balance), // "1299" -> Money
+}));
+
+accounts[0].balance instanceof Money; // true
+```
+
+</CodeBlock>
+
+`pgSql` returns `{ query, params }` — it does not execute; you pass them to the client's `query(sql, params)`. Every interpolated value becomes a positional param, so values are never string-spliced into SQL; wrap a name in `identifier(...)` to splice a quoted identifier instead. Always `decode` what you read — a raw row holds wire values, and decoding turns them into the app values your code expects, validating against your schema in the process.
+
+## Where to go next
+
+- [The encoded and decoded sides](/docs/concepts/app-and-wire) — the model behind these methods.
+- [Type mapping](/docs/reference/type-mapping) — what each field converts between.
+- [Generate & run migrations](/docs/guides/migrations) — create the table these rows go into.

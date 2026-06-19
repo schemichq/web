@@ -1,0 +1,172 @@
+---
+title: Quickstart
+description: Go from an empty directory to a running Postgres migration with Schemic — install the driver, define a table in TypeScript, and generate and apply a migration against embedded PGlite, no database server required.
+---
+
+This walks you from an empty directory to a running migration. Because the driver runs on embedded PGlite, **you do not need to install or start a Postgres server** to follow along.
+
+<CompatBadges items={["PostgreSQL via PGlite (embedded)", "Node 18+ or Bun", "A terminal"]} />
+
+<Step n={1} id="install" title="Create a project and install Schemic">
+
+<CommandTabs
+  npm={`mkdir app && cd app
+npm init -y
+npm install @schemic/cli @schemic/postgres @electric-sql/pglite`}
+  pnpm={`mkdir app && cd app
+pnpm init
+pnpm add @schemic/cli @schemic/postgres @electric-sql/pglite`}
+  yarn={`mkdir app && cd app
+yarn init -y
+yarn add @schemic/cli @schemic/postgres @electric-sql/pglite`}
+  bun={`mkdir app && cd app
+bun init -y
+bun add @schemic/cli @schemic/postgres @electric-sql/pglite`}
+/>
+
+`@schemic/cli` provides the `schemic` / `sc` CLI; `@schemic/postgres` is the Postgres driver (authoring + DDL); `@electric-sql/pglite` is the embedded engine your migrations run against. `zod` ships with the driver.
+
+<Callout variant="tip" title="Running the CLI">
+The examples below call the CLI with `npx schemic`. With Bun, use `bunx schemic`; with pnpm, `pnpm dlx schemic`.
+</Callout>
+
+</Step>
+
+<Step n={2} id="scaffold" title="Scaffold the project">
+
+<Terminal command="npx schemic init --driver postgres" output={`  + schemic.config.ts
+  + database/schema/tables.ts
+  + database/seed.ts
+  + database/migrations/meta/_snapshot.json
+  + .env.example
+
+✓ Initialized. Edit database/schema, then run \`schemic gen\`.`} />
+
+`init` writes a `schemic.config.ts` (a `postgresConnection` pointed at a local PGlite data dir), a sample schema, a seed file, and an empty migration snapshot. It never overwrites files that already exist.
+
+</Step>
+
+<Step n={3} id="schema" title="Read the generated schema">
+
+Open `database/schema/tables.ts`. This is the single source of truth; the DDL below is derived from it.
+
+<CodeBlock title="database/schema/tables.ts" lang="ts">
+
+```ts
+import { defineTable, s, sqlExpr } from "@schemic/postgres";
+
+export const user = defineTable("user", {
+  email: s.varchar(255).$unique(),
+  name: s.text(),
+  age: s.smallint().optional(),
+  createdAt: s.timestamptz().$default(sqlExpr("now()")),
+});
+```
+
+</CodeBlock>
+
+It generates this DDL:
+
+<CodeBlock title="Generated DDL" lang="postgresql">
+
+```sql
+CREATE TABLE "user" (
+  "id" text PRIMARY KEY,
+  "age" smallint,
+  "createdAt" timestamp with time zone NOT NULL DEFAULT now(),
+  "email" varchar(255) NOT NULL,
+  "name" text NOT NULL
+);
+CREATE UNIQUE INDEX "user_email_key" ON "user" ("email");
+```
+
+</CodeBlock>
+
+A few things to notice, each of which you will use constantly:
+
+- You never declared `id` — Schemic adds an implicit `"id" text PRIMARY KEY`. Declare your own with `.primaryKey(...)` to replace it.
+- `s.varchar(255)` maps to a `varchar(255)` column, and `.$unique()` adds a `CREATE UNIQUE INDEX`.
+- `.optional()` makes `age` nullable; required fields emit `NOT NULL`.
+- `.$default(sqlExpr("now()"))` emits a database-side `DEFAULT` from a raw SQL expression.
+
+</Step>
+
+<Step n={4} id="generate" title="Generate your first migration">
+
+`schemic gen` diffs your schema against the recorded snapshot and writes a migration for the difference.
+
+<Terminal command="npx schemic gen initial" output={`2 changes to migrate — 4 Fields, 1 Index.
+database/schema/tables.ts
+  + "age" smallint
+  + "createdAt" timestamp with time zone NOT NULL DEFAULT now()
+  + "email" varchar(255) NOT NULL
+  + "name" text NOT NULL
+
+user_email_key
+  + CREATE UNIQUE INDEX "user_email_key" ON "user" ("email");
+✓ 20260619090000_initial.sql  (+2 up / 2 down)`} />
+
+The migration is plain, reviewable SQL with forward and rollback bodies. Open it before applying anything.
+
+</Step>
+
+<Step n={5} id="migrate" title="Apply it to the database">
+
+`schemic migrate` (alias `up`) applies every pending migration in order, against the embedded PGlite database from your config — no server to start.
+
+<Terminal command="npx schemic migrate" output={`  ↑ 20260619090000_initial
+
+✓ Applied 1 migration.`} />
+
+Confirm what is applied with `schemic status`:
+
+<Terminal command="npx schemic status" output={`  ✓ applied  20260619090000_initial
+
+1 migration, 0 pending.`} />
+
+</Step>
+
+<Step n={6} id="evolve" title="Evolve the schema">
+
+Change the schema and Schemic writes the next migration for just the delta. Add a column:
+
+<CodeBlock title="database/schema/tables.ts" lang="ts">
+
+```ts
+export const user = defineTable("user", {
+  email: s.varchar(255).$unique(),
+  name: s.text(),
+  age: s.smallint().optional(),
+  bio: s.text().optional(),
+  createdAt: s.timestamptz().$default(sqlExpr("now()")),
+});
+```
+
+</CodeBlock>
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic gen add_bio
+npx schemic migrate
+```
+
+</CodeBlock>
+
+The second migration contains only the new column (`ALTER TABLE "user" ADD COLUMN "bio" text`) — it does not re-create the table.
+
+</Step>
+
+<Step n={7} id="rows" title="Read and write rows">
+
+Your table definition carries codecs that bridge app values and the Postgres wire format. `encode` builds the payload you write; `decode` validates a returned row and converts it to app values (so a `timestamptz` comes back as a `Date`). See [Read & write rows](/docs/guides/encode-decode-rows) for the full pattern against the PGlite client.
+
+</Step>
+
+## Where to go next
+
+<NextSteps items={[
+  { title: "Define a table", description: "Columns, primary keys, and checks.", href: "/docs/guides/define-a-table" },
+  { title: "The type mapping", description: "Every s.* type and the Postgres column it emits.", href: "/docs/reference/type-mapping" },
+  { title: "Generate & run migrations", description: "The everyday gen / migrate / status loop.", href: "/docs/guides/migrations" }
+]} />

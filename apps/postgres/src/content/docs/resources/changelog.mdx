@@ -1,0 +1,34 @@
+---
+title: Changelog
+description: Notable changes to the Schemic Postgres driver, newest first. The driver is alpha, so breaking changes are expected and called out explicitly.
+---
+
+Notable changes to the Schemic Postgres driver (`@schemic/postgres`), newest first. Each entry is written from your side — what changes for code that uses the driver.
+
+<Callout variant="caution" title="Alpha: expect breaking changes">
+The Postgres driver is `0.1.0-alpha`. The API still changes between releases. Pin an exact version and read this page before upgrading. Breaking changes are marked **Breaking**.
+</Callout>
+
+## 0.1.0-alpha.5
+
+### Added
+
+- **PGlite-backed authoring and migrations.** Define tables in TypeScript and run `diff` / `gen` / `migrate` / `status` / `rollback` against an embedded [PGlite](https://pglite.dev) engine — no Postgres server to install. See the [quickstart](/docs/quickstart).
+- **The pg-native `s.*` vocabulary** — scalars plus precise Postgres types (`text`, `varchar`, `numeric`, `timestamptz`, `jsonb`, `serial`, …), the implicit `id text PRIMARY KEY`, custom and composite primary keys, and table-level `CHECK`. See [type mapping](/docs/reference/type-mapping).
+- **Column clauses** — `$default` / `sqlExpr`, `$check`, `$generated`, `$identity`, `$unique`, `$comment`, and foreign keys via `s.references` with `ON DELETE` / `ON UPDATE`. See [field methods](/docs/reference/field-methods).
+- **The escape hatch** — `s.$postgres(pgType, codec)` and the chainable `.$postgres(wire, codec?)` for storing values with no built-in mapping.
+- **Per-field codecs** — `table.fields.<column>.encode` / `.decode`, with `App<T>` and `Wire<T>` row types. See [encode & decode rows](/docs/guides/encode-decode-rows).
+
+### Known limitations
+
+- **PGlite only.** Hosted Postgres servers over `postgres://` are reserved for a future client.
+- **Per-field codecs only.** A whole-row `Table.encode` / `Table.decode` helper is not yet available.
+- **`DEFAULT`, `CHECK`, `GENERATED`, and `COMMENT` are excluded from drift detection** — they emit faithfully but changing only one of them generates no migration.
+- **`diff` is structural** — no `--live`, `--ts`, or `--watch`; `pull` and `push` are not available; `check` validates the schema only (`--schema`).
+- **Not yet supported:** native enums/domains, extension-backed types, views, functions, triggers, multiple schemas, RLS, composite foreign keys, and non-btree indexes. See [type mapping](/docs/reference/type-mapping#not-yet-covered).
+
+## Where to go next
+
+- [Quickstart](/docs/quickstart) — the current workflow end to end.
+- [The migration model](/docs/concepts/migrations-model) — the model behind these commands.
+- [CLI commands](/docs/reference/cli) — every command at the current version.

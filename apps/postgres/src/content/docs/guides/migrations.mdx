@@ -1,0 +1,91 @@
+---
+title: Generate & run migrations
+description: The everyday Postgres migration workflow in Schemic — preview with diff, generate a migration, apply it against embedded PGlite, check status, and roll back.
+---
+
+Schemic generates migrations by diffing your schema against a recorded snapshot. This guide is the loop you run as you evolve a schema: author, preview, generate, apply. For the model behind it, see [the migration model](/docs/concepts/migrations-model). Migrations run against the embedded [PGlite](https://pglite.dev) engine from your config — there is no server to start.
+
+## Preview the change
+
+Before generating anything, `schemic diff` shows the pending structural change without writing a file. On Postgres it introspects your live database and compares your schema against it — `gen`, below, diffs against the recorded snapshot instead:
+
+<Terminal command="npx schemic diff" output={`  driver: postgres
+user
+  + "bio" text
+
+1 change — 1 added, 0 changed, 0 removed.`} />
+
+<Callout variant="note" title="diff is structural only">
+On the Postgres driver, `diff` compares structure — tables, columns, types, nullability, indexes, and foreign keys. It has no `--live`, `--ts`, or `--watch` mode, and it does not surface changes to `DEFAULT`, `CHECK`, `GENERATED`, or `COMMENT` (those are excluded from drift detection by design — see [the migration model](/docs/concepts/migrations-model)).
+</Callout>
+
+## Generate a migration
+
+Edit your schema, then run `schemic gen` with a name describing the change. `gen` diffs the schema against the snapshot and, if anything changed, writes a `<timestamp>_<name>.sql` file with `up` and `down` sections. When nothing changed it tells you so and writes nothing:
+
+<Terminal command="npx schemic gen add_bio" output={`1 change to migrate — 1 Field.
+database/schema/tables.ts
+  + "bio" text
+✓ 20260619090000_add_bio.sql  (+1 up / 1 down)`} />
+
+Commit the generated `.sql` files. They are the reviewable, version-controlled record of how your schema evolved. The migration contains only the delta — adding a column emits `ALTER TABLE "user" ADD COLUMN "bio" text`, not a full table rewrite.
+
+## Apply pending migrations
+
+`schemic migrate` (alias `up`) applies every pending migration in order, against the PGlite database from your config:
+
+<Terminal command="npx schemic migrate" output={`  ↑ 20260619090000_add_bio
+
+✓ Applied 1 migration.`} />
+
+## Check status
+
+`schemic status` shows which migrations are applied and which are pending:
+
+<Terminal command="npx schemic status" output={`  ✓ applied  20260601000000_initial
+  · pending  20260619090000_add_bio
+
+2 migrations, 1 pending.`} />
+
+## Roll back
+
+`schemic rollback` (alias `down`) reverts applied migrations newest-first, running each migration's `down` section:
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic rollback            # revert the most recent
+npx schemic rollback 2          # revert the last two
+```
+
+</CodeBlock>
+
+## Seed data
+
+`schemic seed` runs your project's seed script (`database/seed.ts`) with a connected client — handy for populating a fresh database after migrating:
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic seed
+```
+
+</CodeBlock>
+
+## Validate the schema
+
+`schemic check --schema` validates your schema definitions without touching the database. (Full migration replay is not yet supported on the Postgres driver — `check` validates the schema only.)
+
+<CodeBlock lang="bash">
+
+```bash
+npx schemic check --schema
+```
+
+</CodeBlock>
+
+## Where to go next
+
+- [The migration model](/docs/concepts/migrations-model) — declarative diffing and reversible migrations.
+- [CLI commands](/docs/reference/cli) — every supported command and flag.
+- [Configuration](/docs/reference/configuration) — pointing the engine at a data directory.

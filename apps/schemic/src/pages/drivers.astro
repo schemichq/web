@@ -1,0 +1,131 @@
+---
+// schemic.dev/drivers — the agnostic driver index.
+//
+// A flat, database-agnostic listing of every driver in the shared roster. Unlike
+// the hub landing (which themes itself per driver), this page is reference
+// content: it stays NEUTRAL (activeDriver={null}) and links out to each driver's
+// own site + docs so visitors can pick a database. The SurrealDB-defaulting CTAs
+// across the hub (Banner, Footer, AiSetup) point here.
+import Footer from "@schemic/landing/components/Footer.astro";
+import Nav from "@schemic/landing/components/Nav.astro";
+import {
+  drivers,
+  driverUrl,
+  SUGGEST_DRIVER_URL,
+} from "@schemic/landing/config/drivers";
+import Landing from "../layouts/Landing.astro";
+
+// One-line description per driver (keyed by slug, with a roster-name fallback so a
+// new driver still renders before its blurb is written).
+const descriptions: Record<string, string> = {
+  surrealdb:
+    "Multi-model SurrealDB schemas in TypeScript — SurrealQL DDL, migrations, and introspection (pull).",
+  postgres:
+    "Relational PostgreSQL schemas in TypeScript — native SQL DDL, migrations, and typed rows.",
+};
+
+const cards = drivers.map((d) => {
+  const url = driverUrl(d.slug);
+  return {
+    name: d.name,
+    maturity: d.maturity,
+    description: descriptions[d.slug] ?? `Schema as code for ${d.name}.`,
+    siteHref: url,
+    docsHref: `${url}/docs/introduction`,
+  };
+});
+
+const arrow = '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>';
+---
+
+<Landing
+  title="Drivers — Schemic"
+  description="Every database Schemic supports — pick yours. Schema as code in the TypeScript you already know, compiled to native DDL, migrations, and types for SurrealDB, PostgreSQL, and more."
+  activeDriver={null}
+>
+  <Nav activeDriver={null} />
+  <main class="mx-auto max-w-4xl px-6 py-16 sm:py-24">
+    <header class="max-w-2xl">
+      <p class="font-mono text-xs uppercase tracking-[0.08em] text-accent-2">
+        // drivers
+      </p>
+      <h1
+        class="mt-3 font-display text-4xl font-semibold leading-[1.06] tracking-tight text-ink sm:text-[44px]"
+      >
+        Schemic drivers
+      </h1>
+      <p class="mt-4 text-[17px] leading-[1.5] text-ink-2">
+        One typed source of truth, for any database. Pick the driver for the
+        database you use — each compiles your schema to that database's native
+        DDL, migrations, and types.
+      </p>
+    </header>
+
+    <ul class="mt-12 flex flex-col gap-4">
+      {
+        cards.map((d) => (
+          <li class="rounded-2xl border border-border bg-surface/60 p-6 transition-colors hover:border-border/80 sm:p-7">
+            <div class="flex items-center gap-3">
+              <h2 class="font-display text-xl font-semibold text-ink">
+                {d.name}
+              </h2>
+              <span
+                class:list={[
+                  "rounded-full px-2 py-0.5 font-mono text-[10px] tracking-wide",
+                  d.maturity === "Beta"
+                    ? "bg-success/15 text-success"
+                    : "bg-accent-soft/15 text-accent-soft",
+                ]}
+              >
+                {d.maturity}
+              </span>
+            </div>
+            <p class="mt-2.5 max-w-xl text-[15px] leading-[1.5] text-ink-2">
+              {d.description}
+            </p>
+            <div class="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-medium">
+              <a
+                href={d.siteHref}
+                class="inline-flex items-center gap-1.5 text-ink transition-colors hover:text-accent-2"
+              >
+                Visit site
+                <svg
+                  class="size-3.5 text-accent-2"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  set:html={arrow}
+                />
+              </a>
+              <a
+                href={d.docsHref}
+                class="text-ink-2 transition-colors hover:text-ink"
+              >
+                Read the docs
+              </a>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="mt-10 border-t border-border-subtle pt-8">
+      <a
+        href={SUGGEST_DRIVER_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="group inline-flex items-center gap-2 text-sm font-medium text-ink-2 transition-colors hover:text-ink"
+      >
+        Don't see your database? Vote or request
+        <span
+          class="text-accent-2 transition-transform group-hover:translate-x-0.5"
+          aria-hidden="true">&rarr;</span
+        >
+      </a>
+    </div>
+  </main>
+  <Footer activeDriver={null} />
+</Landing>

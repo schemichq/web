@@ -1,5 +1,5 @@
 ---
-import { drivers, driverUrl, flagshipDriver } from "../config/drivers";
+import { drivers, driverUrl, hubUrl } from "../config/drivers";
 import BrandMark from "./BrandMark.astro";
 
 interface Props {
@@ -12,17 +12,23 @@ const { activeDriver = null } = Astro.props;
 const showAmbassador = activeDriver === "surrealdb";
 
 const repo = "https://github.com/schemichq/schemic";
-// NOTE (IA TBD): docs live on the per-driver subdomains, not the hub; pointing
-// at the shipped flagship driver for now.
-const surreal = driverUrl(flagshipDriver.slug);
+// Docs + Changelog are driver-aware: docs live on the per-driver subdomains, so a
+// driver site points at its OWN docs; the agnostic hub has no docs of its own and
+// points at the database picker (/drivers) instead of favoring a flagship.
+const docsHref = activeDriver
+  ? `${driverUrl(activeDriver)}/docs/introduction`
+  : `${hubUrl}/drivers`;
+const changelogHref = activeDriver
+  ? `${driverUrl(activeDriver)}/docs/resources/changelog`
+  : `${hubUrl}/drivers`;
 
 const columns: { heading: string; links: { label: string; href: string }[] }[] =
   [
     {
       heading: "Product",
       links: [
-        { label: "Docs", href: `${surreal}/docs/introduction` },
-        { label: "Changelog", href: `${surreal}/docs/resources/changelog` },
+        { label: "Docs", href: docsHref },
+        { label: "Changelog", href: changelogHref },
         { label: "GitHub", href: repo },
       ],
     },
@@ -39,7 +45,6 @@ const columns: { heading: string; links: { label: string; href: string }[] }[] =
       heading: "Community",
       links: [
         { label: "GitHub", href: repo },
-        { label: "Discord", href: "https://surrealdb.com/discord" },
         { label: "Issues", href: `${repo}/issues` },
         { label: "Sponsor", href: `${repo}?sponsor=1` },
       ],

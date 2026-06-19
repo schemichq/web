@@ -1,10 +1,11 @@
 ---
-import { driverUrl, flagshipDriver } from "../config/drivers";
+import { hubUrl } from "../config/drivers";
 
 // Single product-news / announcement strip — the SAME message on every
 // subdomain (not driver-aware). Always visible (NOT dismissible). Swap the
-// message + href when there is new news to surface.
-const href = driverUrl(flagshipDriver.slug);
+// message + href when there is new news to surface. Points at the agnostic hub
+// driver index so neither database is favored.
+const href = `${hubUrl}/drivers`;
 ---
 
 <div id="site-banner" class="border-b border-border-subtle bg-canvas-2/60">

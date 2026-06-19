@@ -1,5 +1,5 @@
 ---
-import { driverUrl, flagshipDriver } from "../config/drivers";
+import { driverUrl, hubUrl } from "../config/drivers";
 
 interface Props {
   /** Slug of the driver this site represents; null = agnostic hub. */
@@ -16,13 +16,18 @@ const PROMPT = `Set up Schemic in my project to manage my database schema as cod
 2. Configure the connection in \`schemic.config.ts\` with the driver's connection factory (e.g. \`surrealConnection({ url, namespace, database })\`) read from environment variables. Reuse my app's existing connection or env vars if it already has them; otherwise ask me how I want the connection defined.
 3. Verify it works: run \`npx schemic doctor\` (it tests the connection) and \`npx schemic status\`, and confirm both succeed before continuing.
 4. Ask me whether I already have an existing database. If I do **and my driver supports introspection** (the reference notes which do — \`pull\` is SurrealDB today), run \`npx schemic pull\` to preview it, then \`npx schemic pull --write\` to adopt it into my TypeScript files; otherwise ask me which tables and fields I need and define them with the \`s.*\` builder (a superset of Zod, where \`$\`-prefixed methods emit DDL).
-5. Generate a migration with \`npx schemic gen <name>\`, then apply it with \`npx schemic migrate\`.
+5. Generate a migration with \`npx schemic gen <name>\`, then show it to me — let me review it and run \`npx schemic migrate\` myself when I'm ready. Don't apply it to my database; that's my call.
 6. Show me how to read and write rows type-safely with \`App<typeof Table>\` and \`encode\` / \`decode\`.
 
 Walk me through each step as you go.`;
 
-// The flagship driver's docs quickstart (the hub has no driver of its own).
-const quickstartUrl = `${driverUrl(flagshipDriver.slug)}/docs/quickstart`;
+// "Read the full guide" is driver-aware: the agnostic hub points at the database
+// picker (/drivers — its docs would otherwise be the flagship driver's, wrong on
+// an agnostic page), while a driver site points at its OWN docs quickstart.
+const quickstartUrl =
+  activeDriver == null
+    ? `${hubUrl}/drivers`
+    : `${driverUrl(activeDriver)}/docs/quickstart`;
 const arrow = '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>';
 const copyIcon =
   '<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>';
@@ -39,10 +44,11 @@ const copyIcon =
       Let your agent wire it up.
     </h2>
     <p class="mx-auto mt-3 max-w-[600px] text-[17px] leading-[1.5] text-ink-2">
-      Paste this prompt into Claude Code, Cursor, or any agent — it installs and
-      configures the right driver for your database, brings your schema into
-      TypeScript (new or existing), and runs your first migration, explaining
-      each step.
+      Let your AI coding agent set up Schemic for you. Paste this prompt into
+      Claude Code, Cursor, or any agent — it installs and configures the right
+      driver for your database, brings your schema into TypeScript (new or
+      existing), and prepares your first migration for you to review and run,
+      explaining each step.
     </p>
 
     <!-- Teaser display: the copy button carries the FULL 6-step prompt

@@ -16,7 +16,7 @@ Prefer to let your AI agent set it up? Paste this prompt into Claude Code, Curso
 2. Configure the connection in \`schemic.config.ts\` with \`surrealConnection({ url, namespace, database })\` read from environment variables. Reuse my app's existing connection or env vars if it already has them; otherwise ask me how I want the connection defined.
 3. Verify it works: run \`npx schemic doctor\` (it tests the connection) and \`npx schemic status\`, and confirm both succeed before continuing.
 4. Ask me whether I already have an existing database. If I do, run \`npx schemic pull\` to preview the introspected schema, then \`npx schemic pull --write\` to adopt it into my TypeScript files. If I don't, ask me which tables and fields I need and define them with the \`s.*\` builder (a superset of Zod, where \`$\`-prefixed methods like \`.$assert\` and \`.$default\` emit SurrealQL DDL).
-5. Generate a migration with \`npx schemic gen <name>\`, then apply it with \`npx schemic migrate\`.
+5. Generate a migration with \`npx schemic gen <name>\`, then show it to me — let me review it and run \`npx schemic migrate\` myself when I'm ready. Don't apply it to my database; that's my call.
 6. Show me how to read and write rows type-safely with \`App<typeof Table>\` and \`encode\` / \`decode\`.
 
 Walk me through each step as you go.`} />

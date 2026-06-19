@@ -35,6 +35,7 @@ interface Theme {
   name: string; // the database word in the headline
   eyebrow: string;
   ddl: string; // "native DDL" / "SurrealQL DDL"
+  install: string; // the npm package shown in the install pill
   accent: string;
   accent2: string;
   markDepth: string; // the block-S logo's depth/shadow stroke (dark accent)
@@ -53,6 +54,7 @@ const THEMES: Record<CardKey, Theme> = {
     name: "database",
     eyebrow: "Schema as code, for any database",
     ddl: "native DDL",
+    install: "@schemic/core",
     // Neutral hub theme — gray accent (matches the agnostic hub UI + the
     // theme-tied brand mark), NOT amber.
     accent: "#d8d6da",
@@ -70,6 +72,7 @@ const THEMES: Record<CardKey, Theme> = {
     name: "SurrealDB",
     eyebrow: "Zod for SurrealDB",
     ddl: "SurrealQL DDL",
+    install: "@schemic/surrealdb",
     accent: "#9600ff",
     accent2: "#ff85d6",
     markDepth: "#45007a",
@@ -85,6 +88,7 @@ const THEMES: Record<CardKey, Theme> = {
     name: "PostgreSQL",
     eyebrow: "Zod for PostgreSQL",
     ddl: "native DDL",
+    install: "@schemic/postgres",
     accent: "#4aa3df",
     accent2: "#5ec8e8",
     markDepth: "#1a4a6b",
@@ -239,7 +243,7 @@ function tree(t: Theme): El {
         fontSize: 18,
         color: t.accent2,
       }),
-      txt("npm i @schemic/core", {
+      txt(`npm i ${t.install}`, {
         fontFamily: "JetBrains Mono",
         fontSize: 18,
         color: t.ink,
@@ -287,6 +291,7 @@ const BANNER_THEME: Theme = {
   name: "database",
   eyebrow: "",
   ddl: "native DDL",
+  install: "@schemic/core",
   accent: "#d8d6da",
   accent2: "#98969a",
   markDepth: "#46454b",
@@ -307,6 +312,7 @@ const BANNER_THEME_LIGHT: Theme = {
   name: "database",
   eyebrow: "",
   ddl: "native DDL",
+  install: "@schemic/core",
   accent: "#5a5860",
   accent2: "#2c2b30",
   markDepth: "#a9a7af",
@@ -398,7 +404,7 @@ function bannerTree(t: Theme): El {
     },
     [
       txt("$", { fontFamily: "JetBrains Mono", fontSize: 18, color: t.accent2 }),
-      txt("npm i @schemic/core", {
+      txt(`npm i ${t.install}`, {
         fontFamily: "JetBrains Mono",
         fontSize: 18,
         color: t.ink,

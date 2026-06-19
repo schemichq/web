@@ -1,4 +1,5 @@
 ---
+import AiSetup from "./components/AiSetup.astro";
 // @schemic/landing — the assembled Schemic marketing landing.
 //
 // ONE theme-agnostic landing, re-themed per subdomain. The consuming app wraps
@@ -7,7 +8,7 @@
 // purple/pink on surrealdb, blue on postgres, …
 //
 // Blend v1 flow: Banner · Nav · Hero · DriftProblem · Demo · Bento ·
-// CLISpotlight · Depth · FAQ · FinalCTA · Footer.
+// CLISpotlight · Depth · FAQ · AiSetup · FinalCTA · Footer.
 //
 // `activeDriver` = the driver this site represents (its slug), or null for the
 // agnostic hub. It seeds the hero's database picker selection and the demo's
@@ -43,6 +44,7 @@ const { activeDriver = null } = Astro.props;
   <CLISpotlight activeDriver={activeDriver} />
   <Depth activeDriver={activeDriver} />
   <FAQ />
+  <AiSetup activeDriver={activeDriver} />
   <FinalCTA activeDriver={activeDriver} />
 </main>
 <Footer activeDriver={activeDriver} />

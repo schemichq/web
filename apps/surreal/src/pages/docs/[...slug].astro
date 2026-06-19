@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from "astro:content";
 // Components registered for MDX so authors use them without importing.
+import AiPrompt from "@schemic/ui/docs/AiPrompt.astro";
 import Callout from "@schemic/ui/docs/Callout.astro";
 import CodeBlock from "@schemic/ui/docs/CodeBlock.astro";
 import CommandRef from "@schemic/ui/docs/CommandRef.astro";
@@ -45,6 +46,7 @@ const toc = headings
 const { prev, next } = prevNextFor(href);
 
 const mdxComponents = {
+  AiPrompt,
   Callout,
   CodeBlock,
   CommandRef,

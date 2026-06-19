@@ -1,0 +1,117 @@
+---
+/**
+ * AiPrompt - a ready-to-paste agent prompt shown in a quoted, monospace
+ * container with a Copy button. Copy writes the EXACT raw prompt string
+ * (backticks and all, no markdown/HTML) to the clipboard so it pastes cleanly
+ * into Claude Code, Cursor, etc.
+ *
+ * The displayed text and the copied text come from the same `prompt` prop, so
+ * they can never drift. Pass the prompt as an expression so literal backticks
+ * survive (markdown would otherwise turn them into <code>):
+ *
+ *   <AiPrompt prompt={`Set up Schemic … install \`@schemic/cli\` …`} />
+ */
+interface Props {
+  prompt: string;
+  /** Small left-hand label in the title bar. Default "prompt". */
+  label?: string;
+}
+const { prompt, label = "prompt" } = Astro.props;
+---
+
+<div class="aiprompt" data-aiprompt>
+  <div class="ap-bar">
+    <span class="ap-label">
+      <svg class="ap-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"/>
+      </svg>
+      {label}
+    </span>
+    <button type="button" class="ap-copy" data-copy data-prompt={prompt} aria-label="Copy prompt">
+      <span data-copy-label>Copy</span>
+    </button>
+  </div>
+  <div class="ap-body">{prompt}</div>
+</div>
+
+<style>
+  .aiprompt {
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    overflow: clip;
+    background: var(--color-code-bg);
+    margin: 1.25rem 0;
+  }
+  .ap-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0.875rem;
+    border-bottom: 1px solid var(--color-border-subtle);
+  }
+  .ap-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.04em;
+    color: var(--color-ink-3);
+  }
+  .ap-spark {
+    width: 13px;
+    height: 13px;
+    color: var(--color-soft);
+  }
+  .ap-copy {
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-ink-3);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.25rem 0.55rem;
+    cursor: pointer;
+    transition:
+      color 0.12s ease,
+      border-color 0.12s ease;
+  }
+  .ap-copy:hover {
+    color: var(--color-ink);
+    border-color: var(--color-border);
+  }
+  .ap-copy.is-copied {
+    color: var(--color-success);
+    border-color: color-mix(in oklab, var(--color-success) 50%, transparent);
+  }
+  .ap-body {
+    padding: 0.95rem 1rem 1.1rem;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.7;
+    color: var(--color-code-plain);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>("[data-aiprompt]").forEach((root) => {
+    const copyBtn = root.querySelector<HTMLButtonElement>("[data-copy]");
+    const copyLabel = root.querySelector<HTMLElement>("[data-copy-label]");
+    copyBtn?.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(copyBtn.dataset.prompt ?? "");
+        if (copyLabel) copyLabel.textContent = "Copied!";
+        copyBtn.classList.add("is-copied");
+        setTimeout(() => {
+          if (copyLabel) copyLabel.textContent = "Copy";
+          copyBtn.classList.remove("is-copied");
+        }, 2000);
+      } catch {
+        /* clipboard unavailable */
+      }
+    });
+  });
+</script>

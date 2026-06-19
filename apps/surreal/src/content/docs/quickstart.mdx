@@ -7,6 +7,14 @@ By the end of this page you will have a SurrealDB schema written in TypeScript, 
 
 This is a tutorial: follow every step in order and it works. The [guides](/docs/guides/define-a-table) cover variations once you are comfortable.
 
+## Set up with AI
+
+Prefer to let your AI agent set it up? Paste this prompt into Claude Code, Cursor, or any coding agent and it will install Schemic, scaffold your schema, and wire up migrations — asking you about your tables as it goes.
+
+<AiPrompt prompt={`Set up Schemic in my project to manage my SurrealDB schema as code. Before changing anything, read the reference at https://surrealdb.schemic.dev/llms-full.txt so you use the current API. Then install the packages — \`@schemic/cli\`, \`@schemic/surrealdb\`, and \`zod\` — and run \`npx schemic init\` to scaffold the config and a sample schema. Ask me which tables and fields I need, and define them with the \`s.*\` builder (a superset of Zod, where \`$\`-prefixed methods like \`.$assert\` and \`.$default\` emit SurrealQL DDL). Generate a migration with \`npx schemic gen <name>\`, then apply it with \`npx schemic migrate\`. In my application code, use \`App<typeof Table>\` for fully-typed rows and \`encode\` / \`decode\` to write and read them. Walk me through each step as you go.`} />
+
+Prefer to do it by hand? The rest of this page is the hands-on walkthrough — about ten minutes from an empty directory to typed, migrated rows.
+
 ## Prerequisites
 
 Install these first. SurrealQL differs across SurrealDB majors, so the versions matter.

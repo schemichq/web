@@ -51,7 +51,15 @@ const themeStyle = t
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {/* Favicon follows the active driver (gray hub / purple SurrealDB / blue
+        Postgres). SSR'd per route; swapped client-side on a driver switch by the
+        script below. */}
+    <link
+      rel="icon"
+      id="favicon"
+      href={ogKey === "hub" ? "/favicon.svg" : `/favicon-${ogKey}.svg`}
+      type="image/svg+xml"
+    />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
@@ -73,5 +81,17 @@ const themeStyle = t
   </head>
   <body class="min-h-screen bg-canvas text-ink antialiased">
     <slot />
+    <script is:inline>
+      // Keep the favicon in sync with the active driver on a client-side switch
+      // (the picker dispatches `schemic:driverswitch` with the pane key). hub ->
+      // gray, surrealdb -> purple, postgres -> blue. SSR already sets the right
+      // one per route; this only updates it on the no-reload switch + back/forward.
+      document.addEventListener("schemic:driverswitch", function (e) {
+        var key = e && e.detail && e.detail.key;
+        var link = document.getElementById("favicon");
+        if (!link || !key) return;
+        link.href = key === "hub" ? "/favicon.svg" : "/favicon-" + key + ".svg";
+      });
+    </script>
   </body>
 </html>

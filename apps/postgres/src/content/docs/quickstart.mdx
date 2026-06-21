@@ -7,51 +7,34 @@ This walks you from an empty directory to a running migration. Because the drive
 
 <CompatBadges items={["PostgreSQL via PGlite (embedded)", "Node 18+ or Bun", "A terminal"]} />
 
-<Step n={1} id="install" title="Create a project and install Schemic">
+<Step n={1} id="create" title="Create a project">
 
 <CommandTabs
-  npm={`mkdir app && cd app
-npm init -y
-npm install @schemic/cli @schemic/postgres @electric-sql/pglite`}
-  pnpm={`mkdir app && cd app
-pnpm init
-pnpm add @schemic/cli @schemic/postgres @electric-sql/pglite`}
-  yarn={`mkdir app && cd app
-yarn init -y
-yarn add @schemic/cli @schemic/postgres @electric-sql/pglite`}
-  bun={`mkdir app && cd app
-bun init -y
-bun add @schemic/cli @schemic/postgres @electric-sql/pglite`}
+  npm={`npm create schemic@latest`}
+  pnpm={`pnpm create schemic`}
+  yarn={`yarn create schemic`}
+  bun={`bun create schemic`}
 />
 
-`@schemic/cli` provides the `schemic` / `sc` CLI; `@schemic/postgres` is the Postgres driver (authoring + DDL); `@electric-sql/pglite` is the embedded engine your migrations run against. `zod` ships with the driver.
+`create schemic` is interactive: pick the **PostgreSQL** driver when it asks, and it installs everything (including the embedded `@electric-sql/pglite` engine) and scaffolds your project. Run it in an empty directory for a new project, or inside an existing one — it merges the `@schemic` dependencies and `db:gen` / `db:migrate` scripts into your `package.json` without touching the rest of your setup. It scaffolds:
+
+- `schemic.config.ts` — a `postgresConnection` pointed at a local PGlite data dir
+- `database/schema/tables.ts` — a sample schema
+- `database/seed/index.ts` — the seed script
+- `database/migrations/meta/_snapshot.json` — migration state
+- `.env.example` — connection environment template
+
+<Callout variant="tip" title="Already in a project, or prefer the CLI?">
+`bunx schemic init --driver postgres` (or `npx schemic init --driver postgres` / `pnpm dlx schemic init --driver postgres`) runs the same setup in place. After it runs you have local `schemic` and `sc` bins, plus `db:gen` / `db:migrate` scripts.
+</Callout>
 
 <Callout variant="note" title="Using pnpm?">
-The scaffolded config imports `@schemic/core/config`, and pnpm's strict `node_modules` doesn't expose that transitively — add it directly: `pnpm add @schemic/core`. Bun, npm, and yarn hoist it, so they don't need it.
-</Callout>
-
-<Callout variant="tip" title="Running the CLI">
-The examples below call the CLI with `npx schemic`. With Bun, use `bunx schemic`; with pnpm, `pnpm dlx schemic`.
+The scaffolded config imports `@schemic/core/config`; under pnpm's strict `node_modules`, add it directly with `pnpm add @schemic/core`. Bun, npm, and yarn hoist it.
 </Callout>
 
 </Step>
 
-<Step n={2} id="scaffold" title="Scaffold the project">
-
-<Terminal command="npx schemic init --driver postgres" output={`  + schemic.config.ts
-  + database/schema/tables.ts
-  + database/seed/index.ts
-  + database/seed/seeds.d.ts
-  + .env.example
-  + database/migrations/meta/_snapshot.json
-
-✓ Initialized. Edit database/schema, then run \`schemic gen\`.`} />
-
-`init` writes a `schemic.config.ts` (a `postgresConnection` pointed at a local PGlite data dir), a sample schema, a `database/seed/` folder, and an empty migration snapshot. It never overwrites files that already exist.
-
-</Step>
-
-<Step n={3} id="schema" title="Read the generated schema">
+<Step n={2} id="schema" title="Read the generated schema">
 
 Open `database/schema/tables.ts`. This is the single source of truth; the DDL below is derived from it.
 
@@ -96,7 +79,7 @@ A few things to notice, each of which you will use constantly:
 
 </Step>
 
-<Step n={4} id="generate" title="Generate your first migration">
+<Step n={3} id="generate" title="Generate your first migration">
 
 `schemic gen` diffs your schema against the recorded snapshot and writes a migration for the difference.
 
@@ -115,7 +98,7 @@ The migration is plain, reviewable SQL with forward and rollback bodies. Open it
 
 </Step>
 
-<Step n={5} id="migrate" title="Apply it to the database">
+<Step n={4} id="migrate" title="Apply it to the database">
 
 `schemic migrate` (alias `up`) applies every pending migration in order, against the embedded PGlite database from your config — no server to start.
 
@@ -131,7 +114,7 @@ Confirm what is applied with `schemic status`:
 
 </Step>
 
-<Step n={6} id="evolve" title="Evolve the schema">
+<Step n={5} id="evolve" title="Evolve the schema">
 
 Change the schema and Schemic writes the next migration for just the delta. Add a column:
 
@@ -162,7 +145,7 @@ The second migration contains only the new column (`ALTER TABLE "user" ADD COLUM
 
 </Step>
 
-<Step n={7} id="rows" title="Read and write rows">
+<Step n={6} id="rows" title="Read and write rows">
 
 Your table definition carries codecs that bridge app values and the Postgres wire format. `encode` builds the payload you write; `decode` validates a returned row and converts it to app values (so a `timestamptz` comes back as a `Date`). See [Read & write rows](/docs/guides/encode-decode-rows) for the full pattern against the PGlite client.
 

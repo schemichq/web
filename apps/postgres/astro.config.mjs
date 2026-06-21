@@ -18,7 +18,9 @@ export default defineConfig({
     // (mirrors surreal's surql -> sql).
     shikiConfig: {
       theme: brandShikiTheme,
-      langAlias: { postgresql: "sql", pgsql: "sql" },
+      // surql -> sql so a shared (cross-site) blog article's SurrealQL fence
+      // still highlights even though those articles are filtered off this site.
+      langAlias: { postgresql: "sql", pgsql: "sql", surql: "sql" },
     },
   },
   vite: {

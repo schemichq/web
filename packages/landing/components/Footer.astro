@@ -28,6 +28,9 @@ const columns: { heading: string; links: { label: string; href: string }[] }[] =
       heading: "Product",
       links: [
         { label: "Docs", href: docsHref },
+        // Every site (hub + drivers) hosts the cross-site blog at /blog, so a
+        // relative link resolves to this site's own blog.
+        { label: "Blog", href: "/blog" },
         { label: "Changelog", href: changelogHref },
         { label: "GitHub", href: repo },
       ],

@@ -3,15 +3,18 @@
   "type": "module",
   "private": true,
   "version": "0.0.0",
-  "description": "Shared docs content infrastructure: brand code theme, docs frontmatter schema, and the nav model types. Driver-agnostic (no per-driver content/IA data).",
+  "description": "Shared content infrastructure: brand code theme, docs + blog frontmatter schemas, the nav model types, and the cross-site blog articles. Driver-agnostic (no per-driver content/IA data).",
   "exports": {
     "./code-theme": "./code-theme.mjs",
     "./docs-schema": "./docs-schema.mjs",
+    "./blog-schema": "./blog-schema.mjs",
     "./nav": "./nav.ts"
   },
   "files": [
     "code-theme.mjs",
     "docs-schema.mjs",
-    "nav.ts"
+    "blog-schema.mjs",
+    "nav.ts",
+    "blog"
   ]
 }

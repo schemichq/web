@@ -1,0 +1,143 @@
+---
+import { getCollection, render } from "astro:content";
+import BlogLayout from "@schemic/ui/blog/BlogLayout.astro";
+// Components registered for MDX so blog authors use them without importing
+// (same pattern as the docs [...slug] route).
+import Callout from "@schemic/ui/docs/Callout.astro";
+import CodeBlock from "@schemic/ui/docs/CodeBlock.astro";
+import CommandRef from "@schemic/ui/docs/CommandRef.astro";
+import Terminal from "@schemic/ui/docs/Terminal.astro";
+import { topNav } from "../../config/docs-nav";
+import "../../styles/blog.css";
+
+export async function getStaticPaths() {
+  // CRITICAL: the same per-site filter as the index (defined inline because
+  // getStaticPaths runs in an isolated scope — module consts are not visible).
+  // This site builds only `general` + `postgres` articles; a `surrealdb`
+  // article is filtered out, so its page is NOT generated here (404).
+  const ALLOWED = ["general", "postgres"];
+  const entries = await getCollection("blog");
+  return entries
+    .filter((e) => ALLOWED.includes(e.data.driver))
+    .map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const { title, tag, date, readTime, excerpt, author } = entry.data;
+
+const mdxComponents = { Callout, CodeBlock, CommandRef, Terminal };
+---
+
+<BlogLayout title={title} description={excerpt} navLinks={topNav}>
+  <a class="back" href="/blog">&larr; Blog</a>
+
+  <div class="meta">
+    <span class="tag">{tag}</span>
+    <span class="date">{date} &middot; {readTime} read</span>
+  </div>
+  <h1 class="title">{title}</h1>
+
+  <div class="author">
+    <span class="avatar">{author.initials}</span>
+    <span class="ainfo">
+      <span class="an">{author.name}</span>
+      <span class="ar">{author.role}</span>
+    </span>
+  </div>
+
+  <hr class="rule" />
+
+  <div class="article doc-prose">
+    <Content components={mdxComponents} />
+  </div>
+</BlogLayout>
+
+<style>
+  .back {
+    font-size: 0.85rem;
+    color: var(--color-ink-3);
+    text-decoration: none;
+  }
+  .meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 1.5rem;
+  }
+  .tag {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--color-accent-soft);
+    background: color-mix(in oklab, var(--color-accent) 15%, transparent);
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .date {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--color-ink-3);
+  }
+  .title {
+    margin: 1rem 0 0;
+    font-size: clamp(2rem, 1.5rem + 2vw, 2.875rem);
+    line-height: 1.1;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: var(--color-ink);
+  }
+  .author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 1.5rem;
+  }
+  .avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--color-on-accent);
+    background: linear-gradient(
+      135deg,
+      var(--color-accent),
+      var(--color-accent-2)
+    );
+  }
+  .ainfo {
+    display: flex;
+    flex-direction: column;
+  }
+  .an {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+  .ar {
+    font-size: 0.78rem;
+    color: var(--color-ink-3);
+  }
+  .rule {
+    border: 0;
+    border-top: 1px solid var(--color-border-subtle);
+    margin: 1.5rem 0;
+  }
+  .article :global(.lead) {
+    font-size: 1.1875rem;
+    line-height: 1.65;
+    color: var(--color-ink);
+  }
+  .article :global(blockquote) {
+    margin: 1.5rem 0;
+    padding: 0.5rem 0 0.5rem 1.5rem;
+    border-left: 3px solid var(--color-accent);
+    font-size: 1.375rem;
+    line-height: 1.45;
+    font-weight: 500;
+    color: var(--color-ink);
+  }
+</style>

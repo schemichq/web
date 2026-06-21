@@ -1,0 +1,58 @@
+---
+title: "Incremental migrations: ALTER, not rip-and-replace"
+date: "2026-06-10"
+excerpt: "The CLI now diffs into clause-level ALTER TABLE and ALTER FIELD instead of blanket OVERWRITE. Migrations touch only what changed, preserve unmentioned clauses, and every up/down round-trips on real SurrealDB."
+tag: "RELEASE"
+driver: "surrealdb"
+readTime: "8 min"
+featured: false
+author:
+  name: "Manuel Sanchez"
+  role: "Maintainer · SurrealDB Ambassador"
+  initials: "MS"
+---
+
+Until now, applying a schema change meant `OVERWRITE`-ing the whole table. That
+works, but it is a blunt instrument: it rewrites clauses you never touched and
+makes every diff look total. The new CLI does the careful thing instead.
+
+`sc gen` now diffs your schema into clause-level `ALTER TABLE` and `ALTER FIELD`
+statements (and `REMOVE` + `DEFINE` for indexes). Migrations touch only what
+changed and preserve everything they do not mention. Edit one field type and you
+get one `ALTER FIELD`, not a rewritten table.
+
+## Try it
+
+Change the schema (an enum value plus a new optional field), and the generator
+emits the migration below.
+
+<CodeBlock title="user.ts" lang="ts">
+
+```ts
+export const User = defineTable("user", {
+  name: s.string(),
+  email: s.string().email(),
+  role: s.enum(["admin", "member", "owner"]),
+  lastSeen: s.datetime().optional(),
+});
+```
+
+</CodeBlock>
+
+<CodeBlock title="Generated migration" lang="surql">
+
+```surql
+-- migrations/0002_user.surql
+ALTER FIELD role ON TABLE user TYPE "admin" | "member" | "owner";
+DEFINE FIELD lastSeen ON TABLE user TYPE option<datetime>;
+```
+
+</CodeBlock>
+
+> Safe migrations, not rip-and-replace — and every up/down round-trips on real
+> SurrealDB.
+
+Pair this with `sc check`, which replays every migration from zero on a
+throwaway database and confirms it reproduces your declared schema. Together
+they catch the bug every DDL tool has but few detect: a migration that no longer
+builds the schema it claims to.

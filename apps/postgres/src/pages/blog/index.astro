@@ -5,7 +5,7 @@ import { topNav } from "../../config/docs-nav";
 import "../../styles/blog.css";
 
 // This site shows GENERAL articles plus its own driver's articles.
-const ALLOWED = ["general", "surrealdb"];
+const ALLOWED = ["general", "postgres"];
 
 const posts = (await getCollection("blog"))
   .filter((p) => ALLOWED.includes(p.data.driver))
@@ -17,7 +17,7 @@ const rest = posts.filter((p) => p.id !== featured?.id);
 ---
 
 <BlogLayout title="Blog" navLinks={topNav}>
-  <p class="kicker">THE SURREAL · ZOD BLOG</p>
+  <p class="kicker">THE POSTGRES · ZOD BLOG</p>
   <h1 class="headline">Notes from building schema-as-code.</h1>
   <p class="sub">Releases, deep dives and design decisions behind Schemic.</p>
 

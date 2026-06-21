@@ -1,0 +1,9 @@
+/*
+ * Blog stylesheet for the PostgreSQL site. Order matters: the docs shell brings
+ * the prose + component styles (and its legacy purple tokens), then base.css +
+ * the PostgreSQL theme override the palette LAST so the blog wears this site's
+ * blue accent. The shared BlogLayout styles entirely off these semantic tokens.
+ */
+@import "@schemic/ui/docs/docs.css";
+@import "@schemic/brand/base.css";
+@import "@schemic/brand/theme-postgres.css";

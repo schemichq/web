@@ -1,0 +1,57 @@
+---
+title: "It's just Zod: how s.* mirrors z. one-to-one"
+date: "2026-06-12"
+excerpt: "Schemic's s.* is a superset of Zod — the same constructors, the same chaining, the same inference. Adoption cost is essentially zero; the only addition is the $-prefixed methods that emit DDL."
+tag: "ENGINEERING"
+driver: "general"
+readTime: "5 min"
+featured: true
+author:
+  name: "Manuel Sanchez"
+  role: "Maintainer"
+  initials: "MS"
+---
+
+{/* Seed article — marketing-lead owns blog content; expand/replace freely. */}
+
+If you know Zod, you already know Schemic. The schema builder you reach for is
+`s`, and it is a superset of `z`: the same constructors, the same chaining, the
+same type inference. There is no new validation dialect to learn — you write the
+Zod you already write.
+
+That means `s.string()`, `s.number()`, `s.enum([...])`, `.optional()`,
+`.default()`, `.email()` and the rest behave exactly as their `z` counterparts.
+The inference helpers carry over too: `s.infer`, `s.input` and `s.output` give
+you the same input/output split, and `.coerce` works the same way. So a field
+you would write in Zod is a field you write in Schemic, unchanged.
+
+<CodeBlock title="schema.ts" lang="ts">
+
+```ts
+import { s, defineTable } from "@schemic/core";
+
+export const User = defineTable("user", {
+  // Plain Zod — same constructors, same chaining, same inference.
+  name: s.string().min(1),
+  email: s.string().email(),
+  role: s.enum(["admin", "member", "owner"]).default("member"),
+
+  // The only addition: $-prefixed methods that emit DDL.
+  id: s.string().$primaryKey(),
+  handle: s.string().$unique(),
+});
+
+type User = s.infer<typeof User>;
+```
+
+</CodeBlock>
+
+So what does Schemic add? Exactly one thing: `$`-prefixed methods that emit DDL.
+`$primaryKey()`, `$unique()` and friends are the database-facing layer — they
+tell Schemic how a field maps to native schema, indexes and constraints. They
+sit alongside the Zod API you already use, never in place of it.
+
+The payoff is that adoption cost is essentially zero. You keep your validation
+exactly as it is, add a few `$` methods where the database needs them, and get
+native DDL, migrations and end-to-end types out of the same typed source of
+truth.

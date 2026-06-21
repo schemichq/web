@@ -1,11 +1,16 @@
 ---
 import { getCollection } from "astro:content";
 import BlogLayout from "@schemic/ui/blog/BlogLayout.astro";
-import { topNav } from "../../config/docs-nav";
 import "../../styles/blog.css";
 
-// This site shows GENERAL articles plus its own driver's articles.
-const ALLOWED = ["general", "surrealdb"];
+// The hub has no docs of its own, so its blog nav is just Blog + the picker.
+const NAV = [
+  { label: "Blog", href: "/blog" },
+  { label: "Drivers", href: "/drivers" },
+];
+
+// The agnostic hub shows ONLY general articles (no driver-specific posts).
+const ALLOWED = ["general"];
 
 const posts = (await getCollection("blog"))
   .filter((p) => ALLOWED.includes(p.data.driver))
@@ -16,8 +21,8 @@ const featured = posts.find((p) => p.data.featured) ?? posts[0];
 const rest = posts.filter((p) => p.id !== featured?.id);
 ---
 
-<BlogLayout title="Blog" navLinks={topNav}>
-  <p class="kicker">THE SURREAL · ZOD BLOG</p>
+<BlogLayout title="Blog" navLinks={NAV}>
+  <p class="kicker">THE SCHEMIC BLOG</p>
   <h1 class="headline">Notes from building schema-as-code.</h1>
   <p class="sub">Releases, deep dives and design decisions behind Schemic.</p>
 

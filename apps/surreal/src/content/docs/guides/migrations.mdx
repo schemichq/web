@@ -92,11 +92,9 @@ Seeds live in `database/seed/` — TypeScript files that each `export default de
 <CodeBlock title="database/seed/01-users.ts" lang="ts">
 
 ```ts
-import { defineSeed } from "@schemic/surrealdb";
-
-export default defineSeed(async (db, ctx) => {
+export default async function seed(db, ctx) {
   await db.query(ctx.file("schema.surql")); // reads ./schema.surql next to the seed, as a string
-});
+}
 ```
 
 </CodeBlock>

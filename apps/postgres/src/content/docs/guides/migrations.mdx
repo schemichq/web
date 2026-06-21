@@ -62,14 +62,16 @@ npx schemic rollback 2          # revert the last two
 
 ## Seed data
 
-Seeds live in `database/seed/` — TypeScript files that each `export default` an `async (db, ctx)` function. `db` is the connected client; `ctx.file(name)` reads a supporting file (raw `.sql`, JSON, …) sitting next to the seed and returns it as a string, and `ctx.dir` is the seed's directory. `schemic seed` runs `index.ts` (or every seed in filename order if there is none); `schemic seed <name>` runs one; `--all` runs them all. A leading `NN-` prefix orders a seed but is not part of its name (`01-users.ts` is the seed `users`).
+Seeds live in `database/seed/` — TypeScript files that each `export default defineSeed(async (db, ctx) => { … })`. `db` is the connected client; `ctx.file(name)` reads a supporting file (raw `.sql`, JSON, …) sitting next to the seed and returns it as a string, and `ctx.dir` is the seed's directory. `defineSeed` types both `db` and `ctx`, so there are no extra type imports. `schemic seed` runs `index.ts` (or every seed in filename order if there is none); `schemic seed <name>` runs one; `--all` runs them all. A leading `NN-` prefix orders a seed but is not part of its name (`01-users.ts` is the seed `users`).
 
 <CodeBlock title="database/seed/01-users.ts" lang="ts">
 
 ```ts
-export default async function seed(db, ctx) {
+import { defineSeed } from "@schemic/postgres";
+
+export default defineSeed(async (db, ctx) => {
   await db.exec(ctx.file("schema.sql")); // exec runs the whole .sql script; query is single-statement
-}
+});
 ```
 
 </CodeBlock>

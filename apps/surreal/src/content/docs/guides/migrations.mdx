@@ -87,7 +87,19 @@ This regenerates the whole schema from an empty snapshot as a single migration, 
 
 ## Seed data
 
-Seeds live in `database/seed/` — TypeScript files that each export a default `(db) => Promise<…>` taking the connected client (annotate it with `Surreal`). `schemic seed` runs `index.ts` (or every seed in filename order if there is none); `schemic seed <name>` runs one; `--all` runs them all. A leading `NN-` prefix orders a seed but is not part of its name (`01-users.ts` is the seed `users`). Raw SurrealQL files load into a seed via an import attribute — `import surql from "./schema.surql" with { type: "text" }` (typed by the scaffolded `seeds.d.ts`):
+Seeds live in `database/seed/` — TypeScript files that each `export default defineSeed(async (db, ctx) => { … })`. `db` is the connected client; `ctx.file(name)` reads a supporting file (raw `.surql`, JSON, …) sitting next to the seed and returns it as a string, and `ctx.dir` is the seed's directory. `defineSeed` types both `db` and `ctx`, so there are no extra type imports. `schemic seed` runs `index.ts` (or every seed in filename order if there is none); `schemic seed <name>` runs one; `--all` runs them all. A leading `NN-` prefix orders a seed but is not part of its name (`01-users.ts` is the seed `users`).
+
+<CodeBlock title="database/seed/01-users.ts" lang="ts">
+
+```ts
+import { defineSeed } from "@schemic/surrealdb";
+
+export default defineSeed(async (db, ctx) => {
+  await db.query(ctx.file("schema.surql")); // reads ./schema.surql next to the seed, as a string
+});
+```
+
+</CodeBlock>
 
 <CodeBlock lang="bash">
 

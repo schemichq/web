@@ -41,7 +41,7 @@ Install these first. SurrealQL differs across SurrealDB majors, so the versions 
   bun={`bun create schemic`}
 />
 
-`create schemic` is interactive: it asks for a project directory and a database driver, installs everything, and scaffolds your project. Run it in an empty directory for a new project, or inside an existing one — it merges the `@schemic` dependencies and `db:gen` / `db:migrate` scripts into your `package.json` without touching the rest of your setup. For the SurrealDB driver it scaffolds:
+`create schemic` is interactive: it asks for a project directory and a database driver, installs everything, and scaffolds your project. Run it in an empty directory for a new project, or inside an existing one — it merges the `@schemic` dependencies and a `db` script into your `package.json` without touching the rest of your setup. For the SurrealDB driver it scaffolds:
 
 - `schemic.config.ts` — where your database connection lives
 - `database/schema/tables/user.ts` — a sample `user` table
@@ -50,7 +50,7 @@ Install these first. SurrealQL differs across SurrealDB majors, so the versions 
 - `.env.example` — connection environment template
 
 <Callout variant="tip" title="Already in a project, or prefer the CLI?">
-`bunx schemic init` (or `npx schemic init` / `pnpm dlx schemic init`) runs the same setup in place — installing and scaffolding into your current directory. After it runs you have local `schemic` and `sc` bins, plus `db:gen` / `db:migrate` scripts.
+`bunx schemic init` (or `npx schemic init` / `pnpm dlx schemic init`) runs the same setup in place — installing and scaffolding into your current directory. After it runs you have local `schemic` and `sc` bins, plus a `db` script — `bun run db gen`, `db migrate`, `db seed` (with npm: `npm run db -- gen`).
 </Callout>
 
 <Callout variant="note" title="Using pnpm?">
@@ -96,7 +96,7 @@ import { s, defineTable, surql } from "@schemic/surrealdb";
 
 export const User = defineTable("user", {
   name: s.string().$assert(surql`string::len($value) > 0`),
-  email: s.email().unique(),
+  email: s.email().$unique(),
   createdAt: s.datetime().$default(surql`time::now()`).$readonly(),
 }).schemafull();
 ```
@@ -119,7 +119,7 @@ DEFINE FIELD createdAt ON TABLE user TYPE datetime DEFAULT time::now() READONLY;
 
 A few things to notice, each of which you will use constantly:
 
-- `s.email()` emits an `ASSERT string::is_email($value)` constraint, and `.unique()` adds a `UNIQUE INDEX` — both enforced by SurrealDB on write.
+- `s.email()` emits an `ASSERT string::is_email($value)` constraint, and `.$unique()` adds a `UNIQUE INDEX` — both enforced by SurrealDB on write.
 - `.$assert(surql`...`)` on `name` adds a custom constraint (here, a non-empty check).
 - `s.datetime()` is a **codec field**: a `Date` in your TypeScript code, a `datetime` on the wire.
 - `.$default(...)` sets a database-side `DEFAULT` — here `time::now()`, written with the `surql` tag — and `.$readonly()` marks the field `READONLY`.

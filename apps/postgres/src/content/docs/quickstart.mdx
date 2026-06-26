@@ -16,7 +16,7 @@ This walks you from an empty directory to a running migration. Because the drive
   bun={`bun create schemic`}
 />
 
-`create schemic` is interactive: pick the **PostgreSQL** driver when it asks, and it installs everything (including the embedded `@electric-sql/pglite` engine) and scaffolds your project. Run it in an empty directory for a new project, or inside an existing one — it merges the `@schemic` dependencies and `db:gen` / `db:migrate` scripts into your `package.json` without touching the rest of your setup. It scaffolds:
+`create schemic` is interactive: pick the **PostgreSQL** driver when it asks, and it installs everything (including the embedded `@electric-sql/pglite` engine) and scaffolds your project. Run it in an empty directory for a new project, or inside an existing one — it merges the `@schemic` dependencies and a `db` script into your `package.json` without touching the rest of your setup. It scaffolds:
 
 - `schemic.config.ts` — a `postgresConnection` pointed at a local PGlite data dir
 - `database/schema/tables.ts` — a sample schema
@@ -25,7 +25,7 @@ This walks you from an empty directory to a running migration. Because the drive
 - `.env.example` — connection environment template
 
 <Callout variant="tip" title="Already in a project, or prefer the CLI?">
-`bunx schemic init --driver postgres` (or `npx schemic init --driver postgres` / `pnpm dlx schemic init --driver postgres`) runs the same setup in place. After it runs you have local `schemic` and `sc` bins, plus `db:gen` / `db:migrate` scripts.
+`bunx schemic init --driver postgres` (or `npx schemic init --driver postgres` / `pnpm dlx schemic init --driver postgres`) runs the same setup in place. After it runs you have local `schemic` and `sc` bins, plus a `db` script — `bun run db gen`, `db migrate`, `db seed` (with npm: `npm run db -- gen`).
 </Callout>
 
 <Callout variant="note" title="Using pnpm?">

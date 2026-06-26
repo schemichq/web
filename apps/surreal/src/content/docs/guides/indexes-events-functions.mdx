@@ -7,7 +7,7 @@ Beyond fields, a SurrealDB schema can carry indexes, events, and functions. Sche
 
 ## Indexes
 
-An index speeds up lookups and can enforce uniqueness. Add one to a single field with `.index()` or `.unique()`:
+An index speeds up lookups and can enforce uniqueness. Add one to a single field with `.$index()` or `.$unique()`:
 
 <CodeBlock title="schema.ts" lang="ts">
 
@@ -16,8 +16,8 @@ import { s, defineTable } from "@schemic/surrealdb";
 
 export const User = defineTable("user", {
   id: s.string(),
-  email: s.email().unique(),
-  handle: s.string().index(),
+  email: s.email().$unique(),
+  handle: s.string().$index(),
 });
 ```
 

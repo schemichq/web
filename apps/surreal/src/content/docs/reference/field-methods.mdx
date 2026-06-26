@@ -86,8 +86,8 @@ These translate Zod-style constraints into SurrealQL `ASSERT` clauses.
 
 | Method | DDL | Description |
 |--------|-----|-------------|
-| `.index()` | `DEFINE INDEX ... FIELDS <field>` | A single-field index. |
-| `.unique()` | `DEFINE INDEX ... UNIQUE` | A single-field unique index. |
+| `.$index()` | `DEFINE INDEX ... FIELDS <field>` | A single-field index. |
+| `.$unique()` | `DEFINE INDEX ... UNIQUE` | A single-field unique index. |
 
 For composite indexes, use the table-level `.index(name, fields, opts)` — see [definers](/docs/reference/definers).
 

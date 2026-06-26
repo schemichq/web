@@ -141,7 +141,9 @@ The CLI ships as `schemic`, with `sc` as a short alias. Run any command with `np
   flags={[
     { flag: "--write", type: "boolean", desc: "Apply the preview to your .ts files." },
     { flag: "--merge", type: "boolean", desc: "Keep local-only entities; apply the database's changes alongside them." },
-    { flag: "--discard", type: "boolean", desc: "Mirror the database exactly, dropping local-only definitions." }
+    { flag: "--discard", type: "boolean", desc: "Mirror the database exactly, dropping local-only definitions." },
+    { flag: "--watch", type: "boolean", desc: "Poll the live database and re-pull as it changes." },
+    { flag: "--interval <seconds>", type: "number", desc: "Poll interval for --watch (default 2)." }
   ]}
 />
 
@@ -169,6 +171,8 @@ These apply to every command that connects to a database. Each overrides, for th
 | `--password <pass>` | Auth password. |
 | `--auth-level <level>` | Sign-in level: `root`, `namespace`, or `database`. |
 | `-c, --config <path>` | Path to the config file. |
+| `--connection <name>` | Run against a named connection from your config (default: `default`). |
+| `--all` | Run against every connection in your config. |
 | `--[no-]tables` | Include or exclude tables from the operation. |
 | `--[no-]functions` | Include or exclude functions. |
 | `--[no-]access` | Include or exclude access definitions. |

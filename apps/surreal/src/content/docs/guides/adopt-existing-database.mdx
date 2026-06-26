@@ -39,10 +39,10 @@ When your files contain definitions the database does not have, `pull` follows a
 
 | Flag | Effect |
 |------|--------|
-| `--merge` | Keep local-only entities (a table, function, or access definition that exists in your code but not the database), and apply the database's changes alongside them. |
+| `--merge` | Keep local-only definitions — a field, table, function, or access in your code but not the database — and apply the database's changes alongside them. |
 | `--discard` | Mirror the database exactly, dropping local-only definitions. |
 
-An *entity* here is one exported definition — a table, a function, an access rule. A single file can hold several, and `--merge` decides per entity.
+The guard works at the granularity of each definition — a table, function, or access rule — and even each **field** (a local-only field on a table that *does* exist in the database). `--merge` keeps every local-only one; `--discard` drops them.
 
 <Callout variant="note" title="Native codecs round-trip as strings on pull">
 Introspection sees the database's DDL, which does not record which fields you authored as `s.email()` or `s.uuid()`. Pulled string formats and uuids come back as a plain `string` with the matching `ASSERT`, not as the original codec field. Re-apply the codec by hand if you want the app-side conversion.

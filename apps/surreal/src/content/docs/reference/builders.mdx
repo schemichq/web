@@ -96,7 +96,9 @@ Plain string plus a `string::is_*` assertion:
   { sig: ".nullable()", type: "T | null", desc: "The field may be null." },
   { sig: ".array()", type: "array<T>", desc: "A list of T." },
   { sig: "s.any() / s.unknown()", type: "any", desc: "Any value; opts out of a specific type." },
-  { sig: "s.coerce.*", type: "(per base)", desc: "Coercing variant of a primitive." }
+  { sig: "s.coerce.*", type: "(per base)", desc: "Coercing variant of a primitive." },
+  { sig: "s.custom<T>()", type: "(app-only)", desc: "An app-only value with no built-in wire type — pair it with .$surreal(type, codec) to store it." },
+  { sig: "s.instanceof(Class)", type: "(app-only)", desc: "A class instance — pair it with .$surreal(type, codec) for its wire mapping." }
 ]} />
 
 ## Where to go next

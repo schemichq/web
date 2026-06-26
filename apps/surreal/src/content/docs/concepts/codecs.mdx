@@ -37,13 +37,13 @@ Treat these as "native types you hold as-is." `encode` and `decode` leave them u
 
 ## Writing a custom codec
 
-When you store a value in a shape SurrealDB understands but your app wants as something else, teach the field a codec with `.$surreal(type, codec)`. You give the wire type and a pair of functions:
+When you store a value in a shape SurrealDB understands but your app wants as something else, teach the field a codec with `.$surreal(wireType, codec)`. The base field is your app-side type; the first argument is the wire type SurrealDB stores, plus a pair of functions:
 
 <CodeBlock lang="ts">
 
 ```ts
 // Store money as a SurrealDB decimal, work with it as cents (a number) in app code.
-const amount = s.decimal().$surreal("decimal", {
+const amount = s.number().$surreal(s.decimal(), {
   decode: (wire) => Math.round(Number(wire) * 100), // wire -> app
   encode: (cents) => new Decimal(cents / 100),       // app -> wire
 });

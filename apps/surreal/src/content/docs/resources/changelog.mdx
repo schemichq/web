@@ -9,23 +9,72 @@ Notable changes to Schemic, newest first. Each entry is written from your side �
 Schemic is `0.1.0-alpha`. The API still changes between releases. Pin an exact version and read this page before upgrading. Breaking changes are marked **Breaking**.
 </Callout>
 
-## Unreleased
+The packages release in lockstep — one version across `@schemic/core`, `@schemic/cli`, `@schemic/surrealdb`, and the rest. This page covers the SurrealDB driver and the shared core/CLI; the full per-version history for every package lives in the repo [CHANGELOG.md](https://github.com/schemichq/schemic/blob/main/CHANGELOG.md).
 
-### Changed
+## 0.1.0-alpha.22
 
-- **`schemic pull` is now non-destructive.** It previews by default and only writes with `--write`, making surgical edits to your `.ts` files that preserve comments, imports, and untouched fields. A git-like guard refuses to clobber local-only definitions; use `--merge` to keep them or `--discard` to mirror the database exactly. **Breaking** for scripts that relied on `pull` writing immediately.
-- **`schemic push` replaces the old apply command** as the name for applying a schema directly to the database (alias `sync`). It prunes stale objects by default; pass `--no-prune` to apply additions and changes only.
-- **Migrations are idempotent.** Generated DDL uses `DEFINE ... OVERWRITE`, `REMOVE ... IF EXISTS`, and `ALTER`, so `schemic migrate` replays cleanly over a database changed out-of-band (for example by `push` or `pull`).
+### Breaking
+
+- **`defineAccess` requires an explicit scope.** `defineAccess(name)` now returns a builder exposing only `.onDatabase()` / `.onNamespace()` — you pick one before the kind (`.record()` / `.jwt()` / `.bearer()`), enforced at compile time. The silent `ON DATABASE` default is gone: access scope is a security boundary, so it must be chosen.
+- **`.reference()` is renamed `.$reference()`** on field builders, matching the other `$`-prefixed DDL clauses (`.$unique()`, `.$index()`, `.$default()`).
+- **`.$fulltext({ bm25 })` accepts only `[k1, b]`.** `bm25: true` is dropped — it was a no-op, since BM25 is always on.
 
 ### Added
 
-- **`schemic diff --ts`** renders a pending change as TypeScript, laid out the way `pull` edits your files, instead of SurrealQL.
-- **`schemic check`** replays your migrations in a throwaway engine and confirms they reproduce your schema — a CI guard against drift. It defaults to an ephemeral in-memory SurrealDB from your local `surreal` CLI.
-- **Baseline squashing** via `schemic gen --baseline --force`, collapsing existing migrations into one fresh baseline.
+- **Full-text and vector indexes** are now expressible on a field: `.$fulltext()`, `.$hnsw()`, `.$diskann()` — plus record-reference links via `.$reference(...)` with `ON DELETE` behaviour.
+- **`DEFINE ACCESS` authoring** (non-secret): `.comment()` and `.withRefresh()`, with a guard that keeps `RECORD` access database-only.
+- **`DEFINE EVENT` gains `async` and `comment`** on `.event()` / `defineEvent`.
+- **`defineAnalyzer().function(cb, name?)`** takes an optional custom name for the auto-defined function.
+- **Author-time field validation:** `schemic gen` rejects invalid `DEFINE FIELD` clause combinations with a clear error instead of failing at apply.
 
 ### Fixed
 
-- **No more phantom migrations from cosmetic changes.** Diffing now normalizes both your schema and the database into one intermediate representation before comparing, so reordering the members of an enum or union no longer generates a migration.
+- `defineAnalyzer().function()` now emits its auto-defined `DEFINE FUNCTION` (previously the analyzer referenced a missing one).
+- `schemic gen` shows the rendered migration **before** the name prompt, so you review the DDL while naming it.
+
+## 0.1.0-alpha.21
+
+### Breaking
+
+- **Package split (M0.3).** The authoring import `@schemic/surrealdb` is now side-effect-free — `s.*`, `define*`, and `surql` only. The connection factory moved to **`@schemic/surrealdb/connection`** (update the `surrealConnection` import in your `schemic.config.ts`), and the driver implementation to `@schemic/surrealdb/driver` (engine/CLI only). The query builder stays at `@schemic/surrealdb/query`.
+
+### Added
+
+- **`defineFunction(args).returns(R).call(db, args)`** — call a defined database function as typed code: arguments encoded via the param schemas, the result decoded through `.returns(R)`.
+
+## 0.1.0-alpha.20
+
+### Added
+
+- **`schemic pull --watch`** polls the live database (`--interval`, default 2s) and re-pulls as it changes.
+- **`callFunction`** in `@schemic/core/query` invokes a defined database function and decodes the result through `.returns(R)`.
+
+### Fixed
+
+- `defineAnalyzer().filters()` no longer dedupes — duplicate filters pass through verbatim.
+
+## 0.1.0-alpha.19
+
+### Fixed
+
+- `defineAnalyzer().tokenizers()` no longer dedupes — duplicate tokenizers pass through verbatim.
+
+## 0.1.0-alpha.18
+
+### Breaking
+
+- **`.flexible()` / `.loose()` / `.strict()` are object-only** — a compile error on non-object fields (previously a silent no-op).
+- **`defineAnalyzer`'s config-object form is dropped** in favour of the fluent builder (`.tokenizers(...).filters(...)`).
+
+### Added
+
+- **Typed `select()` query builder** at `@schemic/surrealdb/query` — `where` / `orderBy` / `limit` / `.return` projection, decode-by-default, `.raw()` to opt out.
+- **Full `DEFINE ANALYZER` coverage** with a fluent `defineAnalyzer` builder (tokenizers, filters, function, comment).
+- **`@schemic/core/query`** — the neutral query toolkit the driver builders compose on.
+
+<Callout variant="note" title="Earlier versions">
+Releases before `0.1.0-alpha.18` predate this changelog. Their history — `schemic check`, `push` / `sync`, non-destructive `pull`, idempotent migrations, baseline squashing, and more — is in the [git history](https://github.com/schemichq/schemic/commits/main) and the [repo CHANGELOG.md](https://github.com/schemichq/schemic/blob/main/CHANGELOG.md).
+</Callout>
 
 ## Where to go next
 

@@ -78,18 +78,30 @@ Emits `DEFINE FUNCTION fn::<name>(<args>) -> <returns> { <body> }`.
 <CodeBlock lang="ts">
 
 ```ts
-defineAccess(name: string): AccessDef
+defineAccess(name: string): UnscopedAccessDef
 ```
 
 </CodeBlock>
 
-Declares an access method. Pick the kind with one of:
+Declares an access method. You choose a **scope** first — `.onDatabase()` or `.onNamespace()`, compile-enforced — then the kind:
 
 | Method | Description |
 |--------|-------------|
-| `.record()` | A `RECORD` access (SIGNUP/SIGNIN bodies). The default kind. |
+| `.onDatabase()` | Scope the access to the database. Required before a kind (or use `.onNamespace()`). |
+| `.onNamespace()` | Scope the access to the namespace — JWT/bearer only; `.record()` is database scope only. |
+| `.record()` | A `RECORD` access (SIGNUP/SIGNIN bodies). Database scope only. |
 | `.jwt({ alg?, key?, url? })` | Validate external JWTs, by key or by JWKS `url`. |
 | `.bearer({ for })` | Bearer API-key grants; `for` is `"record"` or `"user"`. |
+
+<CodeBlock lang="ts">
+
+```ts
+import { defineAccess } from "@schemic/surrealdb";
+
+export const Account = defineAccess("account").onDatabase().record();
+```
+
+</CodeBlock>
 
 ## defineEvent
 
@@ -108,20 +120,19 @@ Declares an event as a standalone object. Equivalent to the table's `.event(name
 <CodeBlock lang="ts">
 
 ```ts
-defineView(name: string, query: Expr): TableDef
+defineView(name: string, shape?: Shape): ViewBuilder
 ```
 
 </CodeBlock>
 
-Defines a view — a read-only table computed from a query. Pass a `surql` `SELECT` expression; Schemic emits it as a SurrealDB view (`DEFINE TABLE <name> ... AS <query>`). It has no authored fields of its own, and you read it like any table.
+Defines a view — a read-only table computed from a query. `defineView` returns a builder; pass the `surql` `SELECT` to `.as(query)`, which returns the `TableDef`. The optional second argument is a **shape** that types the projected rows. Schemic emits `DEFINE TABLE <name> TYPE ANY SCHEMALESS AS <query>`, and you read it like any table.
 
 <CodeBlock lang="ts">
 
 ```ts
 import { defineView, surql } from "@schemic/surrealdb";
 
-export const ActiveUser = defineView(
-  "active_user",
+export const ActiveUser = defineView("active_user").as(
   surql`SELECT id, name FROM user WHERE active = true`,
 );
 ```
@@ -133,22 +144,26 @@ export const ActiveUser = defineView(
 <CodeBlock lang="ts">
 
 ```ts
-defineAnalyzer(name: string, config: AnalyzerConfig): AnalyzerDef
+defineAnalyzer(name: string): AnalyzerDef
 ```
 
 </CodeBlock>
 
-Declares a full-text search analyzer. `config` is `{ tokenizers: string[]; filters?: string[] }`, emitted as `DEFINE ANALYZER <name> TOKENIZERS <...> FILTERS <...>`. Reference the analyzer from a search index on a field.
+Declares a full-text search analyzer, configured with a fluent chain. Emits `DEFINE ANALYZER <name> TOKENIZERS <...> FILTERS <...>`. Reference the analyzer from a search index on a field.
+
+| Method | Description |
+|--------|-------------|
+| `.tokenizers(...names)` | The tokenizers, e.g. `"class"`, `"blank"`, `"camel"`, `"punct"`. |
+| `.filters(...names)` | The token filters, e.g. `"lowercase"`, `"ascii"`, `"snowball(english)"`. Also accepts a `f => [...]` callback. |
 
 <CodeBlock lang="ts">
 
 ```ts
 import { defineAnalyzer } from "@schemic/surrealdb";
 
-export const Standard = defineAnalyzer("standard", {
-  tokenizers: ["class"],
-  filters: ["lowercase", "ascii"],
-});
+export const Standard = defineAnalyzer("standard")
+  .tokenizers("class")
+  .filters("lowercase", "ascii");
 ```
 
 </CodeBlock>

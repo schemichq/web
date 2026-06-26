@@ -99,6 +99,8 @@ const PostPlus    = Post.extend({ pinned: s.boolean() });
 | `.partial()` | A table with every field optional. |
 | `.extend({ ... })` | A table with extra fields added. |
 
+These derivations keep the source table's name (`PostSummary` is still table `post`), so reach for them to derive types, codecs, and projections — `App<typeof PostSummary>` — not to define separate tables.
+
 ## Verify it
 
 Generate a migration to see the DDL your definition produces:

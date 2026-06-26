@@ -101,7 +101,7 @@ produces:
 ```surql
 DEFINE TABLE user TYPE NORMAL SCHEMAFULL;
 DEFINE FIELD email ON TABLE user TYPE string ASSERT string::is_email($value);
-DEFINE FIELD ssn ON TABLE user TYPE string PERMISSIONS FOR select WHERE $auth.admin = true, FOR update NONE;
+DEFINE FIELD ssn ON TABLE user TYPE string PERMISSIONS FOR select WHERE $auth.admin = true FOR update NONE;
 ```
 
 </CodeBlock>

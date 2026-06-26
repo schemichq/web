@@ -24,7 +24,7 @@ await db.connect("ws://127.0.0.1:8000/rpc", {
 </CodeBlock>
 
 <Callout variant="caution" title="Write with db.query across the SDK/server skew">
-The `surrealdb` SDK is a 2.x major paired with a 3.x server. Its typed write helpers are version-sensitive: `db.create` with a *table-name string* fails, and `db.merge` does not exist. The form that always works is `db.query` with SurrealQL plus `encode`/`encodePartial` for the payload — this guide leads with it, and notes the typed-method alternatives that do work.
+The `surrealdb` SDK is a 2.x major paired with a 3.x server. Its typed write helpers are version-sensitive: `db.create` with a *table-name string* fails, and there's no top-level `db.merge()` shortcut (only the `db.update(id).merge(...)` builder, which doesn't reliably line up with the 3.x server). The form that always works is `db.query` with SurrealQL plus `encode`/`encodePartial` for the payload — this guide leads with it, and notes the typed-method alternatives that do work.
 </Callout>
 
 ## Create a row

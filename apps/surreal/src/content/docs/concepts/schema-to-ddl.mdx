@@ -57,7 +57,7 @@ The `TYPE` clause comes from the Zod schema. Combinators compose into SurrealQL 
 
 ## How clauses become DDL
 
-The `$`-prefixed [field methods](/docs/reference/field-methods) and Zod's string formats add clauses to the `DEFINE FIELD`, in this order: `TYPE`, `DEFAULT`, `ASSERT`, `READONLY`, `PERMISSIONS`.
+The `$`-prefixed [field methods](/docs/reference/field-methods) and Zod's string formats add clauses to the `DEFINE FIELD`, in this order: `TYPE`, `DEFAULT`, `VALUE`, `ASSERT`, `READONLY`, `PERMISSIONS`.
 
 | You write | DDL clause |
 |-----------|-----------|

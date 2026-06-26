@@ -61,8 +61,6 @@ Each is a `string` carrying an `ASSERT`. The full list is in [Schema builders](/
 
 These SurrealQL features are on the roadmap but not expressible in the schema today. Do not rely on them yet:
 
-- **Record references with cascade**: `record<...> REFERENCE ... ON DELETE`.
-- **Full-text and vector indexes**: only standard and unique indexes are emitted.
 - **`DEFINE PARAM` and `DEFINE SEQUENCE`**.
 
 One round-trip caveat: [`schemic pull`](/docs/guides/adopt-existing-database) reconstructs `s.email()` and `s.uuid()` fields from the database as a plain `string` with the matching `ASSERT`, not as the original codec field, because introspection sees only the DDL.

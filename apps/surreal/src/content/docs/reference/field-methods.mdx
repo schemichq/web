@@ -70,6 +70,7 @@ Each `$`-method adds one clause to the field's `DEFINE FIELD`. Expressions are w
 | `.$readonly()` | `READONLY` | Allowed on create, rejected on later change. |
 | `.$comment(text)` | `COMMENT "text"` | Attach a comment to the field. |
 | `.$permissions(spec)` | `PERMISSIONS FOR ... WHERE ...` | Per-operation access control (`select`, `create`, `update`). |
+| `.$reference(opts?)` | `REFERENCE [ON DELETE ...]` | Track back-references to a record link, with optional cascade/cleanup on delete. |
 
 ## Constraint helpers
 

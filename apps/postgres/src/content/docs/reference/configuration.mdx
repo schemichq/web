@@ -11,7 +11,7 @@ Config is **connections-only**: a map of named connections, each built by a driv
 
 ```ts
 import { defineConfig } from "@schemic/core/config";
-import { postgresConnection } from "@schemic/postgres";
+import { postgresConnection } from "@schemic/postgres/connection";
 
 export default defineConfig({
   connections: {
@@ -32,7 +32,7 @@ export default defineConfig({
 |--------|------|-------------|
 | `connections` | record | A map of named connections. The CLI uses `default` unless told otherwise; add more for multi-database setups. |
 
-Each entry comes from a driver factory — `postgresConnection(...)` from `@schemic/postgres`. `defineConfig` is imported from `@schemic/core/config`.
+Each entry comes from a driver factory — `postgresConnection(...)` from `@schemic/postgres/connection`. `defineConfig` is imported from `@schemic/core/config`.
 
 ## `postgresConnection(...)`
 
@@ -51,12 +51,12 @@ The driver runs on embedded PGlite, and `url` selects where its data lives:
 
 | `url` | Behaviour |
 |-------|-----------|
-| `"file:./.pgdata"` (or a bare path) | A **persistent** PGlite data directory on disk. |
-| `""` (or omitted) | An **in-memory** PGlite database — fresh each run. |
-| `"postgres://…"` | **Reserved** for a future node-postgres client. Not supported yet. |
+| `"file:./.pgdata"` | A **persistent** PGlite data directory on disk. The `file:` prefix is what makes it persist. |
+| `""`, omitted, or a bare path | An **in-memory** PGlite database, fresh each run. A bare path like `"./.pgdata"` (no `file:`) silently runs in-memory — only a `file:`-prefixed url persists. |
+| `"postgres://…"` | **Rejected.** `connect` fails loud — hosted Postgres over `postgres://` is not supported yet (a node-postgres client is planned). Use `file:<dir>` for persistence, or `""`/omit for in-memory. |
 
 <Callout variant="note" title="PGlite only today">
-Hosted Postgres servers over `postgres://` are planned but not shipped. Point `url` at a `file:` data directory (or leave it in-memory). The scaffold reads `process.env.DATABASE_URL` so you can swap the location per environment, but for now its value should be a `file:` path or empty.
+Hosted Postgres servers over `postgres://` are planned but not shipped — a `postgres://` url now **errors** rather than silently running in-memory. **Persistence requires the `file:` prefix**: point `url` at a `file:` data directory; an empty url or a bare path (no `file:`) runs **in-memory**, fresh each run. The scaffold reads `process.env.DATABASE_URL`, so for now keep its value a `file:` path (or empty for in-memory).
 </Callout>
 
 ## Environment variables

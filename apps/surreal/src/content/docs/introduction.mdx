@@ -42,7 +42,7 @@ DEFINE FIELD createdAt ON TABLE user TYPE datetime DEFAULT time::now() READONLY;
     Emit `DEFINE TABLE`, `DEFINE FIELD`, indexes, events, functions, and access definitions straight from your schema. No DDL to hand-write or keep in sync.
   </PillarCard>
   <PillarCard icon="shield-check" title="Runtime validation">
-    Every field is a real Zod schema, so parsing, refinements, and error messages work exactly as you already know them.
+    Every field is a real Zod schema, so `parse`, `refine`, and Zod's error messages work exactly as they do in Zod.
   </PillarCard>
   <PillarCard icon="layers" title="Typed JS-to-DB mapping">
     Read and write rows through codecs that convert between your app values and the database wire format, with static types for both sides.
@@ -50,6 +50,10 @@ DEFINE FIELD createdAt ON TABLE user TYPE datetime DEFAULT time::now() READONLY;
 </PillarGrid>
 
 A fourth thing falls out of the same source of truth: a declarative, reviewable [migration history](/docs/concepts/migrations-model) the CLI generates by diffing your schema against the database.
+
+<Callout variant="note" title="Standard Schema compatible">
+Every `s.*` field implements [Standard Schema](https://standardschema.dev) — the shared interface for TypeScript validation libraries — so you can hand a Schemic field straight to anything that speaks it (tRPC, TanStack Form and Router, and the rest), no adapter needed.
+</Callout>
 
 ## The mental model
 

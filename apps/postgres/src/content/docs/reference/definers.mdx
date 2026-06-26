@@ -1,9 +1,9 @@
 ---
 title: Definers
-description: Reference for the top-level definers in the Schemic Postgres driver — defineTable with its primaryKey, check, index, and record methods, and the s.$postgres escape-hatch factory.
+description: Reference for the top-level definers in the Schemic Postgres driver — defineTable with its methods, the standalone definers (enum, domain, sequence, extension, view, function, trigger, policy), and the s.$postgres escape-hatch factory.
 ---
 
-The Postgres driver's only standalone definer is `defineTable` — indexes and foreign keys are authored *inside* a table. This page lists `defineTable`'s signature and methods, plus the escape-hatch factory.
+The Postgres driver's definers are the entry points you import from `@schemic/postgres`. `defineTable` is the core one — indexes and foreign keys are authored *inside* a table — and alongside it are standalone definers for enums, domains, sequences, extensions, views, functions, triggers, and policies. This page lists each one's signature, plus `defineTable`'s methods and the escape-hatch factory.
 
 ## defineTable
 
@@ -21,7 +21,8 @@ Creates a table definition. `fields` is an object of `s.*` columns. When no prim
 |--------|-------------|
 | `.primaryKey(...cols)` | Composite / custom `PRIMARY KEY`, replacing the implicit `id`. |
 | `.check(expr)` | A table-level `CHECK (expr)`. Emitted but excluded from drift detection. |
-| `.index(cols, opts?)` | A secondary index over `cols`. `opts`: `{ name?, unique? }`. |
+| `.index(cols, opts?)` | A secondary index over `cols`. `opts`: `{ name?, unique?, method?, where? }` (`method` = `btree`/`gin`/`gist`/`brin`/`hash`; `where` = partial predicate). |
+| `.foreignKey(opts)` | A composite or non-`id` foreign key. `opts`: `{ columns, refTable, refColumns?, onDelete?, onUpdate?, name? }` (`refColumns` defaults to `["id"]`). |
 | `.record(opts?)` | The `s.references` foreign-key field for *this* table, for use in another table's shape. `opts`: `{ onDelete?, onUpdate? }`. |
 
 <CodeBlock lang="ts">
@@ -43,9 +44,27 @@ export const member = defineTable("member", {
 
 Each entry in `fields` is a `PgField`, which carries the codec for that column. Read and write through `table.fields.<column>.encode(value)` / `.decode(value)` — see [encode & decode rows](/docs/guides/encode-decode-rows). The decoded and encoded row shapes are the `App<typeof Table>` and `Wire<typeof Table>` types.
 
-<Callout variant="note" title="s.enum projects to text">
-`s.enum([...])` validates the value app-side as a Zod enum but emits a plain `text` column — there is no native Postgres `ENUM` (`CREATE TYPE`) yet.
+<Callout variant="note" title="s.enum is text; defineEnum is native">
+`s.enum([...])` validates the value app-side as a Zod enum but emits a plain `text` column — the lightweight option. For a **native** Postgres enum (`CREATE TYPE … AS ENUM`), use the standalone [`defineEnum`](#standalone-definers) below and its `.column()`.
 </Callout>
+
+## Standalone definers
+
+Beyond `defineTable`, the Postgres driver ships definers for the other top-level objects. Each is imported from `@schemic/postgres` and emits its `CREATE …` statement alongside your tables.
+
+| Definer | Signature | Emits |
+|---------|-----------|-------|
+| `defineEnum` | `defineEnum(name, values)` — `.column()` types a column as the enum | `CREATE TYPE <name> AS ENUM (...)` |
+| `defineDomain` | `defineDomain(name, base, opts?)` — `opts`: `{ notNull?, default?, check? }`; `.column()` types a column | `CREATE DOMAIN <name> AS <base> [DEFAULT] [NOT NULL] [CHECK]` |
+| `defineSequence` | `defineSequence(name, opts?)` — `opts`: `{ start?, increment?, min?, max?, cache?, cycle? }` | `CREATE SEQUENCE <name> …` |
+| `defineExtension` | `defineExtension(name, opts?)` — `opts`: `{ schema?, version? }` | `CREATE EXTENSION IF NOT EXISTS <name> [SCHEMA] [VERSION]` |
+| `defineView` | `defineView(name, sql)` | `CREATE VIEW <name> AS <sql>` |
+| `defineMaterializedView` | `defineMaterializedView(name, sql)` | `CREATE MATERIALIZED VIEW <name> AS <sql>` |
+| `defineFunction` | `defineFunction(name, opts)` — `opts`: `{ args?, returns, language?, body, volatility?, strict?, replace? }` | `CREATE [OR REPLACE] FUNCTION <name>(args) RETURNS <ret> LANGUAGE <lang> AS $$ … $$` |
+| `defineTrigger` | `defineTrigger(name, opts)` — `opts`: `{ table, timing, events, function, forEach?, when?, args? }` | `CREATE TRIGGER <name> <timing> <events> ON <table> EXECUTE FUNCTION <fn>()` |
+| `definePolicy` | `definePolicy(name, opts)` — `opts`: `{ table, command?, roles?, using?, withCheck?, permissive? }` | `ALTER TABLE <table> ENABLE ROW LEVEL SECURITY;` + `CREATE POLICY <name> ON <table> …` |
+
+`defineEnum` and `defineDomain` expose a `.column()` that returns a `PgField` typed as that enum or domain — drop it into a table's `fields` like any other column. See the [coverage map](https://github.com/schemichq/schemic/blob/main/drivers/postgres/docs/COVERAGE.md) for the round-trip status of each.
 
 ## The escape hatch
 

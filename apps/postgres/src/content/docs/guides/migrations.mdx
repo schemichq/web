@@ -16,7 +16,7 @@ user
 1 change — 1 added, 0 changed, 0 removed.`} />
 
 <Callout variant="note" title="diff is structural only">
-On the Postgres driver, `diff` compares structure — tables, columns, types, nullability, indexes, and foreign keys. It has no `--live`, `--ts`, or `--watch` mode, and it does not surface changes to `DEFAULT`, `CHECK`, `GENERATED`, or `COMMENT` (those are excluded from drift detection by design — see [the migration model](/docs/concepts/migrations-model)).
+On the Postgres driver, `diff` compares structure — tables, columns, types, nullability, indexes, and foreign keys — always against the live database (it introspects it). The `--live`, `--ts`, and `--watch` flags are no-ops here. Changes to `DEFAULT`, `CHECK`, `GENERATED`, or `COMMENT` are excluded from migration generation by design, though the `diff` preview may still *display* one — see [the migration model](/docs/concepts/migrations-model).
 </Callout>
 
 ## Generate a migration
@@ -39,7 +39,7 @@ Commit the generated `.sql` files. They are the reviewable, version-controlled r
 
 `schemic migrate` (alias `up`) applies every pending migration in order, against the PGlite database from your config:
 
-<Terminal command="npx schemic migrate" output={`  ↑ 20260619090000_add_bio
+<Terminal command="npx schemic migrate" output={`  ↑ 20260626114301_add_bio
 
 ✓ Applied 1 migration.`} />
 
@@ -48,7 +48,7 @@ Commit the generated `.sql` files. They are the reviewable, version-controlled r
 `schemic status` shows which migrations are applied and which are pending:
 
 <Terminal command="npx schemic status" output={`  ✓ applied  20260601000000_initial
-  · pending  20260619090000_add_bio
+  · pending  20260626114301_add_bio
 
 2 migrations, 1 pending.`} />
 

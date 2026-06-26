@@ -6,7 +6,7 @@ description: Add database-side defaults, CHECK constraints, generated columns, i
 The `$`-prefixed field methods attach SQL clauses to a column. This guide covers the everyday ones — defaults, checks, generated columns, identity, and comments. For the full method list see [field methods](/docs/reference/field-methods).
 
 <Callout variant="caution" title="DEFAULT, CHECK, GENERATED, and COMMENT are excluded from drift detection">
-These four clauses **emit faithfully** into the generated DDL, but Postgres rewrites their expressions on read (`'x'` becomes `'x'::text`, `a > 0` becomes `(a > 0)`), so an exact comparison would produce phantom migrations. Schemic therefore **excludes them from change detection**: adding or changing *only* one of these will not show up in `schemic diff` and will not generate a migration. Set them when you first author a column; to change one later, recreate the column. Nullability, type, foreign keys, and indexes are all detected normally.
+These four clauses **emit faithfully** into the generated DDL, but Postgres rewrites their expressions on read (`'x'` becomes `'x'::text`, `a > 0` becomes `(a > 0)`), so an exact comparison would produce phantom migrations. Schemic therefore **excludes them from migration generation**: adding or changing *only* one of these will not generate a migration. (`schemic diff` may still *display* such a delta in its preview, even though `gen` won't migrate it.) Set them when you first author a column; to change one later, recreate the column. Nullability, type, foreign keys, and indexes are all detected normally.
 </Callout>
 
 ## Defaults

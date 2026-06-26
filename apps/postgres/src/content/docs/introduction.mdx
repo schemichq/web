@@ -48,7 +48,7 @@ You never wrote the `id` primary key — Schemic adds an implicit `"id" text PRI
     Emit `CREATE TABLE`, columns, primary and foreign keys, unique and secondary indexes, defaults, and checks straight from your schema. No DDL to hand-write or keep in sync.
   </PillarCard>
   <PillarCard icon="shield-check" title="Runtime validation">
-    Every field is a real Zod schema, so parsing, refinements, and error messages work exactly as you already know them.
+    Every field is a real Zod schema, so `parse`, `refine`, and Zod's error messages work exactly as they do in Zod.
   </PillarCard>
   <PillarCard icon="layers" title="Typed JS-to-DB mapping">
     Read and write rows through codecs that convert between your app values and the Postgres wire format, with static types for both sides.
@@ -56,6 +56,10 @@ You never wrote the `id` primary key — Schemic adds an implicit `"id" text PRI
 </PillarGrid>
 
 A fourth thing falls out of the same source of truth: a declarative, reviewable [migration history](/docs/concepts/migrations-model) the CLI generates by diffing your schema against the database.
+
+<Callout variant="note" title="Standard Schema compatible">
+Every `s.*` field implements [Standard Schema](https://standardschema.dev) — the shared interface for TypeScript validation libraries — so you can hand a Schemic field straight to anything that speaks it (tRPC, TanStack Form and Router, and the rest), no adapter needed.
+</Callout>
 
 ## The mental model
 
@@ -71,7 +75,7 @@ A codec moves a value between the two: `decode` reads a row into app values, and
 <CompatBadges items={["PostgreSQL via PGlite (embedded)", "Zod 4", "TypeScript 5.x", "Node 18+ or Bun"]} />
 
 <Callout variant="note" title="Alpha — PGlite today">
-The Postgres driver is `0.1.0-alpha`. Today it runs on embedded [PGlite](https://pglite.dev): authoring, DDL emit, introspection, and migrations all round-trip against it, with **no database server to install**. A client for hosted Postgres servers is planned. Tables, columns, primary/foreign keys, unique and secondary indexes, defaults, checks, and identity columns are supported; views, functions, triggers, native enums, and extensions are not yet. See the [coverage map](https://github.com/schemichq/schemic/blob/main/packages/postgres/docs/COVERAGE.md) for the feature-by-feature status, and pin a version.
+The Postgres driver is `0.1.0-alpha`. Today it runs on embedded [PGlite](https://pglite.dev) — a real Postgres compiled to WASM — so authoring, DDL emit, introspection, and migrations all round-trip with **no database server to install**. Coverage spans tables, columns and native types, indexes (including gin/gist/brin/hash and partial), foreign keys (including composite and non-`id`), enums, sequences, domains, views, materialized views, functions, triggers, and RLS policies. Network Postgres (node-postgres) and multiple schemas are on the beta roadmap. See the [coverage map](https://github.com/schemichq/schemic/blob/main/drivers/postgres/docs/COVERAGE.md) for the feature-by-feature status, and pin a version.
 </Callout>
 
 ## Start here

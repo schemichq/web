@@ -25,7 +25,7 @@ The Postgres workflow is a short cycle:
 `status`, `rollback`, and `seed` round out the loop. The [migrations guide](/docs/guides/migrations) walks through it command by command.
 
 <Callout variant="note" title="The Postgres driver is migration-first">
-There is no `push` (apply-without-migration) or `pull` (introspect-into-code) on the Postgres driver yet, and `diff` is **structural only** — it has no `--live`, `--ts`, or `--watch` mode. The path through migrations is the supported way to change the database. See the [CLI reference](/docs/reference/cli) for exactly which commands ship.
+There is no `push` (apply-without-migration) or `pull` (introspect-into-code) on the Postgres driver yet, and `diff` is **structural only**. On Postgres, `diff` always compares against the **live** database by introspecting it; the `--live`, `--ts`, and snapshot toggles apply to drivers with the richer diff pipeline (SurrealDB), and `--watch` doesn't apply here. The path through migrations is the supported way to change the database. See the [CLI reference](/docs/reference/cli) for exactly which commands ship.
 </Callout>
 
 ## Migrations are reversible
@@ -39,7 +39,7 @@ Each generated migration carries both directions in one file, delimited by marke
 CREATE TABLE "user" ( ... );
 
 -- schemic:down
-DROP TABLE "user";
+DROP TABLE IF EXISTS "user" CASCADE;
 ```
 
 </CodeBlock>
@@ -48,9 +48,9 @@ DROP TABLE "user";
 
 ## What the structural diff covers
 
-The diff today is **structural**: it detects table create/drop, `ADD COLUMN` / `DROP COLUMN`, column type changes (best-effort cast), nullability changes, and index and foreign-key add/drop. Plain and unique btree indexes and foreign keys round-trip cleanly, so adding or dropping one produces a real, accurate migration.
+The diff today is **structural**: it detects table create/drop, `ADD COLUMN` / `DROP COLUMN`, column type changes (best-effort cast), nullability changes, and index and foreign-key add/drop. Indexes (including gin/gist/brin/hash and partial) and foreign keys (including composite and non-`id` targets) round-trip cleanly, so adding or dropping one produces a real, accurate migration.
 
-Expression-level clauses — `DEFAULT`, `CHECK`, `GENERATED`, and `COMMENT` — are **emitted faithfully but excluded from the diff**, because Postgres rewrites those expressions on read and an exact comparison would produce phantom migrations. The practical consequence: changing *only* a default or a check does not generate a migration. Set those when you first author a column, or recreate the column when you need to change one. See [from schema to DDL](/docs/concepts/schema-to-ddl) for the full list.
+Expression-level clauses — `DEFAULT`, `CHECK`, `GENERATED`, and `COMMENT` — are **emitted faithfully but excluded from migration generation**, because Postgres rewrites those expressions on read and an exact comparison would produce phantom migrations. The practical consequence: changing *only* a default or a check does not generate a migration. Set those when you first author a column, or recreate the column when you need to change one. (`schemic diff` may still *display* a default or check delta that `gen` won't migrate — a preview-only artifact.) See [from schema to DDL](/docs/concepts/schema-to-ddl) for the full list.
 
 ## The engine is embedded PGlite
 

@@ -1,9 +1,9 @@
 ---
 title: Indexes
-description: Add unique and secondary btree indexes to Postgres tables with Schemic — column-level $unique, table-level .index([...]), and composite unique indexes.
+description: Add indexes to Postgres tables with Schemic — column-level $unique, table-level .index([...]), composite unique indexes, access methods (gin/gist/brin/hash), and partial indexes.
 ---
 
-Schemic emits plain btree indexes — unique and non-unique — as `CREATE INDEX` statements alongside the table. This guide covers the three forms you reach for most.
+Schemic emits indexes — unique and non-unique, btree or another access method, and partial — as `CREATE INDEX` statements alongside the table. This guide covers the forms you reach for most.
 
 ## A unique column index
 
@@ -87,8 +87,50 @@ CREATE UNIQUE INDEX "membership_org_user_idx" ON "membership" ("org", "user");
 
 </CodeBlock>
 
-<Callout variant="note" title="Plain btree indexes only">
-Unique and non-unique btree indexes over real columns are supported and round-trip through `schemic diff`. Index methods (gin, gist, brin, hash) and partial or expression indexes are not yet supported.
+## Access methods and partial indexes
+
+`.index(cols, { method, where })` covers the rest. `method` picks the access method — `gin`, `gist`, `brin`, or `hash` (`btree` is the default and emits no `USING`); `where` makes the index partial.
+
+<CodeBlock lang="ts">
+
+```ts
+export const doc = defineTable("doc", { meta: s.jsonb() })
+  .index(["meta"], { method: "gin" });
+```
+
+</CodeBlock>
+
+<CodeBlock title="Generated DDL" lang="postgresql">
+
+```sql
+CREATE INDEX "doc_meta_idx" ON "doc" USING gin ("meta");
+```
+
+</CodeBlock>
+
+A `where` predicate makes the index partial — it covers only the matching rows:
+
+<CodeBlock lang="ts">
+
+```ts
+export const task = defineTable("task", { priority: s.integer(), status: s.text() })
+  .index(["priority"], { where: "status = 'open'" });
+```
+
+</CodeBlock>
+
+<CodeBlock title="Generated DDL" lang="postgresql">
+
+```sql
+CREATE INDEX "task_priority_idx" ON "task" ("priority") WHERE status = 'open';
+```
+
+</CodeBlock>
+
+Pick the method to match the column: **gin** for `jsonb`, arrays, and full-text; **brin** for large, naturally-ordered columns; **hash** for equality. (`gist` needs a type with a gist operator class.) Methods and columns round-trip cleanly; a partial `where` predicate emits and round-trips on presence, but — like `DEFAULT` and `CHECK` — a predicate-only edit is not auto-detected.
+
+<Callout variant="note" title="Expression indexes not yet supported">
+Indexes on an *expression* rather than plain columns (for example `CREATE INDEX … (lower(email))`) are not yet supported. Plain-column indexes — unique, non-unique, composite, any access method, and partial — all round-trip.
 </Callout>
 
 ## Where to go next

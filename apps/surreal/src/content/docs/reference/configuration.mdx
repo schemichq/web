@@ -36,7 +36,7 @@ export default defineConfig({
 |--------|------|-------------|
 | `connections` | record | A map of named connections. The CLI uses `default` unless told otherwise; add more for multi-tenant or multi-database setups. |
 
-Each entry comes from a driver factory — `surrealConnection(...)` from `@schemic/surrealdb` (other drivers export their own, e.g. `postgresConnection`).
+Each entry comes from a driver factory — `surrealConnection(...)` from `@schemic/surrealdb/connection` (other drivers export their own, e.g. `postgresConnection`).
 
 ## `surrealConnection(...)`
 

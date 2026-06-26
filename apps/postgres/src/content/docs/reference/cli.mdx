@@ -30,7 +30,7 @@ The Postgres workflow is **author → diff → gen → migrate**, with `status`,
 <CommandRef
   id="new"
   name="schemic new <kind> <name>"
-  desc="Scaffold a starter schema file at <schema>/<kind-folder>/<name>.ts — a realistic starter, not a bare stub. Postgres' only standalone kind is table → tables/; index and constraint throw a helpful 'authored inside a table' message, since indexes and foreign keys live in defineTable. Requires a directory schema layout; never overwrites an existing file."
+  desc="Scaffold a starter schema file at <schema>/<kind-folder>/<name>.ts — a realistic starter, not a bare stub. On Postgres, new scaffolds a table starter (→ tables/); index and constraint give an 'authored inside a table' message, since indexes and foreign keys live in defineTable. Postgres' other standalone objects — enums, views, sequences, domains, extensions, functions, triggers, policies — are authored by hand with defineX (no new scaffolder for them yet). Requires a directory schema layout; never overwrites an existing file."
   synopsis="schemic new table invoice"
   flags={[]}
 />
@@ -110,16 +110,21 @@ The Postgres workflow is **author → diff → gen → migrate**, with `status`,
 
 ## Not yet supported on Postgres
 
-These commands exist on other drivers but are not available on Postgres yet — they error with *"the postgres driver does not support …"*:
+These commands exist on other drivers but **error** on Postgres with *"the postgres driver does not support …"*:
 
 | Command | Status |
 |---------|--------|
 | `schemic pull` | No introspection-into-code yet. |
 | `schemic push` (`sync`) | No apply-without-migration yet. |
-| `schemic diff --live` | The live diff against a running database is not available. |
-| `schemic diff --ts` | TypeScript-rendered diffs are not available. |
-| `schemic diff --watch` | Watch mode is not available. |
 | `schemic check` (full replay) | `check` validates the schema only — use `--schema`. |
+
+These `diff` flags are **accepted but ignored** — Postgres `diff` is always structural and runs against the live database, so the flags are no-ops (they do not error):
+
+| Flag | Behaviour on Postgres |
+|------|-----------------------|
+| `schemic diff --live` | No-op — pg `diff` already runs against the live database. |
+| `schemic diff --ts` | No-op — pg `diff` does not render TypeScript. |
+| `schemic diff --watch` | No-op — watch mode does not apply. |
 
 ## Global flags
 
@@ -127,6 +132,8 @@ These commands exist on other drivers but are not available on Postgres yet — 
 |------|-------------|
 | `--url <url>` | Override the connection's PGlite location for this command (a `file:` data dir or empty for in-memory). |
 | `-c, --config <path>` | Path to the config file. |
+| `--connection <name>` | Run against a named connection from your config (default: `default`). |
+| `--all` | Run against every connection in your config. |
 
 ## Where to go next
 

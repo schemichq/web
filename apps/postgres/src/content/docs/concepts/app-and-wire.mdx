@@ -63,8 +63,8 @@ const app = account.fields.balance.decode("1299");           // wire -> app: a M
 
 For a field with no codec, `encode` and `decode` simply pass the value through — `account.fields.email.decode(v)` returns the `string` unchanged. The direction is the thing to remember: **encode to write, decode to read.**
 
-<Callout variant="note" title="Codecs are per-field today">
-The Postgres driver does not yet expose a whole-row `Table.encode` / `Table.decode` helper the way the SurrealDB driver does. You encode and decode one column at a time through `table.fields.<column>`. This is a known gap, tracked for a future release — see [Encode & decode rows](/docs/guides/encode-decode-rows) for the full read/write pattern against the PGlite client.
+<Callout variant="note" title="Encode is per-field today">
+The Postgres driver gives you whole-row **decode** — `table.decode(row)` and `table.safeDecode(row)` validate a returned row into `App<typeof table>`. Whole-row **encode** is the gap: there is no `table.encode` yet, so on write you encode one column at a time through `table.fields.<column>`. See [Encode & decode rows](/docs/guides/encode-decode-rows) for the full read/write pattern against the PGlite client.
 </Callout>
 
 ## App and Wire types

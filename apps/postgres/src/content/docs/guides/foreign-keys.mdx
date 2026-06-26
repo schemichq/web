@@ -3,7 +3,7 @@ title: Foreign keys
 description: Model relationships between Postgres tables with Schemic — single-column foreign keys with s.references, ON DELETE and ON UPDATE referential actions, and the table.record() helper.
 ---
 
-A foreign key links a column to another table's `id`. In Schemic you author it with `s.references(table)`, which emits a `text` column plus a `FOREIGN KEY` constraint. This guide covers the everyday cases.
+A foreign key links one or more columns to another table. The common case — a single column referencing another table's `id` — you author inline with `s.references(table)`, which emits a `text` column plus a `FOREIGN KEY` constraint; composite and non-`id` keys use the table-level `.foreignKey(...)`. This guide covers both.
 
 ## A single foreign key
 
@@ -87,6 +87,58 @@ ALTER TABLE "post" ADD CONSTRAINT "post_author_fkey" FOREIGN KEY ("author") REFE
 
 </CodeBlock>
 
+## Composite and non-`id` foreign keys
+
+`s.references` is the sugar for the common case — a single column pointing at another table's `id`. For a **multi-column** key, or one that targets a **non-`id`** column, use the table-level `.foreignKey(...)`:
+
+<CodeBlock lang="ts">
+
+```ts
+const team = defineTable("team", { org_id: s.text(), code: s.text() })
+  .primaryKey("org_id", "code");
+
+const member = defineTable("member", { org_id: s.text(), team_code: s.text() })
+  .foreignKey({
+    columns: ["org_id", "team_code"],
+    refTable: "team",
+    refColumns: ["org_id", "code"],
+    onDelete: "cascade",
+  });
+```
+
+</CodeBlock>
+
+<CodeBlock title="Generated DDL" lang="postgresql">
+
+```sql
+ALTER TABLE "member" ADD CONSTRAINT "member_org_id_team_code_fkey" FOREIGN KEY ("org_id", "team_code") REFERENCES "team" ("org_id", "code") ON DELETE CASCADE;
+```
+
+</CodeBlock>
+
+To reference a non-`id` column — here a `UNIQUE` one — point `refColumns` at it:
+
+<CodeBlock lang="ts">
+
+```ts
+const u = defineTable("u", { email: s.text().$unique() });
+
+const prof = defineTable("prof", { email: s.text() })
+  .foreignKey({ columns: ["email"], refTable: "u", refColumns: ["email"] });
+```
+
+</CodeBlock>
+
+<CodeBlock title="Generated DDL" lang="postgresql">
+
+```sql
+ALTER TABLE "prof" ADD CONSTRAINT "prof_email_fkey" FOREIGN KEY ("email") REFERENCES "u" ("email");
+```
+
+</CodeBlock>
+
+`.foreignKey({ columns, refTable, refColumns?, onDelete?, onUpdate?, name? })` is the general form: `refColumns` defaults to `["id"]`, and the constraint name defaults to `<table>_<columns>_fkey`.
+
 ## Putting it together
 
 Foreign keys compose with checks, defaults, generated columns, and indexes in one domain:
@@ -133,10 +185,6 @@ ALTER TABLE "order" ADD CONSTRAINT "order_customer_fkey" FOREIGN KEY ("customer"
 ```
 
 </CodeBlock>
-
-<Callout variant="note" title="Single-column keys to id only">
-A foreign key always targets the referenced table's `id` and is a single column. Composite or multi-column foreign keys, and keys to a non-`id` column, are not yet supported.
-</Callout>
 
 ## Where to go next
 

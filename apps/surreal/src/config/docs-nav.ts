@@ -39,6 +39,7 @@ export const sidebarNav: NavGroup[] = [
         href: d("guides/indexes-events-functions"),
       },
       { label: "Encode & decode rows", href: d("guides/encode-decode-rows") },
+      { label: "Queries", href: d("guides/queries") },
       { label: "Generate & run migrations", href: d("guides/migrations") },
       {
         label: "Sync without migrations",

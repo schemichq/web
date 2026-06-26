@@ -1,0 +1,53 @@
+---
+title: Queries
+description: Read rows back type-safely with the typed query builder, and call SurrealDB functions from TypeScript.
+---
+
+Schemic ships an early, **opt-in** query layer at `@schemic/surrealdb/query`. Today it covers **typed single-table reads** and **calling database functions as code**. Writes (`CREATE` / `UPDATE` / `DELETE`), multi-table and graph relations, and live queries are in progress.
+
+## Typed reads
+
+`select(Table)` builds a typed query against one table. The predicate, ordering, limit, and projection all infer from your schema, and rows **decode by default** — so a `datetime` field comes back a real `Date`.
+
+```ts
+import { select, and } from "@schemic/surrealdb/query";
+import { Surreal } from "surrealdb";
+import { User } from "./schema/tables/user";
+
+const db = new Surreal();
+// ...connect (see the Quickstart)...
+
+const rows = await select(User)
+  .where((u) => u.age.gt(18))
+  .orderBy((u) => u.name) // "asc" by default; pass "desc" to flip
+  .limit(10)
+  .return((u) => ({ name: u.name, email: u.email }))
+  .run(db);
+// rows: { name: string; email: string }[]
+
+const adults = await select(User)
+  .where((u) => and(u.age.gte(18), u.email.neq("")))
+  .run(db);
+```
+
+The builder surface: `.where(row => Expr)`, `.orderBy(row => ref, "asc" | "desc")`, `.limit(n)`, `.return(row => projection)`, `.raw()` (return wire rows, skip decoding), `.toSQL()` (render the query without executing), and `.run(conn)` (execute against a connected `Surreal` client). Field operators are `.eq`, `.neq`, `.lt`, `.lte`, `.gt`, `.gte`; `and(...)` / `or(...)` compose predicates.
+
+## Call a database function
+
+`defineFunction` declares a database function with typed params and a typed return; `.call()` runs it, encoding the arguments through the param schemas and decoding the result through `.returns()`.
+
+```ts
+import { defineFunction, s, surql } from "@schemic/surrealdb";
+
+export const greet = defineFunction("greet", { name: s.string() })
+  .returns(s.string())
+  .body(surql`RETURN "Hello, " + $name;`);
+
+const msg = await greet.call(db, { name: "Ada" }); // msg: string
+```
+
+The result is decoded through the return schema — e.g. `.returns(s.datetime())` yields a real `Date`.
+
+## In progress
+
+Writes (`CREATE` / `UPDATE` / `DELETE` / `UPSERT`), multi-table and graph relations, a function library, and live queries are planned phases of the query layer — not yet shipped.

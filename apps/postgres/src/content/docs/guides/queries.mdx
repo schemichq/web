@@ -1,0 +1,34 @@
+---
+title: Queries
+description: Read rows back type-safely with the typed query builder.
+---
+
+Schemic ships an early, **opt-in** query layer at `@schemic/postgres/query`. Today it covers **typed single-table reads**. Writes (`INSERT` / `UPDATE` / `DELETE`), joins and relations, and live queries are in progress.
+
+## Typed reads
+
+`select(table)` builds a typed query against one table. The predicate, ordering, limit, and projection all infer from your schema, and rows **decode by default**.
+
+```ts
+import { select, and } from "@schemic/postgres/query";
+import { user } from "./schema/tables";
+
+// conn: your PgConn (from the configured postgres connection)
+const rows = await select(user)
+  .where((u) => u.age.gt(18))
+  .orderBy((u) => u.name)
+  .limit(10)
+  .return((u) => ({ name: u.name, email: u.email }))
+  .run(conn);
+// rows: { name: string; email: string }[]
+
+const adults = await select(user)
+  .where((u) => and(u.age.gte(18), u.email.neq("")))
+  .run(conn);
+```
+
+The builder surface: `.where(row => Expr)`, `.orderBy(row => ref, "asc" | "desc")`, `.limit(n)`, `.return(row => projection)`, `.raw()` (return wire rows, skip decoding), `.toSQL()` (render the query without executing), and `.run(conn)` (execute against a `PgConn`). Field operators are `.eq`, `.neq`, `.lt`, `.lte`, `.gt`, `.gte`; `and(...)` / `or(...)` compose predicates.
+
+## In progress
+
+Writes, joins and relations, a function library, and live queries are planned phases of the query layer — not yet shipped. Calling database functions (`defineFunction().call()`) is currently SurrealDB-only.

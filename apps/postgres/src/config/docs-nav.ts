@@ -36,6 +36,7 @@ export const sidebarNav: NavGroup[] = [
       { label: "Foreign keys", href: d("guides/foreign-keys") },
       { label: "Indexes", href: d("guides/indexes") },
       { label: "Encode & decode rows", href: d("guides/encode-decode-rows") },
+      { label: "Queries", href: d("guides/queries") },
       { label: "Generate & run migrations", href: d("guides/migrations") },
     ],
   },

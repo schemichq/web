@@ -1,8 +1,10 @@
 ---
 import {
   ctaFor,
+  driverUrl,
   findDriver,
   flagshipDriver,
+  hubUrl,
   isAvailable,
   paneKeyFor,
   paneStates,
@@ -65,12 +67,24 @@ const rail = [
   { id: "live", label: "Live round-trip", icon: "repeat" },
 ];
 
-// Non-interactive "coming soon" capabilities (no panel, disabled). The typed
-// query layer ships an early opt-in slice (reads + DB-function calls) but stays
-// "Soon" here until it's released + documented — then it gets the dedicated
-// "In progress · try today" treatment (see the Pencil proposal in website.pen).
+// The typed query layer ships an early opt-in slice (typed reads + DB-function
+// calls at @schemic/<driver>/query); writes, relations & live queries are still
+// coming. It gets a dedicated "In progress · try today" treatment — a real link,
+// distinct from the disabled "Soon" items (the chip design is the Pencil
+// proposal in website.pen). The query docs only exist per-driver, so the
+// agnostic hub points "try it" at the database picker.
+const inProgress = {
+  label: "Typed queries",
+  icon: "database",
+  subtext:
+    "Typed reads + DB-function calls today — writes, relations & live queries coming.",
+  href: activeDriver
+    ? `${driverUrl(activeDriver)}/docs/guides/queries`
+    : `${hubUrl}/drivers`,
+};
+
+// Non-interactive "coming soon" capabilities (no panel, disabled).
 const comingSoon = [
-  { label: "ORM", icon: "database" },
   { label: "Tests", icon: "flask" },
   { label: "Studio", icon: "app" },
 ];
@@ -187,6 +201,45 @@ const comingSoon = [
                 </button>
               ))
             }
+            <a
+              href={inProgress.href}
+              class="group flex flex-col gap-2 rounded-[10px] border border-accent/25 bg-accent/[0.05] px-3 py-2.5 text-left transition-colors hover:border-accent/45 hover:bg-accent/[0.09]"
+            >
+              <span class="flex items-center gap-2.5">
+                <svg
+                  class="size-[17px] shrink-0 text-accent-2"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  set:html={icons[inProgress.icon]}
+                />
+                <span class="text-sm font-semibold text-ink">{inProgress.label}</span>
+                <span
+                  class="ml-auto rounded-full border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wide"
+                  style="color:var(--color-success);border-color:color-mix(in oklab,var(--color-success) 32%,transparent);background:color-mix(in oklab,var(--color-success) 12%,transparent)"
+                >
+                  In progress
+                </span>
+              </span>
+              <span class="text-[12px] leading-[1.45] text-ink-3">{inProgress.subtext}</span>
+              <span
+                class="inline-flex items-center gap-1 text-[12px] font-semibold text-accent-2 transition-transform group-hover:translate-x-0.5"
+              >
+                Try it today
+                <svg
+                  class="size-3.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg
+                >
+              </span>
+            </a>
             {
               comingSoon.map((item) => (
                 <div

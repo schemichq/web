@@ -5,7 +5,7 @@ const code = (s: string) =>
 const faqs: { q: string; a: string; chips?: string[] }[] = [
   {
     q: "Is it really just Zod?",
-    a: `Yes — ${code("s.*")} is a 1:1 drop-in for ${code("z.*")}. Migrate an existing schema by find-replacing ${code("z.")} → ${code("s.")} If you know Zod, there's nothing new to learn.`,
+    a: `${code("s.*")} is built on Zod 4 — your fields <em>are</em> Zod schemas (and Standard Schema compatible), so the API mirrors the ${code("z.*")} you already know, plus ${code("$")}-prefixed methods that emit database DDL. If you know Zod, you'll feel at home immediately.`,
   },
   {
     q: "Why not write the DDL by hand?",

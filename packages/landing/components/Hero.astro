@@ -35,7 +35,7 @@ const isHub = activeDriver == null;
 const selected = findDriver(activeDriver);
 const pickerLabel = selected?.name ?? "Database";
 
-const meta = ["TypeScript-first", "Zod-compatible", "Standard Schema", "MIT"];
+const meta = ["TypeScript-first", "Zod-based", "Standard Schema", "MIT"];
 
 // Primary CTA — driver-aware, rendered for EVERY variant as a `[data-driver-pane]`
 // (the hub variant OPENS the picker; a driver variant links into that driver's
@@ -129,8 +129,8 @@ const chevron = '<path d="m6 9 6 6 6-6"/>';
       Define your schema with <code
         class="rounded-md bg-surface-2 px-1.5 py-0.5 font-mono text-[0.9em] text-code-keyword"
         >s.*</code
-      > — a drop-in for Zod. Schemic generates your database's native DDL,
-      validates at runtime, and runs your migrations.
+      > — Zod, with your database's types built in. Schemic generates your
+      database's native DDL, validates at runtime, and runs your migrations.
     </p>
 
     <!-- CTAs -->

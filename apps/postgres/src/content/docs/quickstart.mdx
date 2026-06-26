@@ -83,16 +83,23 @@ A few things to notice, each of which you will use constantly:
 
 `schemic gen` diffs your schema against the recorded snapshot and writes a migration for the difference.
 
-<Terminal command="npx schemic gen initial" output={`2 changes to migrate — 4 Fields, 1 Index.
-database/schema/tables.ts
-  + "age" smallint
-  + "createdAt" timestamp with time zone NOT NULL DEFAULT now()
-  + "email" varchar(255) NOT NULL
-  + "name" text NOT NULL
+<Terminal command="npx schemic gen initial" output={`2 changes — 4 Fields, 1 Index.
 
-user_email_key
-  + CREATE UNIQUE INDEX "user_email_key" ON "user" ("email");
-✓ 20260619090000_initial.sql  (+2 up / 2 down)`} />
+  -- schemic:up
+  CREATE TABLE "user" (
+    "id" text PRIMARY KEY,
+    "age" smallint,
+    "createdAt" timestamp with time zone NOT NULL DEFAULT now(),
+    "email" varchar(255) NOT NULL,
+    "name" text NOT NULL
+  );
+  CREATE UNIQUE INDEX "user_email_key" ON "user" ("email");
+
+  -- schemic:down
+  DROP INDEX IF EXISTS "user_email_key";
+  DROP TABLE IF EXISTS "user" CASCADE;
+
+✓ 20260626114226_initial.sql  (+2 up / 2 down)`} />
 
 The migration is plain, reviewable SQL with forward and rollback bodies. Open it before applying anything.
 
@@ -102,13 +109,13 @@ The migration is plain, reviewable SQL with forward and rollback bodies. Open it
 
 `schemic migrate` (alias `up`) applies every pending migration in order, against the embedded PGlite database from your config — no server to start.
 
-<Terminal command="npx schemic migrate" output={`  ↑ 20260619090000_initial
+<Terminal command="npx schemic migrate" output={`  ↑ 20260626114226_initial
 
 ✓ Applied 1 migration.`} />
 
 Confirm what is applied with `schemic status`:
 
-<Terminal command="npx schemic status" output={`  ✓ applied  20260619090000_initial
+<Terminal command="npx schemic status" output={`  ✓ applied  20260626114226_initial
 
 1 migration, 0 pending.`} />
 

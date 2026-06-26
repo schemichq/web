@@ -23,10 +23,15 @@ On the Postgres driver, `diff` compares structure — tables, columns, types, nu
 
 Edit your schema, then run `schemic gen` with a name describing the change. `gen` diffs the schema against the snapshot and, if anything changed, writes a `<timestamp>_<name>.sql` file with `up` and `down` sections. When nothing changed it tells you so and writes nothing:
 
-<Terminal command="npx schemic gen add_bio" output={`1 change to migrate — 1 Field.
-database/schema/tables.ts
-  + "bio" text
-✓ 20260619090000_add_bio.sql  (+1 up / 1 down)`} />
+<Terminal command="npx schemic gen add_bio" output={`1 change — 1 Field.
+
+  -- schemic:up
+  ALTER TABLE "user" ADD COLUMN "bio" text;
+
+  -- schemic:down
+  ALTER TABLE "user" DROP COLUMN IF EXISTS "bio";
+
+✓ 20260626114301_add_bio.sql  (+1 up / 1 down)`} />
 
 Commit the generated `.sql` files. They are the reviewable, version-controlled record of how your schema evolved. The migration contains only the delta — adding a column emits `ALTER TABLE "user" ADD COLUMN "bio" text`, not a full table rewrite.
 

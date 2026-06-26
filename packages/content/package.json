@@ -8,12 +8,14 @@
     "./code-theme": "./code-theme.mjs",
     "./docs-schema": "./docs-schema.mjs",
     "./blog-schema": "./blog-schema.mjs",
+    "./changelog": "./changelog.mjs",
     "./nav": "./nav.ts"
   },
   "files": [
     "code-theme.mjs",
     "docs-schema.mjs",
     "blog-schema.mjs",
+    "changelog.mjs",
     "nav.ts",
     "blog"
   ]

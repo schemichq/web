@@ -1,0 +1,284 @@
+---
+/**
+ * Changelog — renders a per-site-filtered changelog (see
+ * @schemic/content/changelog). The data is fetched + filtered at build time by
+ * the page; this component is pure presentation, styled entirely off docs.css
+ * brand tokens so it themes per site automatically.
+ *
+ * Display rules (the page IS the current driver, so the driver tag is noise):
+ *   - entries tagged with `currentDriver`  -> plain text, no chip
+ *   - entries tagged core / cli / setup    -> a subtle toolchain chip + text
+ *   - untagged entries (shared)            -> plain text, no chip
+ */
+import { versionSlug } from "@schemic/content/changelog";
+
+interface Entry {
+  pkg: string | null;
+  text: string;
+}
+interface Group {
+  title: string;
+  breaking: boolean;
+  entries: Entry[];
+}
+interface Version {
+  version: string;
+  date: string | null;
+  unreleased: boolean;
+  groups: Group[];
+}
+interface Props {
+  versions: Version[];
+  /** The driver this site ships ("surrealdb" | "postgres"); its tag is dropped. */
+  currentDriver: string;
+}
+
+const { versions, currentDriver } = Astro.props;
+
+const TOOLCHAIN = ["core", "cli", "setup"];
+
+/** The subtle chip label for an entry, or null to render plain text. Driver-
+ * tagged and untagged entries render plain; toolchain changes keep a label. */
+function chipFor(pkg: string | null): string | null {
+  if (!pkg) return null;
+  const tokens = pkg.match(/[a-z]+/g) ?? [];
+  if (tokens.includes(currentDriver)) return null;
+  return TOOLCHAIN.find((t) => tokens.includes(t)) ?? null;
+}
+
+/** Render the inline markdown an entry's text can contain — code spans,
+ * **bold**, and [links](url) — to safe HTML (everything else is escaped). */
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+function inline(md: string): string {
+  // Sentinel that cannot occur in markdown text and survives escapeHtml, so
+  // code spans are protected from the bold/link passes then restored last.
+  const Z = String.fromCharCode(0);
+  const codes: string[] = [];
+  let s = String(md).replace(/`([^`]+)`/g, (_m, c) => {
+    codes.push(c);
+    return `${Z}${codes.length - 1}${Z}`;
+  });
+  s = escapeHtml(s);
+  s = s.replace(
+    /\[([^\]]+)\]\(([^)\s]+)\)/g,
+    (_m, t, u) => `<a href="${u}" target="_blank" rel="noopener">${t}</a>`,
+  );
+  s = s.replace(/\*\*([^*]+?)\*\*/g, "<strong>$1</strong>");
+  s = s.replace(
+    new RegExp(`${Z}(\\d+)${Z}`, "g"),
+    (_m, i) => `<code>${escapeHtml(codes[Number(i)])}</code>`,
+  );
+  return s;
+}
+
+function fmtDate(date: string | null): string | null {
+  if (!date) return null;
+  const d = new Date(`${date}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return date;
+  return d.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+---
+
+<div class="changelog">
+  {
+    versions.map((v) => (
+      <section id={versionSlug(v.version)} class="version">
+        <header class:list={["version-head", { unreleased: v.unreleased }]}>
+          <h2 class="version-num">
+            {v.unreleased ? "Unreleased" : v.version}
+          </h2>
+          {v.unreleased ? (
+            <span class="in-progress">in progress</span>
+          ) : (
+            fmtDate(v.date) && <span class="version-date">{fmtDate(v.date)}</span>
+          )}
+        </header>
+
+        {v.groups.map((g) => (
+          <div class="group">
+            <h3 class="group-title">
+              {g.title}
+              {g.breaking && <span class="breaking">Breaking</span>}
+            </h3>
+            <ul class="entries">
+              {g.entries.map((e) => {
+                const chip = chipFor(e.pkg);
+                return (
+                  <li class="entry">
+                    {chip && (
+                      <code class={`chip chip-${chip}`}>{chip}</code>
+                    )}
+                    <span class="entry-text" set:html={inline(e.text)} />
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </section>
+    ))
+  }
+
+  <p class="older">
+    Older versions (pre-alpha.18) →{" "}
+    <a
+      href="https://github.com/schemichq/schemic/blob/main/CHANGELOG.md"
+      target="_blank"
+      rel="noopener"
+    >
+      repo CHANGELOG
+    </a>
+  </p>
+</div>
+
+<style>
+  .changelog {
+    color: var(--color-ink-2);
+    font-size: 0.9375rem;
+    line-height: 1.7;
+  }
+  .version {
+    padding-block: 1.75rem 0.5rem;
+    border-top: 1px solid var(--color-border-subtle);
+    scroll-margin-top: 5rem;
+  }
+  .version:first-of-type {
+    border-top: 0;
+    padding-top: 0.5rem;
+  }
+  .version-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+  .version-num {
+    margin: 0;
+    font-size: 1.4375rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--color-ink);
+    font-family: var(--font-mono);
+    letter-spacing: -0.01em;
+  }
+  .version-date {
+    font-size: 0.78rem;
+    color: var(--color-ink-3);
+  }
+  .version-head.unreleased .version-num {
+    color: var(--color-ink-2);
+    font-family: var(--font-sans);
+  }
+  .in-progress {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-ink-3);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    padding: 0.1em 0.6em;
+  }
+  .group {
+    margin-top: 1.1rem;
+  }
+  .group-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0 0 0.5rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink-3);
+  }
+  .breaking {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-danger);
+    background: color-mix(in oklab, var(--color-danger) 14%, transparent);
+    border: 1px solid color-mix(in oklab, var(--color-danger) 40%, transparent);
+    border-radius: 5px;
+    padding: 0.1em 0.45em;
+    letter-spacing: 0.02em;
+  }
+  .entries {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+  .entry {
+    display: flex;
+    align-items: baseline;
+    gap: 0.55rem;
+  }
+  .chip {
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--color-ink-3);
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 5px;
+    padding: 0.12em 0.42em;
+    position: relative;
+    top: -0.05em;
+  }
+  .entry-text {
+    min-width: 0;
+  }
+  .entry-text :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border-subtle);
+    padding: 0.1em 0.38em;
+    border-radius: 5px;
+  }
+  .entry-text :global(strong),
+  .entry-text :global(b) {
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+  .entry-text :global(a) {
+    color: var(--color-soft);
+    text-decoration: none;
+  }
+  .entry-text :global(a:hover) {
+    text-decoration: underline;
+  }
+  .older {
+    margin-top: 2.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-border-subtle);
+    font-size: 0.84rem;
+    color: var(--color-ink-3);
+  }
+  .older a {
+    color: var(--color-soft);
+    text-decoration: none;
+  }
+  .older a:hover {
+    text-decoration: underline;
+  }
+</style>

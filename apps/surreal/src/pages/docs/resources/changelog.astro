@@ -1,0 +1,105 @@
+---
+/**
+ * Changelog — auto-generated at build time from the Schemic monorepo's
+ * CHANGELOG.md (fetched raw, no vendored copy), filtered to the packages this
+ * site ships (core + cli + setup + surrealdb). Replaces the hand-authored
+ * resources/changelog.mdx; this standalone page now owns the route, so the
+ * .mdx was deleted to avoid colliding with [...slug].astro.
+ */
+import {
+  filterChangelog,
+  parseChangelog,
+  versionSlug,
+} from "@schemic/content/changelog";
+import Changelog from "@schemic/ui/docs/Changelog.astro";
+import DocsLayout from "@schemic/ui/docs/DocsLayout.astro";
+import {
+  crumbFor,
+  sidebarNav,
+  topActiveFor,
+  topNav,
+} from "../../../config/docs-nav";
+
+const CHANGELOG_URL =
+  "https://raw.githubusercontent.com/schemichq/schemic/main/CHANGELOG.md";
+const PKGS = ["core", "cli", "setup", "surrealdb"];
+const CURRENT_DRIVER = "surrealdb";
+
+const href = "/docs/resources/changelog";
+const title = "Changelog";
+const description =
+  "Notable changes to Schemic, newest first — the SurrealDB driver plus the shared core and CLI. The library is alpha, so breaking changes are called out.";
+
+let md: string | null = null;
+try {
+  const r = await fetch(CHANGELOG_URL);
+  if (r.ok) md = await r.text();
+} catch {
+  md = null;
+}
+
+const filtered = md
+  ? filterChangelog(parseChangelog(md), PKGS)
+  : { versions: [] };
+
+const headings = filtered.versions.map((v) => ({
+  id: versionSlug(v.version),
+  text: v.unreleased ? "Unreleased" : v.version,
+}));
+---
+
+<DocsLayout
+  title={title}
+  description={description}
+  sidebarNav={sidebarNav}
+  topNav={topNav}
+  activeHref={href}
+  topActive={topActiveFor(href)}
+  headings={headings}
+>
+  <nav class="crumb" aria-label="Breadcrumb">{crumbFor(href)}</nav>
+  <h1 class="page-h1" id="_top">{title}</h1>
+  {
+    md ? (
+      <Changelog versions={filtered.versions} currentDriver={CURRENT_DRIVER} />
+    ) : (
+      <p class="unavailable">
+        The changelog is temporarily unavailable — see the full{" "}
+        <a
+          href="https://github.com/schemichq/schemic/blob/main/CHANGELOG.md"
+          target="_blank"
+          rel="noopener"
+        >
+          CHANGELOG on GitHub →
+        </a>
+      </p>
+    )
+  }
+</DocsLayout>
+
+<style>
+  .crumb {
+    font-size: 0.78rem;
+    color: var(--color-ink-3);
+  }
+  .page-h1 {
+    margin: 0.4rem 0 1.5rem;
+    font-size: 2.5rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--color-ink);
+    scroll-margin-top: 5rem;
+  }
+  .unavailable {
+    color: var(--color-ink-2);
+    font-size: 0.9375rem;
+    line-height: 1.7;
+  }
+  .unavailable a {
+    color: var(--color-soft);
+    text-decoration: none;
+  }
+  .unavailable a:hover {
+    text-decoration: underline;
+  }
+</style>

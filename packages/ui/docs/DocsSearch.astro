@@ -1,0 +1,251 @@
+---
+/**
+ * DocsSearch — shared, self-hosted docs search modal (Pagefind).
+ *
+ * Lives in @schemic/ui so BOTH driver sites (surrealdb + postgres) get the same
+ * search. Rendered once from DocsLayout. The static index is produced at build
+ * time by the `astro-pagefind` integration (-> dist/pagefind/) and scoped to doc
+ * pages via `data-pagefind-body` on the DocsLayout content article.
+ *
+ * Opens from: the DocsNav search button ([data-search-open]), the `/` shortcut
+ * (ignored while typing in a field), and ⌘K / Ctrl+K. Closes on Escape (native
+ * <dialog>) and backdrop click. Pagefind's JS/CSS + the default UI are lazy-
+ * loaded on first open so they never block initial page load. The UI is themed
+ * to docs.css tokens via the CSS-variable overrides below, so it matches each
+ * driver's accent automatically.
+ */
+---
+
+<dialog id="docs-search" aria-label="Search docs">
+  <div class="ds-panel">
+    <div id="pagefind-ui" data-pagefind-ignore></div>
+    <div class="ds-hint" aria-hidden="true">
+      <span><kbd>↵</kbd> to select</span>
+      <span><kbd>↑</kbd><kbd>↓</kbd> to navigate</span>
+      <span><kbd>esc</kbd> to close</span>
+    </div>
+  </div>
+</dialog>
+
+<style>
+  #docs-search {
+    margin: 0;
+    padding: 0;
+    width: min(640px, calc(100vw - 32px));
+    max-width: none;
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    background: var(--color-canvas-2);
+    color: var(--color-ink);
+    box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.7);
+    position: fixed;
+    inset: 0;
+    margin-inline: auto;
+    margin-top: 12vh;
+    overflow: hidden;
+  }
+  #docs-search::backdrop {
+    background: color-mix(in oklab, var(--color-canvas) 70%, transparent);
+    backdrop-filter: blur(4px);
+  }
+  .ds-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .ds-hint {
+    display: flex;
+    gap: 16px;
+    padding: 9px 16px;
+    border-top: 1px solid var(--color-border-subtle);
+    background: var(--color-surface);
+    font-size: 0.72rem;
+    color: var(--color-ink-3);
+  }
+  .ds-hint kbd {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 0 4px;
+    margin-right: 2px;
+  }
+  @media (max-width: 40rem) {
+    .ds-hint {
+      display: none;
+    }
+  }
+</style>
+
+{/* Pagefind's default UI renders into #pagefind-ui at runtime, so its internals
+    can't carry Astro's scoped-style attribute — theme them globally, namespaced
+    under the dialog. Map Pagefind's CSS variables onto docs.css tokens. */}
+<style is:global>
+  #docs-search .pagefind-ui {
+    --pagefind-ui-scale: 0.9;
+    --pagefind-ui-primary: var(--color-soft);
+    --pagefind-ui-text: var(--color-ink);
+    --pagefind-ui-background: var(--color-canvas-2);
+    --pagefind-ui-border: var(--color-border);
+    --pagefind-ui-tag: var(--color-surface);
+    --pagefind-ui-border-width: 1px;
+    --pagefind-ui-border-radius: 8px;
+    --pagefind-ui-font: var(--font-sans);
+  }
+  #docs-search .pagefind-ui__form {
+    position: relative;
+  }
+  #docs-search .pagefind-ui__form::before {
+    background-color: var(--color-ink-3);
+    opacity: 1;
+  }
+  #docs-search .pagefind-ui__search-input {
+    background: var(--color-surface);
+    color: var(--color-ink);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    font-weight: 500;
+  }
+  #docs-search .pagefind-ui__search-input::placeholder {
+    color: var(--color-ink-3);
+  }
+  #docs-search .pagefind-ui__search-input:focus {
+    outline: none;
+    border-color: color-mix(in oklab, var(--color-accent-500) 60%, var(--color-border));
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-accent-500) 18%, transparent);
+  }
+  #docs-search .pagefind-ui__search-clear {
+    background: transparent;
+    color: var(--color-ink-3);
+  }
+  #docs-search .pagefind-ui__results-area {
+    max-height: min(60vh, 520px);
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  #docs-search .pagefind-ui__message {
+    color: var(--color-ink-3);
+    font-size: 0.82rem;
+  }
+  #docs-search .pagefind-ui__result {
+    border-top: 1px solid var(--color-border-subtle);
+    padding: 14px 4px;
+  }
+  #docs-search .pagefind-ui__result-title {
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+  #docs-search .pagefind-ui__result-link {
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+  #docs-search .pagefind-ui__result-link:hover {
+    color: var(--color-soft);
+    text-decoration: underline;
+  }
+  #docs-search .pagefind-ui__result-excerpt {
+    color: var(--color-ink-2);
+    font-size: 0.84rem;
+  }
+  #docs-search .pagefind-ui__result mark {
+    background: color-mix(in oklab, var(--color-accent-500) 28%, transparent);
+    color: var(--color-ink);
+    border-radius: 3px;
+  }
+  #docs-search .pagefind-ui__result-nested {
+    border-left: 1px solid var(--color-border);
+    padding-left: 12px;
+  }
+  #docs-search .pagefind-ui__result-nested .pagefind-ui__result-link {
+    color: var(--color-ink-2);
+  }
+  #docs-search .pagefind-ui__button {
+    background: var(--color-surface);
+    color: var(--color-ink-2);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+  }
+</style>
+
+<script>
+  const dialog = document.getElementById("docs-search") as HTMLDialogElement | null;
+  if (dialog) {
+    const uiHost = dialog.querySelector<HTMLElement>("#pagefind-ui");
+    let loaded = false;
+
+    async function ensureUI() {
+      if (loaded || !uiHost) return;
+      loaded = true;
+      // Lazy-load Pagefind's default UI (JS + CSS) only when search is first
+      // opened — keeps it off the critical path of every docs page.
+      const [{ PagefindUI }] = await Promise.all([
+        import("@pagefind/default-ui"),
+        import("@pagefind/default-ui/css/ui.css"),
+      ]);
+      new PagefindUI({
+        element: uiHost,
+        showSubResults: true,
+        showImages: false,
+        excerptLength: 18,
+        resetStyles: true,
+        autofocus: false,
+      });
+    }
+
+    function focusInput() {
+      const input = dialog?.querySelector<HTMLInputElement>(
+        ".pagefind-ui__search-input",
+      );
+      input?.focus();
+    }
+
+    async function open() {
+      if (!dialog || dialog.open) return;
+      await ensureUI();
+      dialog.showModal();
+      // Wait a frame for the UI to mount, then focus the input.
+      requestAnimationFrame(() => requestAnimationFrame(focusInput));
+    }
+
+    function close() {
+      dialog?.close();
+    }
+
+    // Trigger: the DocsNav search button (and any other [data-search-open]).
+    for (const el of document.querySelectorAll("[data-search-open]")) {
+      el.addEventListener("click", (e) => {
+        e.preventDefault();
+        open();
+      });
+    }
+
+    // Keyboard: `/` (not while typing) and ⌘K / Ctrl+K open search.
+    document.addEventListener("keydown", (e) => {
+      const t = e.target as HTMLElement | null;
+      const typing =
+        !!t &&
+        (t.tagName === "INPUT" ||
+          t.tagName === "TEXTAREA" ||
+          t.isContentEditable);
+      if ((e.key === "k" || e.key === "K") && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        dialog?.open ? close() : open();
+        return;
+      }
+      if (e.key === "/" && !typing && !dialog?.open) {
+        e.preventDefault();
+        open();
+      }
+    });
+
+    // Close on backdrop click (clicks outside the panel resolve to the dialog).
+    dialog.addEventListener("click", (e) => {
+      if (e.target === dialog) close();
+    });
+    // Escape is handled natively by <dialog>; clear focus styling on close.
+    dialog.addEventListener("close", () => {
+      const btn = document.querySelector<HTMLElement>("[data-search-open]");
+      btn?.blur();
+    });
+  }
+</script>

@@ -7,7 +7,7 @@ interface Props {
 const { headings = [] } = Astro.props;
 ---
 
-<aside class="toc">
+<aside class="toc" data-pagefind-ignore>
   {
     headings.length > 0 && (
       <nav aria-label="On this page">

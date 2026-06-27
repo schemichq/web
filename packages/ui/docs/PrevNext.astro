@@ -11,7 +11,7 @@ interface Props {
 const { prev, next } = Astro.props;
 ---
 
-<nav class="prevnext" aria-label="Pagination">
+<nav class="prevnext" aria-label="Pagination" data-pagefind-ignore>
   {
     prev ? (
       <a class="pn prev" href={prev.href}>

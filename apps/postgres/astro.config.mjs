@@ -3,6 +3,10 @@ import mdx from "@astrojs/mdx";
 import { brandShikiTheme } from "@schemic/content/code-theme";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
+// Static, self-hosted docs search. Runs Pagefind over the build output on every
+// `astro build` (the deploy path) -> emits dist/pagefind/, and serves the index
+// in `astro dev`. Indexing is scoped to docs via data-pagefind-body in DocsLayout.
+import pagefind from "astro-pagefind";
 
 // postgres.schemic.dev - the PostgreSQL driver site. The landing lives at "/"
 // (src/pages/index.astro, shared @schemic/landing themed for Postgres). The docs
@@ -10,7 +14,7 @@ import { defineConfig } from "astro/config";
 // MDX (src/content/docs/**) at /docs/<slug>. No Starlight: we own the chrome.
 export default defineConfig({
   site: "https://postgres.schemic.dev",
-  integrations: [mdx()],
+  integrations: [mdx(), pagefind()],
   markdown: {
     // Brand syntax colors for plain ``` fences (CodeBlock shares this theme).
     // Alias postgresql/pgsql to Shiki's `sql` grammar so a `postgresql` fence

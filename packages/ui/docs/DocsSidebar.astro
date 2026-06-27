@@ -10,7 +10,7 @@ interface Props {
 const { sidebarNav, activeHref, topNav = [], topActive } = Astro.props;
 ---
 
-<aside class="sidebar" id="docs-drawer" data-docs-drawer>
+<aside class="sidebar" id="docs-drawer" data-docs-drawer data-pagefind-ignore>
   <nav aria-label="Docs">
     {
       topNav.length > 0 && (

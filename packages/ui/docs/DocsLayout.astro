@@ -4,6 +4,7 @@ import "@fontsource-variable/jetbrains-mono";
 import "./docs.css";
 import type { NavGroup, NavItem, TocItem } from "@schemic/content/nav";
 import DocsNav from "./DocsNav.astro";
+import DocsSearch from "./DocsSearch.astro";
 import DocsSidebar from "./DocsSidebar.astro";
 import DocsTOC from "./DocsTOC.astro";
 
@@ -57,12 +58,19 @@ const hasToc = headings.length > 0;
         topActive={topActive}
       />
       <main class="content">
-        <div class:list={["content-inner", { wide: !hasToc }]}>
+        {/* data-pagefind-body scopes Pagefind to docs pages only: the landing
+            (/) and blog don't render DocsLayout, so they stay out of the index.
+            The doc <h1> inside the slot becomes each result's title. */}
+        <article
+          class:list={["content-inner", { wide: !hasToc }]}
+          data-pagefind-body
+        >
           <slot />
-        </div>
+        </article>
       </main>
       {hasToc && <DocsTOC headings={headings} />}
     </div>
+    <DocsSearch />
   </body>
 </html>
 

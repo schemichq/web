@@ -3,7 +3,7 @@ title: Schema builders
 description: Reference for the s schema builders — primitives, numbers, native SurrealDB types, string formats, record links, and structural types, each with its SurrealQL TYPE.
 ---
 
-`s` is built on Zod's `z` and records a SurrealQL type for each field — it mirrors the `z` API, and each field is a real Zod schema underneath. This page lists every builder and the `TYPE` it emits in DDL. For the conceptual side, see [from schema to DDL](/docs/concepts/schema-to-ddl); for the full type-by-type matrix with support status, see [type mapping](/docs/reference/type-mapping).
+`s` is a drop-in for Zod's `z` that also records a SurrealQL type for each field — use it the way you use `z`, and each field is a real Zod schema underneath. This page lists every builder and the `TYPE` it emits in DDL. For the conceptual side, see [from schema to DDL](/docs/concepts/schema-to-ddl); for the full type-by-type matrix with support status, see [type mapping](/docs/reference/type-mapping).
 
 ## Primitives
 

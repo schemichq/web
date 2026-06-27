@@ -9,7 +9,7 @@ Every `s.*` field is chainable. This page is the complete list of methods. For h
 
 The methods split by prefix, and the prefix tells you which side a method acts on:
 
-- **Non-`$` methods are native Zod.** Your fields **are** Zod schemas, so the methods below delegate to Zod and shape the **app-side** value and its validation.
+- **Non-`$` methods are native Zod.** `s.*` is a drop-in for `z.*` on the app side — your fields **are** Zod schemas, so these methods delegate to Zod, shaping the **app-side** value and its validation.
 - **`$`-prefixed methods are Schemic's.** They attach a clause to the **Postgres column** — the database side.
 
 The two do not bridge; each side is explicit.

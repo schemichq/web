@@ -42,7 +42,7 @@ DEFINE FIELD createdAt ON TABLE user TYPE datetime DEFAULT time::now() READONLY;
     Emit `DEFINE TABLE`, `DEFINE FIELD`, indexes, events, functions, and access definitions straight from your schema. No DDL to hand-write or keep in sync.
   </PillarCard>
   <PillarCard icon="shield-check" title="Runtime validation">
-    Every field is a real Zod schema, so `parse`, `refine`, and Zod's error messages work exactly as they do in Zod.
+    Every field is a real Zod schema — the `z.*` API you already know — so parsing, refinements, formats, and error messages all behave exactly as in Zod.
   </PillarCard>
   <PillarCard icon="layers" title="Typed JS-to-DB mapping">
     Read and write rows through codecs that convert between your app values and the database wire format, with static types for both sides.

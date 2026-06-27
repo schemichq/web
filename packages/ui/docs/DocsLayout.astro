@@ -50,7 +50,12 @@ const hasToc = headings.length > 0;
   <body>
     <DocsNav topNav={topNav} topActive={topActive} />
     <div class="shell">
-      <DocsSidebar sidebarNav={sidebarNav} activeHref={activeHref} />
+      <DocsSidebar
+        sidebarNav={sidebarNav}
+        activeHref={activeHref}
+        topNav={topNav}
+        topActive={topActive}
+      />
       <main class="content">
         <div class:list={["content-inner", { wide: !hasToc }]}>
           <slot />

@@ -1,15 +1,31 @@
 ---
-import type { NavGroup } from "@schemic/content/nav";
+import type { NavGroup, NavItem } from "@schemic/content/nav";
 
 interface Props {
   sidebarNav: NavGroup[];
   activeHref?: string;
+  topNav?: NavItem[];
+  topActive?: string;
 }
-const { sidebarNav, activeHref } = Astro.props;
+const { sidebarNav, activeHref, topNav = [], topActive } = Astro.props;
 ---
 
-<aside class="sidebar">
+<aside class="sidebar" id="docs-drawer" data-docs-drawer>
   <nav aria-label="Docs">
+    {
+      topNav.length > 0 && (
+        <div class="drawer-top">
+          {topNav.map((item) => (
+            <a
+              href={item.href}
+              class:list={["drawer-top-link", { active: item.label === topActive }]}
+            >
+              {item.label}
+            </a>
+          ))}
+        </div>
+      )
+    }
     {
       sidebarNav.map((group) => (
         <div class="group">
@@ -32,6 +48,11 @@ const { sidebarNav, activeHref } = Astro.props;
     }
   </nav>
 </aside>
+
+<!-- Backdrop scrim for the mobile drawer. Rendered OUTSIDE the sticky header
+     (it lives in .shell, which has no transform/backdrop-filter) so this fixed
+     element resolves against the viewport, not a clipped containing block. -->
+<div class="scrim" data-docs-scrim></div>
 
 <style>
   .sidebar {
@@ -88,9 +109,121 @@ const { sidebarNav, activeHref } = Astro.props;
     font-weight: 600;
     background: color-mix(in oklab, var(--color-purple) 14%, transparent);
   }
+
+  /* Top-nav (Docs/Guides/Reference/Blog) surfaced inside the drawer — these
+     links live in the header on desktop, where they're hidden on mobile, so the
+     drawer is the only way to switch sections on a phone. Desktop: hidden. */
+  .drawer-top {
+    display: none;
+  }
+  .scrim {
+    display: none;
+  }
+
   @media (max-width: 60rem) {
+    /* Off-canvas drawer: the sidebar becomes a fixed left panel that slides in
+       from behind the sticky header. Desktop layout (>=60rem) is untouched. */
     .sidebar {
-      display: none;
+      position: fixed;
+      top: 54px;
+      left: 0;
+      bottom: 0;
+      width: 290px;
+      max-width: 86vw;
+      border-right: 1px solid var(--color-border);
+      background: var(--color-canvas);
+      transform: translateX(-100%);
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 45;
+      overflow-y: auto;
+    }
+    .sidebar.is-open {
+      transform: translateX(0);
+    }
+    .sidebar nav {
+      position: static;
+      top: auto;
+      max-height: none;
+      padding: 20px 18px 32px;
+    }
+    .drawer-top {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding-bottom: 18px;
+      margin-bottom: 4px;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .drawer-top-link {
+      display: block;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--color-ink-2);
+      text-decoration: none;
+    }
+    .drawer-top-link:hover {
+      color: var(--color-ink);
+      background: color-mix(in oklab, var(--color-ink) 5%, transparent);
+    }
+    .drawer-top-link.active {
+      color: var(--color-ink);
+    }
+    .scrim {
+      display: block;
+      position: fixed;
+      top: 54px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 40;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(2px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .scrim.is-open {
+      opacity: 1;
+      pointer-events: auto;
     }
   }
 </style>
+
+<script is:inline>
+  (function () {
+    var toggle = document.querySelector("[data-docs-nav-toggle]");
+    var drawer = document.querySelector("[data-docs-drawer]");
+    var scrim = document.querySelector("[data-docs-scrim]");
+    if (!toggle || !drawer) return;
+
+    function setOpen(open) {
+      drawer.classList.toggle("is-open", open);
+      if (scrim) scrim.classList.toggle("is-open", open);
+      toggle.setAttribute("aria-expanded", String(open));
+      document.body.style.overflow = open ? "hidden" : "";
+    }
+
+    toggle.addEventListener("click", function (e) {
+      e.stopPropagation();
+      setOpen(!drawer.classList.contains("is-open"));
+    });
+    if (scrim) {
+      scrim.addEventListener("click", function () {
+        setOpen(false);
+      });
+    }
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && drawer.classList.contains("is-open")) {
+        setOpen(false);
+      }
+    });
+    // Close on any in-drawer link activation (section switch or page nav).
+    drawer.addEventListener("click", function (e) {
+      if (e.target instanceof Element && e.target.closest("a")) {
+        setOpen(false);
+      }
+    });
+  })();
+</script>

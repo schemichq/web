@@ -12,6 +12,16 @@ const repo = "https://github.com/schemichq/schemic";
 <header class="nav">
   <div class="nav-inner">
     <div class="nav-left">
+      <button
+        class="hamburger"
+        type="button"
+        data-docs-nav-toggle
+        aria-label="Open navigation"
+        aria-expanded="false"
+        aria-controls="docs-drawer"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+      </button>
       <a class="logo" href="/">Schemic</a>
       <nav class="links" aria-label="Primary">
         {
@@ -60,6 +70,27 @@ const repo = "https://github.com/schemichq/schemic";
     display: flex;
     align-items: center;
     gap: 28px;
+  }
+  .hamburger {
+    display: none;
+    width: 36px;
+    height: 36px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-ink-2);
+    cursor: pointer;
+    padding: 0;
+  }
+  .hamburger:hover {
+    color: var(--color-ink);
+    border-color: color-mix(in oklab, var(--color-accent-500) 50%, var(--color-border));
+  }
+  .hamburger svg {
+    width: 20px;
+    height: 20px;
   }
   .logo {
     font-family: var(--font-mono);
@@ -134,7 +165,13 @@ const repo = "https://github.com/schemichq/schemic";
     width: 18px;
     height: 18px;
   }
-  @media (max-width: 50rem) {
+  @media (max-width: 60rem) {
+    .nav-left {
+      gap: 12px;
+    }
+    .hamburger {
+      display: inline-flex;
+    }
     .links,
     .search span,
     .search kbd {
